@@ -103,6 +103,17 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 
 
 /* Ayarlar */
+
+.typing-indicator{display:none;font-size:12px;color:var(--txt3);padding:3px 8px;font-style:italic}
+.typing-dots span{animation:tdot 1.2s infinite;opacity:0;display:inline-block}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,60%,100%{opacity:0}30%{opacity:1}}
+
+.spec-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--gd);color:var(--green);border:1px solid var(--green);margin-left:.5rem}
+.spec-boards{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-top:1rem}
+.spec-banner{text-align:center;padding:.6rem 1rem;border-radius:8px;font-size:14px;font-weight:600;background:var(--bd);color:var(--bl);border:1px solid var(--blue);margin-bottom:.75rem}
+.spec-count{font-size:12px;color:var(--txt3);text-align:center;margin-top:.5rem}
 .settings-btn{position:fixed;bottom:.75rem;right:.75rem;width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex !important;align-items:center;justify-content:center;z-index:999;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .settings-btn:hover{background:var(--bg3);color:var(--txt)}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
@@ -164,6 +175,12 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
         <input type="text" id="inCode" placeholder="ABCD" maxlength="4"
           style="text-transform:uppercase;letter-spacing:5px;font-weight:800;font-size:18px;text-align:center;width:120px">
         <button class="btn bo" style="flex:1" id="btnJoin" onclick="doJoin()">Kat&#305;l &rarr;</button>
+      </div>
+      <div class="divider">veya oyunu izle</div>
+      <div style="display:flex;gap:.5rem">
+        <input type="text" id="inSpecCode" placeholder="ABCD" maxlength="4"
+          style="text-transform:uppercase;letter-spacing:5px;font-weight:800;font-size:18px;text-align:center;width:120px">
+        <button class="btn bo" style="flex:1;color:var(--green);border-color:var(--green)" id="btnSpec" onclick="doSpectate()">&#128064; &#304;zle</button>
       </div>
     </div>
   </div>
@@ -240,6 +257,9 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
     <!-- CHAT -->
     <div class="chat-wrap">
       <div class="chat-log" id="chatLog"></div>
+      <div class="typing-indicator" id="typingIndicator">
+        <span id="typingName"></span> yazıyor<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
       <div class="chat-input-row">
         <input type="text" id="chatInput" placeholder="Mesaj yaz..." maxlength="100" autocomplete="off">
         <button onclick="sendChat()">G&ouml;nder</button>
@@ -263,6 +283,42 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+
+
+<!-- SPECTATOR -->
+<div id="sSpec" class="screen">
+  <div style="max-width:980px;margin:0 auto">
+    <div class="spec-banner" id="specBanner">Oyun izleniyor...</div>
+    <div class="metrics">
+      <div class="met"><div class="ml" id="specP1name">Oyuncu 1</div><div class="mv" id="specP1hits">0</div></div>
+      <div class="met"><div class="ml" id="specP2name">Oyuncu 2</div><div class="mv" id="specP2hits">0</div></div>
+      <div class="met"><div class="ml">Hamle</div><div class="mv" id="specMoves">0</div></div>
+    </div>
+    <div class="spec-boards">
+      <div class="bcard">
+        <h4 id="specBoard1Title">Oyuncu 1 Tahtası</h4>
+        <div class="gout">
+          <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
+          <div class="grows" id="specGrid1"></div>
+        </div>
+      </div>
+      <div class="bcard">
+        <h4 id="specBoard2Title">Oyuncu 2 Tahtası</h4>
+        <div class="gout">
+          <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
+          <div class="grows" id="specGrid2"></div>
+        </div>
+      </div>
+    </div>
+    <div class="spec-count" id="specCount"></div>
+    <div style="margin-top:1rem">
+      <div class="chat-log" id="specChatLog" style="height:80px"></div>
+    </div>
+    <div style="text-align:center;margin-top:1rem">
+      <button class="btn bo" onclick="backToLobby()">&#8592; Ana Men&uuml;</button>
+    </div>
+  </div>
+</div>
 
 <!-- Ayarlar Butonu -->
 <button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
@@ -304,6 +360,180 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 
 </main>
 <script>
+
+
+// ── SPECTATOR ─────────────────────────────────────────────
+var spectators = [];
+var isSpectator = false;
+var specState = {
+  p1name:'', p2name:'',
+  shots1: null, shots2: null, // shots1 = p1'in p2'ye attığı
+  hits:[0,0], moves:0, currentTurn:0
+};
+
+function doSpectate(){
+  var name = getName(); if(!name) return;
+  var code = document.getElementById('inSpecCode').value.trim().toUpperCase();
+  if(code.length!==4){showErr('Oda kodu 4 harf olmali.');return;}
+  g.myName = name; isSpectator = true;
+  setBtns(true);
+  showInfo('Odaya baglaniliyor...');
+  initPeer(undefined, function(){
+    var c = peer.connect(code, {reliable:true, serialization:'json'});
+    conn = c;
+    c.on('open', function(){
+      hideInfo(); setBtns(false);
+      setHBadge('İzleniyor: '+code);
+      setTimeout(function(){
+        send({type:'spectate', name:name});
+      }, 300);
+    });
+    c.on('data', function(raw){
+      var msg = typeof raw==='string' ? JSON.parse(raw) : raw;
+      handleSpecData(msg);
+    });
+    c.on('close', function(){ alert('Bağlantı kesildi.'); backToLobby(); });
+    c.on('error', function(e){ console.error(e); });
+  });
+}
+
+function handleSpecData(msg){
+  switch(msg.type){
+    case 'spec_init':
+      specState.p1name = msg.p1name;
+      specState.p2name = msg.p2name;
+      specState.shots1 = msg.shots1;
+      specState.shots2 = msg.shots2;
+      specState.hits = msg.hits;
+      specState.moves = msg.moves;
+      specState.currentTurn = msg.currentTurn;
+      showScreen('sSpec');
+      renderSpecBoards();
+      updateSpecBanner();
+      break;
+    case 'spec_fire':
+      specState.shots1 = msg.shots1;
+      specState.shots2 = msg.shots2;
+      specState.hits = msg.hits;
+      specState.moves = msg.moves;
+      specState.currentTurn = msg.currentTurn;
+      renderSpecBoards();
+      updateSpecBanner();
+      document.getElementById('specMoves').textContent = msg.moves;
+      document.getElementById('specP1hits').textContent = msg.hits[0];
+      document.getElementById('specP2hits').textContent = msg.hits[1];
+      break;
+    case 'spec_chat':
+      var log = document.getElementById('specChatLog');
+      var p = document.createElement('p');
+      p.textContent = msg.from + ': ' + msg.text;
+      log.appendChild(p);
+      log.scrollTop = log.scrollHeight;
+      break;
+    case 'spec_count':
+      document.getElementById('specCount').textContent = msg.count + ' kişi izliyor';
+      break;
+    case 'spec_end':
+      document.getElementById('specBanner').textContent = (msg.winner===0?specState.p1name:specState.p2name) + ' kazandı!';
+      break;
+    case 'opponent_left':
+      alert('Oyun sona erdi.'); backToLobby(); break;
+  }
+}
+
+function renderSpecBoards(){
+  buildSpecGrid('specGrid1', specState.shots2); // p2'nin p1'e attıkları
+  buildSpecGrid('specGrid2', specState.shots1); // p1'in p2'ye attıkları
+  document.getElementById('specP1name').textContent = specState.p1name || 'Oyuncu 1';
+  document.getElementById('specP2name').textContent = specState.p2name || 'Oyuncu 2';
+  document.getElementById('specBoard1Title').textContent = (specState.p1name||'Oyuncu 1') + ' Tahtası';
+  document.getElementById('specBoard2Title').textContent = (specState.p2name||'Oyuncu 2') + ' Tahtası';
+}
+
+function buildSpecGrid(cid, shots){
+  var w = document.getElementById(cid); if(!w) return;
+  w.innerHTML = '';
+  for(var r=0;r<10;r++){
+    var row = document.createElement('div'); row.className='grow';
+    var l = document.createElement('div'); l.className='rlbl'; l.textContent=r+1; row.appendChild(l);
+    for(var c=0;c<10;c++){
+      var cell = document.createElement('div'); cell.className='cell';
+      cell.dataset.r=r; cell.dataset.c=c;
+      if(shots && shots[r] && shots[r][c]){
+        // shots[r][c] === 1 hit, 2 miss (bunu server'dan gönderelim)
+        cell.classList.add(shots[r][c]===1?'hit':'miss');
+        cell.textContent = shots[r][c]===1?'x':'.';
+      }
+      row.appendChild(cell);
+    }
+    w.appendChild(row);
+  }
+  setTimeout(calcGridSize, 50);
+}
+
+function updateSpecBanner(){
+  var b = document.getElementById('specBanner');
+  var names = [specState.p1name||'Oyuncu 1', specState.p2name||'Oyuncu 2'];
+  b.textContent = names[specState.currentTurn] + ' ateş ediyor...';
+}
+
+// Host: spectator bağlandığında
+function addSpectator(c){
+  spectators.push(c);
+  c.on('data', function(raw){
+    // Spektatörden mesaj gelmez (sadece izler)
+  });
+  c.on('close', function(){
+    spectators = spectators.filter(function(s){return s!==c;});
+    broadcastSpectators({type:'spec_count', count:spectators.length});
+  });
+  // Mevcut durumu gönder
+  if(g.myBoard && g.oppBoard){
+    // Oyun devam ediyor
+    var shots2 = buildSpecShots(g.oppShots, g.myBoard);
+    var shots1 = buildSpecShots(g.myShots, g.oppBoard);
+    var msg = {
+      type:'spec_init',
+      p1name: g.myName, p2name: g.oppName,
+      shots1: shots1, shots2: shots2,
+      hits: g.hits, moves: g.moves,
+      currentTurn: g.myTurn ? 0 : 1
+    };
+    if(c.open) c.send(JSON.stringify(msg));
+    else c.on('open', function(){ c.send(JSON.stringify(msg)); });
+  } else {
+    // Bekleme/setup aşaması
+    if(c.open) c.send(JSON.stringify({type:'spec_init', p1name:g.myName, p2name:g.oppName||'?', shots1:null, shots2:null, hits:[0,0], moves:0, currentTurn:0}));
+  }
+  broadcastSpectators({type:'spec_count', count:spectators.length});
+}
+
+function buildSpecShots(shots, board){
+  var result = Array(10).fill(null).map(function(){return Array(10).fill(0);});
+  for(var r=0;r<10;r++) for(var c=0;c<10;c++){
+    if(shots[r][c]) result[r][c] = board[r][c] ? 1 : 2; // 1=hit 2=miss
+  }
+  return result;
+}
+
+function broadcastSpectators(msg){
+  var data = JSON.stringify(msg);
+  spectators.forEach(function(c){
+    if(c.open) c.send(data);
+  });
+}
+
+function notifySpectatorsAfterFire(){
+  if(spectators.length===0) return;
+  var shots1 = g.myBoard ? buildSpecShots(g.myShots, g.oppBoard) : null;
+  var shots2 = g.myBoard ? buildSpecShots(g.oppShots, g.myBoard) : null;
+  broadcastSpectators({
+    type:'spec_fire',
+    shots1: shots1, shots2: shots2,
+    hits: g.hits, moves: g.moves,
+    currentTurn: g.myTurn ? 0 : 1
+  });
+}
 
 // ── AYARLAR ──────────────────────────────────────────────
 var settings = {
@@ -575,10 +805,24 @@ function onData(raw){
     case 'chat':
       addChatMsg(g.oppName,msg.text,'opp');
       if(settings.sound) sndChat();
+      broadcastSpectators({type:'spec_chat', from:g.oppName, text:msg.text});
       break;
 
     case 'setting':
       if(msg.key==='refire') settings.refire=msg.val;
+      break;
+
+    case 'typing':
+      var ti = document.getElementById('typingIndicator');
+      var tn = document.getElementById('typingName');
+      if(ti && tn){ tn.textContent=g.oppName||'Rakip'; ti.style.display='block'; }
+      clearTimeout(g.typingHideTimer);
+      g.typingHideTimer = setTimeout(function(){ if(ti) ti.style.display='none'; }, 2000);
+      break;
+
+    case 'typing_stop':
+      var ti2 = document.getElementById('typingIndicator');
+      if(ti2) ti2.style.display='none';
       break;
 
     case 'rematch_ok':
@@ -611,8 +855,20 @@ function doCreate(){
     showScreen('sWait');
     peer.on('connection',function(c){
       console.log('Host: incoming connection');
-      setupConn(c);
-      // Host hello'yu bekliyor, cevap onData'da veriliyor
+      // Spectator mı oyuncu mu? İlk mesaja bak
+      c.on('open', function(){
+        c.once('data', function(raw){
+          var msg = typeof raw==='string' ? JSON.parse(raw) : raw;
+          if(msg.type==='spectate'){
+            console.log('Spectator joined:', msg.name);
+            addSpectator(c);
+          } else if(msg.type==='hello'){
+            // Normal oyuncu
+            setupConn(c);
+            onData(msg); // hello mesajını işle
+          }
+        });
+      });
     });
   });
 }
@@ -644,6 +900,9 @@ function copyCode(){
 }
 
 function backToLobby(){
+  spectators.forEach(function(c){try{c.close();}catch(e){}});
+  spectators=[];
+  isSpectator=false;
   if(conn){conn.close();conn=null;}
   if(peer){peer.destroy();peer=null;}
   score={me:0,opp:0};
@@ -882,7 +1141,7 @@ function receiveAttack(row,col){
   send({type:'fire_result',row:row,col:col,hit:hit,sunk:sunkKey});
 
   if(checkLost()){endGame(false);return;}
-  // Tekrar ates aciksa ve rakip isabet yaptiysa sira yine rakipte kalir
+  notifySpectatorsAfterFire();
   if(hit && settings.refire){
     g.myTurn=false;
   } else {
@@ -915,7 +1174,8 @@ function applyResult(row,col,hit,sunk){
 
   if(checkWon()){endGame(true);return;}
 
-  // Tekrar ates: isabet + refire aciksa sira yine bizde
+  notifySpectatorsAfterFire();
+
   if(hit && settings.refire){
     g.myTurn=true;
     updateBanner();renderEnemyGrid();
@@ -984,8 +1244,15 @@ function sendChat(){
   inp.value='';
   send({type:'chat',text:txt});
   addChatMsg(g.myName,txt,'me');
+  broadcastSpectators({type:'spec_chat', from:g.myName, text:txt});
 }
 
+var typingTimer = null;
+document.getElementById('chatInput').addEventListener('input', function(){
+  send({type:'typing'});
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(function(){ send({type:'typing_stop'}); }, 1500);
+});
 document.getElementById('chatInput').addEventListener('keydown',function(e){
   if(e.key==='Enter') sendChat();
 });
@@ -1024,6 +1291,7 @@ window.addEventListener('orientationchange', function(){ setTimeout(calcGridSize
 calcGridSize();
 
 document.getElementById('inCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
+document.getElementById('inSpecCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
 document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
 </script>
