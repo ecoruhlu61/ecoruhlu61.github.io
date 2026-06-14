@@ -333,7 +333,13 @@ function initPeer(id,onOpen){
 
 function setupConn(c){
   conn=c;
-  conn.on('data',onData);
+  conn.on('open',function(){
+    console.log('conn open, isHost:', g.isHost);
+  });
+  conn.on('data',function(raw){
+    console.log('raw data received:', raw);
+    onData(raw);
+  });
   conn.on('close',function(){
     var inGame=['sGame','sSetup','sWait'].some(function(id){return document.getElementById(id).classList.contains('active');});
     if(inGame){alert('Rakip baglantisi kesildi.');backToLobby();}
@@ -406,7 +412,9 @@ function doCreate(){
     setHBadge('Oda: '+code);
     showScreen('sWait');
     peer.on('connection',function(c){
+      console.log('Host: incoming connection');
       setupConn(c);
+      // Host hello'yu bekliyor, cevap onData'da veriliyor
     });
   });
 }
@@ -421,9 +429,13 @@ function doJoin(){
     var c=peer.connect(code,{reliable:true,serialization:'json'});
     setupConn(c);
     c.on('open',function(){
+      console.log('Joiner: connection open, sending hello');
       hideInfo();setBtns(false);
       setHBadge('Oda: '+code);
-      send({type:'hello',name:g.myName});
+      // Kısa gecikme - karşı tarafın data listener'ı hazır olsun
+      setTimeout(function(){
+        send({type:'hello',name:g.myName});
+      }, 300);
     });
   });
 }
