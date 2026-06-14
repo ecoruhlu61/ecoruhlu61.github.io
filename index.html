@@ -100,6 +100,21 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .trophy{font-size:64px}
 .score-big{font-size:22px;color:var(--txt2)}
 .score-big span{color:var(--txt);font-weight:700}
+
+@media (orientation: landscape) and (max-width: 900px) {
+  .game-wrap{gap:.4rem}
+  .boards-row{flex-wrap:nowrap;align-items:flex-start;gap:.5rem}
+  .bcard{padding:.5rem}
+  .bcard h4{margin-bottom:.4rem;font-size:11px}
+  .metrics{grid-template-columns:repeat(3,1fr);gap:5px}
+  .met{padding:.4rem}
+  .met .ml{font-size:10px}.met .mv{font-size:16px}
+  .tbanner{padding:.4rem .75rem;font-size:13px}
+  .chat-wrap{display:none}
+  .game-log{max-height:40px}
+  header{padding:.4rem 1rem}
+  main{padding:.5rem .5rem}
+}
 @media(max-width:600px){.cell{width:26px;height:26px;font-size:11px}}
 </style>
 </head>
@@ -782,12 +797,20 @@ document.getElementById('chatInput').addEventListener('keydown',function(e){
 
 // Hücre boyutunu ekrana göre hesapla
 function calcGridSize(){
-  var padding = 32; // bcard padding her iki taraf
-  var lblW = 22;    // satır etiketi genişliği
-  var gap = 2;      // hücreler arası boşluk
-  var maxW = Math.min(window.innerWidth, 480) - padding * 2;
-  var cs = Math.floor((maxW - lblW - gap * 10) / 10);
-  cs = Math.max(22, Math.min(cs, 32)); // min 22px max 32px
+  var isLandscape = window.innerWidth > window.innerHeight;
+  var isMobile = window.innerWidth < 900;
+  var padding = 16;
+  var lblW = 20;
+  var gap = 2;
+  var availW;
+  if(isLandscape && isMobile){
+    // Yatayda iki tahta yan yana — her biri ekranın yarısından az
+    availW = Math.floor((window.innerWidth - padding * 4 - 8) / 2);
+  } else {
+    availW = Math.min(window.innerWidth, 480) - padding * 2;
+  }
+  var cs = Math.floor((availW - lblW - gap * 10) / 10);
+  cs = Math.max(isLandscape && isMobile ? 18 : 22, Math.min(cs, 32));
   var lbl = Math.round(cs * 0.75);
   document.querySelectorAll('.grid-container').forEach(function(el){
     el.style.setProperty('--cs', cs + 'px');
@@ -795,6 +818,7 @@ function calcGridSize(){
   });
 }
 window.addEventListener('resize', calcGridSize);
+window.addEventListener('orientationchange', function(){ setTimeout(calcGridSize, 200); });
 // Screen değişince de çalıştır
 calcGridSize();
 
