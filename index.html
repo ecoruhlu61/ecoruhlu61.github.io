@@ -14,7 +14,6 @@
   --blue:#3b82f6;--bl:#60a5fa;--bd:#1e3a5f;
   --red:#ef4444;--rd:#3f1515;
   --amber:#f59e0b;--ad:#3d2a00;
-  --green:#22c55e;
   --miss:#334155;--ship:#2563eb;--hit:#dc2626;
 }
 body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
@@ -23,12 +22,10 @@ header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display
 #hbadge{display:none;margin-left:auto;font-size:12px;padding:3px 12px;border-radius:20px;border:1px solid var(--blue);background:var(--bd);color:var(--bl)}
 main{width:100%;max-width:980px;padding:1.5rem 1rem;flex:1}
 .screen{display:none}.screen.active{display:block}
-
-/* shared */
 .card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:1.25rem;width:100%}
 .btn{cursor:pointer;border-radius:8px;font-size:14px;font-weight:500;padding:10px 20px;transition:all .15s;border:1px solid transparent}
 .btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.bp{background:var(--blue);color:#fff;border-color:var(--blue)}.bp:hover:not(:disabled){background:var(--bl)}
+.bp{background:var(--blue);color:#fff}.bp:hover:not(:disabled){background:var(--bl)}
 .bo{background:transparent;color:var(--txt);border-color:var(--bdr2)}.bo:hover:not(:disabled){background:var(--bg3)}
 .bfull{width:100%}
 .divider{display:flex;align-items:center;gap:.75rem;color:var(--txt3);font-size:13px}
@@ -43,19 +40,13 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .infobar.show{display:flex;align-items:center;gap:8px}
 .spin{width:14px;height:14px;border:2px solid var(--bl);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* lobby */
 .center{display:flex;flex-direction:column;align-items:center;gap:1.1rem;max-width:420px;margin:2rem auto 0}
 .hero{text-align:center}.hero h1{font-size:38px;font-weight:800;letter-spacing:-1.5px;margin-bottom:.4rem}
 .hero h1 span{color:var(--bl)}.hero p{color:var(--txt2);font-size:14px}
-
-/* wait */
 .wait-box{text-align:center;padding:2rem;max-width:420px;margin:3rem auto}
 .codebox{font-size:52px;font-weight:900;letter-spacing:10px;color:var(--bl);margin:.75rem 0;font-family:monospace}
 .pulse{animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-
-/* setup */
 .setup-wrap{display:flex;flex-direction:column;gap:.9rem}
 .ship-palette{display:flex;flex-wrap:wrap;gap:.5rem}
 .schip{padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:1.5px dashed var(--bdr2);color:var(--bl);background:var(--bd);transition:all .15s}
@@ -64,8 +55,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .orow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .obtn{padding:5px 14px;border-radius:6px;border:1px solid var(--bdr2);font-size:13px;cursor:pointer;background:transparent;color:var(--txt2);transition:all .15s}
 .obtn.active{background:var(--bg3);border-color:var(--blue);color:var(--bl)}
-
-/* grid */
 .gout{overflow-x:auto}
 .clbl{display:grid;grid-template-columns:22px repeat(10,30px);gap:2px;margin-bottom:2px}
 .clbl span{font-size:11px;color:var(--txt3);text-align:center;line-height:22px}
@@ -79,8 +68,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .cell.miss{background:var(--miss);border-color:#475569}
 .cell.tgt{cursor:crosshair}.cell.tgt:hover{background:#1e3554;transform:scale(1.12)}
 @keyframes hf{0%{transform:scale(1.3)}100%{transform:scale(1)}}
-
-/* game */
 .game-wrap{display:flex;flex-direction:column;gap:1rem}
 .tbanner{text-align:center;padding:.75rem 1.5rem;border-radius:10px;font-size:15px;font-weight:600;background:var(--bd);color:var(--bl);border:1px solid var(--blue);transition:all .3s}
 .tbanner.enemy{background:var(--ad);color:var(--amber);border-color:var(--amber)}
@@ -92,8 +79,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .met .ml{font-size:12px;color:var(--txt3);margin-bottom:3px}.met .mv{font-size:22px;font-weight:700}
 .log{max-height:80px;overflow-y:auto;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .75rem;font-size:12px;color:var(--txt2)}
 .log p{margin:2px 0}
-
-/* end */
 .end-wrap{max-width:460px;margin:3rem auto;text-align:center;display:flex;flex-direction:column;gap:1.25rem}
 .end-wrap h2{font-size:32px;font-weight:800}
 .trophy{font-size:64px}
@@ -107,7 +92,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 </header>
 <main>
 
-<!-- LOBBY -->
 <div id="sLobby" class="screen active">
   <div class="center">
     <div class="hero">
@@ -133,7 +117,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
-<!-- WAIT -->
 <div id="sWait" class="screen">
   <div class="wait-box card">
     <p style="color:var(--txt2);font-size:14px;margin-bottom:.25rem">Oda kodun</p>
@@ -147,7 +130,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
-<!-- SETUP -->
 <div id="sSetup" class="screen">
   <div class="setup-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
@@ -175,7 +157,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
-<!-- GAME -->
 <div id="sGame" class="screen">
   <div class="game-wrap">
     <div id="tbanner" class="tbanner">Y&uuml;kleniyor&hellip;</div>
@@ -204,7 +185,6 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
-<!-- END -->
 <div id="sEnd" class="screen">
   <div class="end-wrap">
     <div class="trophy" id="endIcon">&#127942;</div>
@@ -220,69 +200,144 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 
 </main>
 <script>
-// ─── SHIPS ───────────────────────────────────────────────
-var SHIPS = [
-  {key:'carrier',  label:'Tasiyici', size:5},
-  {key:'battle',   label:'Savas',    size:4},
-  {key:'cruiser',  label:'Kruvazor', size:3},
-  {key:'destroy',  label:'Destroyer',size:3},
-  {key:'sub',      label:'Denizalti',size:2}
+var SHIPS=[
+  {key:'carrier',label:'Tasiyici',size:5},
+  {key:'battle',label:'Savas',size:4},
+  {key:'cruiser',label:'Kruvazor',size:3},
+  {key:'destroy',label:'Destroyer',size:3},
+  {key:'sub',label:'Denizalti',size:2}
 ];
-var TOTAL = SHIPS.reduce(function(a,s){return a+s.size;},0);
+var TOTAL=SHIPS.reduce(function(a,s){return a+s.size;},0);
 
-// ─── HELPERS ─────────────────────────────────────────────
 function mk10(){return Array(10).fill(null).map(function(){return Array(10).fill(0);});}
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
 function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},5000);}
-function showInfo(m){var e=document.getElementById('lobInfo');document.getElementById('lobInfoTxt').textContent=m;e.classList.add('show');}
+function showInfo(m){document.getElementById('lobInfoTxt').textContent=m;document.getElementById('lobInfo').classList.add('show');}
 function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
 function setHBadge(t){var e=document.getElementById('hbadge');e.textContent=t;e.style.display='block';}
 function addLog(t){var l=document.getElementById('gameLog');var p=document.createElement('p');p.textContent=t;l.insertBefore(p,l.firstChild);}
 function gc(gid,r,c){return document.querySelector('#'+gid+' [data-r="'+r+'"][data-c="'+c+'"]');}
 
-// ─── PEER / STATE ─────────────────────────────────────────
-var peer = null;
-var conn = null;
-var g = {};
+var peer=null, conn=null;
+var g={};
 
 function resetG(){
-  g = {
-    isHost:false, myName:'', oppName:'?', roomCode:'',
-    myBoard:null, oppBoard:null, myShots:null, oppShots:null,
-    placedShips:{}, selShip:null, orient:'H',
-    hits:[0,0], moves:0, myTurn:false,
-    myReady:false, oppReady:false
-  };
+  g={isHost:false,myName:'',oppName:'?',roomCode:'',
+     myBoard:null,oppBoard:null,myShots:null,oppShots:null,
+     placedShips:{},selShip:null,orient:'H',
+     hits:[0,0],moves:0,myTurn:false,myReady:false,oppReady:false};
 }
 resetG();
 
-// 4 harfli büyük kod üret (I ve O hariç — karışmasın)
 function genCode(){
-  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ';
-  var c='';
-  for(var i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)];
-  return c;
+  var c='ABCDEFGHJKLMNPQRSTUVWXYZ',s='';
+  for(var i=0;i<4;i++) s+=c[Math.floor(Math.random()*c.length)];
+  return s;
 }
 
-// PeerJS peer ID = oda kodu
+var ICE={config:{iceServers:[
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun1.l.google.com:19302'}
+]}};
+
 function initPeer(id, onOpen){
-  if(peer && !peer.destroyed) peer.destroy();
-  peer = new Peer(id, {debug:0});
-  peer.on('open', function(){
-    console.log('Peer acik, ID:', peer.id);
+  if(peer&&!peer.destroyed) peer.destroy();
+  peer = id ? new Peer(id, ICE) : new Peer(ICE);
+  peer.on('open',function(){
+    console.log('Peer ID:',peer.id);
     onOpen();
   });
-  peer.on('error', function(err){
-    hideInfo();
-    setBtns(false);
-    if(err.type === 'unavailable-id'){
-      showErr('Bu oda kodu zaten kullaniliyor. Tekrar deneyin.');
-    } else if(err.type === 'peer-unavailable'){
-      showErr('Oda bulunamadi. Kodu kontrol edin.');
-    } else {
-      showErr('Baglanti hatasi: ' + err.message);
-    }
+  peer.on('error',function(err){
+    hideInfo(); setBtns(false);
+    console.error('Peer error:', err.type, err);
+    if(err.type==='unavailable-id') showErr('Bu kod simdi baska biri tarafindan kullaniliyor. Tekrar deneyin.');
+    else if(err.type==='peer-unavailable') showErr('Oda bulunamadi. Kod dogru mu? Oda sahibi bekleme ekraninda olmali.');
+    else showErr('Baglanti hatasi ('+err.type+'). Tekrar deneyin.');
   });
+  peer.on('disconnected',function(){
+    console.log('Peer disconnected, reconnecting...');
+    peer.reconnect();
+  });
+}
+
+function setupConn(c){
+  conn=c;
+  conn.on('data', onData);
+  conn.on('close',function(){
+    var inGame=['sGame','sSetup','sWait'].some(function(id){return document.getElementById(id).classList.contains('active');});
+    if(inGame){alert('Rakip baglantisi kesildi.');backToLobby();}
+  });
+  conn.on('error',function(e){console.error('conn error',e);});
+}
+
+function send(msg){
+  if(conn&&conn.open) conn.send(JSON.stringify(msg));
+}
+
+// TEK handleData fonksiyonu — tüm mesaj tipleri burada
+function onData(raw){
+  var msg = typeof raw==='string' ? JSON.parse(raw) : raw;
+  console.log('<-',msg.type,msg);
+
+  switch(msg.type){
+
+    case 'hello':
+      g.oppName=msg.name;
+      send({type:'hello_ack',name:g.myName});
+      startSetup();
+      break;
+
+    case 'hello_ack':
+      g.oppName=msg.name;
+      startSetup();
+      break;
+
+    case 'board_ready':
+      g.oppReady=true;
+      checkBothReady();
+      break;
+
+    case 'fire':
+      // Rakip bize ates etti — kendi tahtamiza bak
+      var row=msg.row, col=msg.col;
+      g.oppShots[row][col]=1;
+      var hit=g.myBoard[row][col]===1;
+      g.moves++;
+      document.getElementById('totMoves').textContent=g.moves;
+      var lbl=String.fromCharCode(65+col)+(row+1);
+      if(hit) g.hits[1]++;
+      document.getElementById('oppHits').textContent=g.hits[1];
+      renderMyGrid();
+      addLog((g.oppName||'Rakip')+' -> '+lbl+': '+(hit?'Isabet!':'Kacti'));
+      // Sonucu karsi tarafa bildir
+      send({type:'fire_result',row:row,col:col,hit:hit});
+      // Tum gemilerim battiysa kaybettim
+      if(checkLost()){endGame(false);return;}
+      // Sira bana gecti
+      g.myTurn=true;
+      updateBanner(); renderEnemyGrid();
+      break;
+
+    case 'fire_result':
+      // Kendi atisimin sonucu geldi
+      var row2=msg.row, col2=msg.col, hit2=msg.hit;
+      if(hit2){g.oppBoard[row2][col2]=1; g.hits[0]++;}
+      document.getElementById('myHits').textContent=g.hits[0];
+      var lbl2=String.fromCharCode(65+col2)+(row2+1);
+      addLog('Sen -> '+lbl2+': '+(hit2?'Isabet!':'Kacti'));
+      document.getElementById('totMoves').textContent=g.moves;
+      if(checkWon()){endGame(true);return;}
+      // Sira rakibe gecti
+      g.myTurn=false;
+      updateBanner(); renderEnemyGrid();
+      break;
+
+    case 'rematch':
+      g.myReady=false; g.oppReady=false;
+      document.getElementById('rematchMsg').textContent='Rakip kabul etti!';
+      startSetup();
+      break;
+  }
 }
 
 function setBtns(dis){
@@ -290,47 +345,6 @@ function setBtns(dis){
   document.getElementById('btnJoin').disabled=dis;
 }
 
-// Mesaj gönder
-function send(msg){
-  if(conn && conn.open) conn.send(msg);
-}
-
-// Gelen mesajları işle
-function handleData(msg){
-  console.log('<-', msg.type, msg);
-  switch(msg.type){
-
-    case 'hello':
-      g.oppName = msg.name;
-      send({type:'hello_ack', name:g.myName});
-      // İkisi de bağlı, setup başlasın
-      startSetup();
-      break;
-
-    case 'hello_ack':
-      g.oppName = msg.name;
-      startSetup();
-      break;
-
-    case 'board_ready':
-      g.oppReady = true;
-      checkBothReady();
-      break;
-
-    case 'fire':
-      receiveFireFromOpp(msg.row, msg.col);
-      break;
-
-    case 'rematch':
-      g.oppReady = false;
-      g.myReady  = false;
-      document.getElementById('rematchMsg').textContent = 'Rakip kabul etti! Hazirlaniliyor...';
-      startSetup();
-      break;
-  }
-}
-
-// ─── LOBBY ───────────────────────────────────────────────
 function getName(){
   var n=document.getElementById('inName').value.trim();
   if(!n){showErr('Once bir isim gir.');return null;}
@@ -340,26 +354,17 @@ function getName(){
 function doCreate(){
   var name=getName(); if(!name) return;
   g.myName=name; g.isHost=true;
-  var code=genCode();
-  g.roomCode=code;
+  var code=genCode(); g.roomCode=code;
   setBtns(true);
-  showInfo('PeerJS sunucusuna baglaniliyor...');
-  initPeer(code, function(){
-    hideInfo();
-    setBtns(false);
+  showInfo('Baglanti kuruluyor...');
+  initPeer(code,function(){
+    hideInfo(); setBtns(false);
     document.getElementById('wCode').textContent=code;
     setHBadge('Oda: '+code);
     showScreen('sWait');
-    // Katılımcı bekle
-    peer.on('connection', function(c){
-      conn=c;
-      conn.on('open', function(){
-        console.log('Rakip baglandi');
-        // Katılımcı hello gönderecek, biz hello_ack ile cevap vereceğiz (handleData'da)
-      });
-      conn.on('data', handleData);
-      conn.on('close', function(){handleDisconnect();});
-      conn.on('error', function(){handleDisconnect();});
+    peer.on('connection',function(c){
+      setupConn(c);
+      // Katilimci hello gonderecek, biz onData'da cevap verecegiz
     });
   });
 }
@@ -371,33 +376,20 @@ function doJoin(){
   g.myName=name; g.isHost=false; g.roomCode=code;
   setBtns(true);
   showInfo('Odaya baglaniliyor...');
-  // Katılımcının kendi peer ID'si rastgele
-  initPeer(undefined, function(){
-    conn=peer.connect(code, {reliable:true});
-    conn.on('open', function(){
-      hideInfo();
-      setBtns(false);
+  initPeer(undefined,function(){
+    var c=peer.connect(code,{reliable:true,serialization:'json'});
+    setupConn(c);
+    c.on('open',function(){
+      hideInfo(); setBtns(false);
       setHBadge('Oda: '+code);
-      // İlk hello mesajını gönder
-      send({type:'hello', name:g.myName});
+      send({type:'hello',name:g.myName});
     });
-    conn.on('data', handleData);
-    conn.on('close', function(){handleDisconnect();});
-    conn.on('error', function(){handleDisconnect();});
   });
 }
 
 function copyCode(){
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(g.roomCode).then(function(){alert('Kopyalandi: '+g.roomCode);});
-  } else {
-    prompt('Kodu kopyala:', g.roomCode);
-  }
-}
-
-function handleDisconnect(){
-  var inGame=['sGame','sSetup','sWait'].some(function(id){return document.getElementById(id).classList.contains('active');});
-  if(inGame){alert('Rakip baglantisi kesildi.');backToLobby();}
+  if(navigator.clipboard) navigator.clipboard.writeText(g.roomCode).then(function(){alert('Kopyalandi: '+g.roomCode);});
+  else prompt('Kodu kopyala:',g.roomCode);
 }
 
 function backToLobby(){
@@ -406,15 +398,14 @@ function backToLobby(){
   resetG();
   document.getElementById('hbadge').style.display='none';
   showScreen('sLobby');
-  setBtns(false);
-  hideInfo();
+  setBtns(false); hideInfo();
 }
 
-// ─── SETUP ───────────────────────────────────────────────
+// ── SETUP ─────────────────────────────────────────────────
 function startSetup(){
-  g.myBoard=mk10(); g.myShots=mk10(); g.oppShots=mk10(); g.oppBoard=mk10();
-  g.placedShips={}; g.selShip=null; g.orient='H';
-  g.myReady=false; g.oppReady=false;
+  g.myBoard=mk10();g.myShots=mk10();g.oppShots=mk10();g.oppBoard=mk10();
+  g.placedShips={};g.selShip=null;g.orient='H';
+  g.myReady=false;g.oppReady=false;
   document.getElementById('setupWait').style.display='none';
   document.getElementById('btnReady').disabled=true;
   document.getElementById('btnH').classList.add('active');
@@ -430,10 +421,10 @@ function setOrient(o){
 }
 
 function renderPalette(){
-  var pal=document.getElementById('shipPalette'); pal.innerHTML='';
+  var pal=document.getElementById('shipPalette');pal.innerHTML='';
   SHIPS.forEach(function(s){
     var b=document.createElement('button');
-    var placed=!!g.placedShips[s.key], sel=g.selShip===s.key;
+    var placed=!!g.placedShips[s.key],sel=g.selShip===s.key;
     b.className='schip'+(placed?' placed':'')+(sel?' sel':'');
     b.textContent=s.label+' ('+s.size+')';
     if(!placed)(function(k){b.onclick=function(){g.selShip=k;renderPalette();};})(s.key);
@@ -441,14 +432,14 @@ function renderPalette(){
   });
 }
 
-function buildGrid(cid, onClick, onEnter, onLeave){
-  var w=document.getElementById(cid); w.innerHTML='';
+function buildGrid(cid,onClick,onEnter,onLeave){
+  var w=document.getElementById(cid);w.innerHTML='';
   for(var r=0;r<10;r++){
-    var row=document.createElement('div'); row.className='grow';
-    var l=document.createElement('div'); l.className='rlbl'; l.textContent=r+1; row.appendChild(l);
+    var row=document.createElement('div');row.className='grow';
+    var l=document.createElement('div');l.className='rlbl';l.textContent=r+1;row.appendChild(l);
     for(var c=0;c<10;c++){
-      var cell=document.createElement('div'); cell.className='cell';
-      cell.dataset.r=r; cell.dataset.c=c;
+      var cell=document.createElement('div');cell.className='cell';
+      cell.dataset.r=r;cell.dataset.c=c;
       if(onClick)(function(rr,cc){cell.onclick=function(){onClick(rr,cc);};})(r,c);
       if(onEnter)(function(rr,cc){cell.onmouseenter=function(){onEnter(rr,cc);};})(r,c);
       if(onLeave)(function(rr,cc){cell.onmouseleave=function(){onLeave(rr,cc);};})(r,c);
@@ -466,10 +457,10 @@ function renderSetupGrid(){
 }
 
 function calcCells(row,col){
-  var s=SHIPS.filter(function(x){return x.key===g.selShip;})[0]; if(!s) return null;
+  var s=SHIPS.filter(function(x){return x.key===g.selShip;})[0];if(!s) return null;
   var cells=[];
   for(var i=0;i<s.size;i++){
-    var r=row,c=col; if(g.orient==='H')c+=i;else r+=i;
+    var r=row,c=col;if(g.orient==='H')c+=i;else r+=i;
     if(r>=10||c>=10||g.myBoard[r][c]) return null;
     cells.push([r,c]);
   }
@@ -478,35 +469,35 @@ function calcCells(row,col){
 
 function hoverShip(row,col,show){
   if(!g.selShip) return;
-  var s=SHIPS.filter(function(x){return x.key===g.selShip;})[0]; if(!s) return;
+  var s=SHIPS.filter(function(x){return x.key===g.selShip;})[0];if(!s) return;
   var valid=calcCells(row,col);
   for(var i=0;i<s.size;i++){
-    var r=row,c=col; if(g.orient==='H')c+=i;else r+=i;
+    var r=row,c=col;if(g.orient==='H')c+=i;else r+=i;
     if(r>=10||c>=10) continue;
-    var el=sc(r,c); if(!el||g.myBoard[r][c]) continue;
+    var el=sc(r,c);if(!el||g.myBoard[r][c]) continue;
     if(show) el.classList.add(valid?'prev':'prevbad');
-    else {el.classList.remove('prev');el.classList.remove('prevbad');}
+    else{el.classList.remove('prev');el.classList.remove('prevbad');}
   }
 }
 
 function placeShip(row,col){
   if(!g.selShip) return;
-  var cells=calcCells(row,col); if(!cells) return;
+  var cells=calcCells(row,col);if(!cells) return;
   cells.forEach(function(rc){g.myBoard[rc[0]][rc[1]]=1;});
-  g.placedShips[g.selShip]=cells; g.selShip=null;
+  g.placedShips[g.selShip]=cells;g.selShip=null;
   document.getElementById('btnReady').disabled=!SHIPS.every(function(s){return !!g.placedShips[s.key];});
-  renderPalette(); renderSetupGrid();
+  renderPalette();renderSetupGrid();
 }
 
 function doAuto(){
-  g.myBoard=mk10(); g.placedShips={};
+  g.myBoard=mk10();g.placedShips={};
   SHIPS.forEach(function(s){
     var done=false;
     while(!done){
-      var o=Math.random()<.5?'H':'V', r0=Math.floor(Math.random()*10), c0=Math.floor(Math.random()*10);
+      var o=Math.random()<.5?'H':'V',r0=Math.floor(Math.random()*10),c0=Math.floor(Math.random()*10);
       var cells=[],ok=true;
       for(var i=0;i<s.size;i++){
-        var r=r0,c=c0; if(o==='H')c+=i;else r+=i;
+        var r=r0,c=c0;if(o==='H')c+=i;else r+=i;
         if(r>=10||c>=10||g.myBoard[r][c]){ok=false;break;}
         cells.push([r,c]);
       }
@@ -514,13 +505,13 @@ function doAuto(){
     }
   });
   document.getElementById('btnReady').disabled=false;
-  renderPalette(); renderSetupGrid();
+  renderPalette();renderSetupGrid();
 }
 
 function doReset(){
-  g.myBoard=mk10(); g.placedShips={}; g.selShip=null;
+  g.myBoard=mk10();g.placedShips={};g.selShip=null;
   document.getElementById('btnReady').disabled=true;
-  renderPalette(); renderSetupGrid();
+  renderPalette();renderSetupGrid();
 }
 
 function doReady(){
@@ -532,35 +523,34 @@ function doReady(){
 }
 
 function checkBothReady(){
-  if(g.myReady && g.oppReady){
-    // Host başlar
-    g.myTurn = g.isHost;
+  if(g.myReady&&g.oppReady){
+    g.myTurn=g.isHost;
     startGame();
   }
 }
 
-// ─── GAME ─────────────────────────────────────────────────
+// ── GAME ─────────────────────────────────────────────────
 function startGame(){
-  g.hits=[0,0]; g.moves=0;
+  g.hits=[0,0];g.moves=0;
   document.getElementById('ml1').textContent=g.myName+' (sen)';
   document.getElementById('ml2').textContent=g.oppName||'Rakip';
-  document.getElementById('enemyTitle').textContent=(g.oppName||'Rakip')+' \u2014 Hedef';
+  document.getElementById('enemyTitle').textContent=(g.oppName||'Rakip')+' - Hedef';
   showScreen('sGame');
   updateBanner();
-  buildGrid('myGrid'); renderMyGrid();
-  buildGrid('enemyGrid',function(r,c){doFire(r,c);}); renderEnemyGrid();
+  buildGrid('myGrid');renderMyGrid();
+  buildGrid('enemyGrid',function(r,c){doFire(r,c);});renderEnemyGrid();
 }
 
 function updateBanner(){
   var b=document.getElementById('tbanner');
-  if(g.myTurn){b.textContent='\uD83C\uDFAF Senin siran \u2014 Hedef al!';b.className='tbanner';}
-  else{b.textContent=(g.oppName||'Rakip')+' ates ediyor\u2026';b.className='tbanner enemy';}
+  if(g.myTurn){b.textContent='Senin siran - Hedef al!';b.className='tbanner';}
+  else{b.textContent=(g.oppName||'Rakip')+' ates ediyor...';b.className='tbanner enemy';}
 }
 
 function renderMyGrid(){
   for(var r=0;r<10;r++) for(var c=0;c<10;c++){
-    var el=gc('myGrid',r,c); if(!el) continue;
-    el.className='cell'; el.textContent='';
+    var el=gc('myGrid',r,c);if(!el) continue;
+    el.className='cell';el.textContent='';
     if(g.oppShots[r][c]){el.classList.add(g.myBoard[r][c]?'hit':'miss');el.textContent=g.myBoard[r][c]?'x':'.';}
     else if(g.myBoard[r][c]) el.classList.add('ship');
   }
@@ -568,8 +558,8 @@ function renderMyGrid(){
 
 function renderEnemyGrid(){
   for(var r=0;r<10;r++) for(var c=0;c<10;c++){
-    var el=gc('enemyGrid',r,c); if(!el) continue;
-    el.className='cell'; el.textContent='';
+    var el=gc('enemyGrid',r,c);if(!el) continue;
+    el.className='cell';el.textContent='';
     if(g.myShots[r][c]){el.classList.add(g.oppBoard[r][c]?'hit':'miss');el.textContent=g.oppBoard[r][c]?'x':'.';}
     else if(g.myTurn) el.classList.add('tgt');
   }
@@ -577,55 +567,11 @@ function renderEnemyGrid(){
 
 function doFire(r,c){
   if(!g.myTurn||g.myShots[r][c]) return;
-  g.myShots[r][c]=1; g.moves++;
+  g.myShots[r][c]=1;g.moves++;
   send({type:'fire',row:r,col:c});
-  // Sonucu rakipten bekleyeceğiz; rakip kendi tahtasını biliyor
-  // Ama biz de rakibin tahtasını bilmiyoruz — bu p2p'de önemli bir nokta:
-  // Rakip bize "hit mi miss mi" sonucunu gönderecek
-  // Bunun için fire mesajını gönderdikten sonra rakipten fire_result bekliyoruz
-  // Aslında bu implementasyonda fire'ı alan taraf kendi tahtasını kontrol edip
-  // sonucu karşıya gönderir — receiveFireFromOpp bunu yapar
-}
-
-function receiveFireFromOpp(row, col){
-  // Rakip bize ateş etti
-  g.oppShots[row][col]=1;
-  var hit=g.myBoard[row][col]===1;
-  g.moves++;
-  document.getElementById('totMoves').textContent=g.moves;
-  var lbl=String.fromCharCode(65+col)+(row+1);
-  if(hit) g.hits[1]++;
-  document.getElementById('oppHits').textContent=g.hits[1];
-  renderMyGrid();
-  addLog((g.oppName||'Rakip')+' -> '+lbl+': '+(hit?'Isabet!':'Kacti'));
-  // Rakibe sonucu bildir
-  send({type:'fire_result', row:row, col:col, hit:hit});
-  // Sıra bize geçiyor
-  g.myTurn=true;
-  updateBanner(); renderEnemyGrid();
-  // Tüm gemilerim battıysa
-  if(checkLost()) endGame(false);
-}
-
-// fire_result'u handleData'ya ekle
-var _origHandleData = handleData;
-function handleData(msg){
-  if(msg.type==='fire_result'){
-    // Bizim ateşimizin sonucu geldi
-    var row=msg.row, col=msg.col, hit=msg.hit;
-    if(hit){g.oppBoard[row][col]=1; g.hits[0]++;}
-    document.getElementById('myHits').textContent=g.hits[0];
-    var lbl=String.fromCharCode(65+col)+(row+1);
-    addLog('Sen -> '+lbl+': '+(hit?'Isabet!':'Kacti'));
-    document.getElementById('totMoves').textContent=g.moves;
-    renderEnemyGrid();
-    if(checkWon()){endGame(true);return;}
-    // Sıra rakibe geçiyor
-    g.myTurn=false;
-    updateBanner(); renderEnemyGrid();
-    return;
-  }
-  _origHandleData(msg);
+  // Sonucu fire_result olarak alacagiz
+  // O zamana kadar tgt class'ini kaldir (cift tiklamayi onle)
+  renderEnemyGrid();
 }
 
 function checkWon(){
@@ -640,8 +586,8 @@ function checkLost(){
 }
 
 function endGame(won){
-  document.getElementById('endIcon').textContent=won?'\uD83C\uDFC6':'\uD83D\uDC80';
-  document.getElementById('endTitle').textContent=won?'Kazandin!':'Kaybettin\u2026';
+  document.getElementById('endIcon').textContent=won?'&#127942;':'&#128128;';
+  document.getElementById('endTitle').textContent=won?'Kazandin!':'Kaybettin...';
   document.getElementById('endMet').innerHTML=
     '<div class="met"><div class="ml">Senin isabet</div><div class="mv">'+g.hits[0]+'</div></div>'+
     '<div class="met"><div class="ml">Rakip isabet</div><div class="mv">'+g.hits[1]+'</div></div>'+
@@ -653,17 +599,14 @@ function endGame(won){
 function doRematch(){
   send({type:'rematch'});
   var el=document.getElementById('rematchMsg');
-  el.style.display='block'; el.textContent='Rakip onayi bekleniyor\u2026';
-  // Kendi setup'ımızı da başlat
-  g.myReady=false; g.oppReady=false;
+  el.style.display='block';el.textContent='Rakip onayi bekleniyor...';
+  g.myReady=false;g.oppReady=false;
   startSetup();
 }
 
-// ─── INPUT HELPERS ───────────────────────────────────────
 document.getElementById('inCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
 document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
 </script>
 </body>
 </html>
-EOF
