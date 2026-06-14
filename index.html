@@ -890,9 +890,9 @@ function receiveAttack(row,col){
 function applyResult(row,col,hit,sunk){
   if(hit){g.oppBoard[row][col]=1;g.hits[0]++;}
   document.getElementById('myHits').textContent=g.hits[0];
+  var L=LANG[settings.lang];
   var lbl=String.fromCharCode(65+col)+(row+1);
 
-  // Animasyon
   var el=gc('enemyGrid',row,col);
   if(el){
     el.className='cell '+(hit?'hit':'miss');
@@ -900,14 +900,21 @@ function applyResult(row,col,hit,sunk){
     if(hit){el.classList.add('new-hit');setTimeout(function(){el.classList.remove('new-hit');},600);}
   }
 
-  if(hit) sndHit(); else sndMiss();
-  if(sunk){g.sunkOpp.push(sunk);sndSunk();}
+  if(settings.sound){if(hit) sndHit(); else sndMiss();}
+  if(sunk){g.sunkOpp.push(sunk);if(settings.sound)sndSunk();}
 
   document.getElementById('totMoves').textContent=g.moves;
-  var logTxt='Sen -> '+lbl+': '+(hit?(sunk?'BATTI! ('+sunk+')':'Isabet!'):'Kacti');
+  var logTxt='Sen -> '+lbl+': '+(hit?(sunk?L.sunk+' ('+sunk+')':L.hit):L.miss);
   addGameLog(logTxt);
 
   if(checkWon()){endGame(true);return;}
+
+  // Tekrar ates: isabet + refire aciksa sira yine bizde
+  if(hit && settings.refire){
+    g.myTurn=true;
+    updateBanner();renderEnemyGrid();
+    return;
+  }
   g.myTurn=false;
   updateBanner();renderEnemyGrid();
 }
@@ -983,19 +990,23 @@ document.getElementById('chatInput').addEventListener('keydown',function(e){
 function calcGridSize(){
   var isLandscape = window.innerWidth > window.innerHeight;
   var isMobile = window.innerWidth < 900;
-  var padding = 16;
+  // bcard padding (her iki yan) + main padding + olası boşluklar
+  var mainPad = 16;
+  var bcardPad = 12;
   var lblW = 20;
-  var gap = 2;
+  var gap = 2; // hücreler arası
+  var totalPad = mainPad * 2 + bcardPad * 2;
   var availW;
   if(isLandscape && isMobile){
-    // Yatayda iki tahta yan yana — her biri ekranın yarısından az
-    availW = Math.floor((window.innerWidth - padding * 4 - 8) / 2);
+    // İki tahta yan yana, her biri yarı ekran
+    availW = Math.floor((window.innerWidth - totalPad * 2 - 6) / 2);
   } else {
-    availW = Math.min(window.innerWidth, 480) - padding * 2;
+    availW = Math.min(window.innerWidth, 500) - totalPad;
   }
-  var cs = Math.floor((availW - lblW - gap * 10) / 10);
-  cs = Math.max(isLandscape && isMobile ? 18 : 22, Math.min(cs, 32));
-  var lbl = Math.round(cs * 0.75);
+  // 10 hücre + 9 gap + 1 lblW
+  var cs = Math.floor((availW - lblW - gap * 9) / 10);
+  cs = Math.max(20, Math.min(cs, 34));
+  var lbl = lblW;
   document.querySelectorAll('.grid-container').forEach(function(el){
     el.style.setProperty('--cs', cs + 'px');
     el.style.setProperty('--lbl', lbl + 'px');
