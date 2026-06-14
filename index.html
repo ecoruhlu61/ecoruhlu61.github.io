@@ -890,6 +890,8 @@ function receiveAttack(row,col){
   }
   updateBanner();renderEnemyGrid();
 
+}
+
 // Kendi atışımın sonucu geldi
 function applyResult(row,col,hit,sunk){
   if(hit){g.oppBoard[row][col]=1;g.hits[0]++;}
