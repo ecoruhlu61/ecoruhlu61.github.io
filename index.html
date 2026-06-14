@@ -14,12 +14,15 @@
   --blue:#3b82f6;--bl:#60a5fa;--bd:#1e3a5f;
   --red:#ef4444;--rd:#3f1515;
   --amber:#f59e0b;--ad:#3d2a00;
+  --green:#22c55e;--gd:#14331f;
   --miss:#334155;--ship:#2563eb;--hit:#dc2626;
 }
 body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2)}
+header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2);flex-wrap:wrap}
 .logo{font-size:20px;font-weight:700}.logo span{color:var(--bl)}
-#hbadge{display:none;margin-left:auto;font-size:12px;padding:3px 12px;border-radius:20px;border:1px solid var(--blue);background:var(--bd);color:var(--bl)}
+#hbadge{display:none;font-size:12px;padding:3px 12px;border-radius:20px;border:1px solid var(--blue);background:var(--bd);color:var(--bl)}
+#scoreboard{display:none;margin-left:auto;font-size:13px;color:var(--txt2);display:none;gap:1rem;align-items:center}
+#scoreboard span{font-weight:700;color:var(--txt)}
 main{width:100%;max-width:980px;padding:1.5rem 1rem;flex:1}
 .screen{display:none}.screen.active{display:block}
 .card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:1.25rem;width:100%}
@@ -64,10 +67,13 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .cell{width:30px;height:30px;border-radius:4px;background:var(--bg3);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .1s,transform .1s;user-select:none;cursor:default;flex-shrink:0}
 .cell.ship{background:var(--ship);border-color:#1d4ed8}
 .cell.prev{background:#1e3554}.cell.prevbad{background:var(--rd)}
-.cell.hit{background:var(--hit);border-color:#b91c1c;animation:hf .4s}
+.cell.hit{background:var(--hit);border-color:#b91c1c}
+.cell.hit.new-hit{animation:hitAnim .5s ease}
 .cell.miss{background:var(--miss);border-color:#475569}
+.cell.sunk{background:#7f1d1d;border-color:#991b1b;animation:sunkAnim .6s ease}
 .cell.tgt{cursor:crosshair}.cell.tgt:hover{background:#1e3554;transform:scale(1.12)}
-@keyframes hf{0%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes hitAnim{0%{transform:scale(1.4);background:#ff6b6b}50%{transform:scale(0.9)}100%{transform:scale(1);background:var(--hit)}}
+@keyframes sunkAnim{0%{transform:scale(1)}20%{transform:scale(1.3) rotate(-5deg)}40%{transform:scale(0.8) rotate(5deg)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
 .game-wrap{display:flex;flex-direction:column;gap:1rem}
 .tbanner{text-align:center;padding:.75rem 1.5rem;border-radius:10px;font-size:15px;font-weight:600;background:var(--bd);color:var(--bl);border:1px solid var(--blue);transition:all .3s}
 .tbanner.enemy{background:var(--ad);color:var(--amber);border-color:var(--amber)}
@@ -77,11 +83,22 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
 .met{background:var(--bg3);border-radius:8px;padding:.75rem;text-align:center}
 .met .ml{font-size:12px;color:var(--txt3);margin-bottom:3px}.met .mv{font-size:22px;font-weight:700}
-.log{max-height:80px;overflow-y:auto;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .75rem;font-size:12px;color:var(--txt2)}
-.log p{margin:2px 0}
-.end-wrap{max-width:460px;margin:3rem auto;text-align:center;display:flex;flex-direction:column;gap:1.25rem}
+/* Chat */
+.chat-wrap{display:flex;flex-direction:column;gap:.5rem}
+.chat-log{height:120px;overflow-y:auto;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .75rem;font-size:12px;color:var(--txt2)}
+.chat-log p{margin:2px 0;line-height:1.5}
+.chat-log .me{color:var(--bl)}.chat-log .opp{color:var(--amber)}.chat-log .sys{color:var(--txt3);font-style:italic}
+.chat-input-row{display:flex;gap:.5rem}
+.chat-input-row input{flex:1;padding:7px 12px;border-radius:8px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--txt);font-size:13px;outline:none}
+.chat-input-row input:focus{border-color:var(--blue)}
+.chat-input-row button{padding:7px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;cursor:pointer;font-size:13px}
+.game-log{max-height:70px;overflow-y:auto;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .75rem;font-size:12px;color:var(--txt2)}
+.game-log p{margin:2px 0}
+.end-wrap{max-width:500px;margin:2rem auto;text-align:center;display:flex;flex-direction:column;gap:1.25rem}
 .end-wrap h2{font-size:32px;font-weight:800}
 .trophy{font-size:64px}
+.score-big{font-size:22px;color:var(--txt2)}
+.score-big span{color:var(--txt);font-weight:700}
 @media(max-width:600px){.cell{width:26px;height:26px;font-size:11px}}
 </style>
 </head>
@@ -89,9 +106,11 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 <header>
   <div class="logo">&#9875; Amiral <span>Batt&#305;</span></div>
   <div id="hbadge"></div>
+  <div id="scoreboard"></div>
 </header>
 <main>
 
+<!-- LOBBY -->
 <div id="sLobby" class="screen active">
   <div class="center">
     <div class="hero">
@@ -117,6 +136,7 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+<!-- WAIT -->
 <div id="sWait" class="screen">
   <div class="wait-box card">
     <p style="color:var(--txt2);font-size:14px;margin-bottom:.25rem">Oda kodun</p>
@@ -130,6 +150,7 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+<!-- SETUP -->
 <div id="sSetup" class="screen">
   <div class="setup-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
@@ -157,6 +178,7 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+<!-- GAME -->
 <div id="sGame" class="screen">
   <div class="game-wrap">
     <div id="tbanner" class="tbanner">Y&uuml;kleniyor&hellip;</div>
@@ -181,25 +203,72 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
         </div>
       </div>
     </div>
-    <div class="log" id="gameLog"></div>
+    <div class="game-log" id="gameLog"></div>
+    <!-- CHAT -->
+    <div class="chat-wrap">
+      <div class="chat-log" id="chatLog"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Mesaj yaz..." maxlength="100" autocomplete="off">
+        <button onclick="sendChat()">G&ouml;nder</button>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- END -->
 <div id="sEnd" class="screen">
   <div class="end-wrap">
     <div class="trophy" id="endIcon">&#127942;</div>
     <h2 id="endTitle">Oyun Bitti</h2>
+    <div class="score-big" id="totalScore"></div>
     <div class="metrics" id="endMet"></div>
     <div class="card" style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
-      <button class="btn bp" onclick="doRematch()">Tekrar Oyna</button>
+      <button class="btn bp" id="btnRematch" onclick="doRematch()">Tekrar Oyna</button>
       <button class="btn bo" onclick="backToLobby()">Ana Men&uuml;</button>
     </div>
-    <div id="rematchMsg" style="display:none;color:var(--amber);font-size:14px"></div>
+    <div id="rematchMsg" style="display:none;color:var(--amber);font-size:14px;margin-top:.5rem"></div>
   </div>
 </div>
 
 </main>
 <script>
+// ── SES ──────────────────────────────────────────────────
+var AC = null;
+function getAC(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function playTone(freq,type,dur,vol){
+  var ac=getAC();if(!ac) return;
+  try{
+    var o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.type=type||'sine';o.frequency.setValueAtTime(freq,ac.currentTime);
+    g.gain.setValueAtTime(vol||0.3,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+    o.start();o.stop(ac.currentTime+dur);
+  }catch(e){}
+}
+function sndHit(){
+  playTone(180,'sawtooth',0.15,0.4);
+  setTimeout(function(){playTone(120,'sawtooth',0.2,0.3);},80);
+}
+function sndMiss(){playTone(400,'sine',0.15,0.15);setTimeout(function(){playTone(300,'sine',0.2,0.1);},100);}
+function sndSunk(){
+  [200,160,120,90].forEach(function(f,i){
+    setTimeout(function(){playTone(f,'sawtooth',0.25,0.35);},i*80);
+  });
+}
+function sndWin(){
+  [523,659,784,1047].forEach(function(f,i){
+    setTimeout(function(){playTone(f,'sine',0.3,0.3);},i*120);
+  });
+}
+function sndLose(){
+  [300,250,200,150].forEach(function(f,i){
+    setTimeout(function(){playTone(f,'sawtooth',0.3,0.25);},i*120);
+  });
+}
+function sndChat(){playTone(880,'sine',0.08,0.15);}
+
+// ── SHIPS ─────────────────────────────────────────────────
 var SHIPS=[
   {key:'carrier',label:'Tasiyici',size:5},
   {key:'battle',label:'Savas',size:4},
@@ -209,78 +278,75 @@ var SHIPS=[
 ];
 var TOTAL=SHIPS.reduce(function(a,s){return a+s.size;},0);
 
+// ── HELPERS ───────────────────────────────────────────────
 function mk10(){return Array(10).fill(null).map(function(){return Array(10).fill(0);});}
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
 function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},5000);}
 function showInfo(m){document.getElementById('lobInfoTxt').textContent=m;document.getElementById('lobInfo').classList.add('show');}
 function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
 function setHBadge(t){var e=document.getElementById('hbadge');e.textContent=t;e.style.display='block';}
-function addLog(t){var l=document.getElementById('gameLog');var p=document.createElement('p');p.textContent=t;l.insertBefore(p,l.firstChild);}
+function addGameLog(t){var l=document.getElementById('gameLog');var p=document.createElement('p');p.textContent=t;l.insertBefore(p,l.firstChild);}
 function gc(gid,r,c){return document.querySelector('#'+gid+' [data-r="'+r+'"][data-c="'+c+'"]');}
 
-var peer=null, conn=null;
+// ── STATE ─────────────────────────────────────────────────
+var peer=null,conn=null;
 var g={};
+var score={me:0,opp:0};
 
 function resetG(){
   g={isHost:false,myName:'',oppName:'?',roomCode:'',
      myBoard:null,oppBoard:null,myShots:null,oppShots:null,
+     sunkMine:[],sunkOpp:[],
      placedShips:{},selShip:null,orient:'H',
-     hits:[0,0],moves:0,myTurn:false,myReady:false,oppReady:false};
+     hits:[0,0],moves:0,myTurn:false,myReady:false,oppReady:false,
+     rematchSent:false};
 }
 resetG();
 
+function updateScoreboard(){
+  var el=document.getElementById('scoreboard');
+  el.style.display='flex';
+  el.innerHTML=g.myName+': <span>'+score.me+'</span>&nbsp;&nbsp;'+g.oppName+': <span>'+score.opp+'</span>';
+}
+
+// ── PEER ─────────────────────────────────────────────────
 function genCode(){
   var c='ABCDEFGHJKLMNPQRSTUVWXYZ',s='';
   for(var i=0;i<4;i++) s+=c[Math.floor(Math.random()*c.length)];
   return s;
 }
+var ICE={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]}};
 
-var ICE={config:{iceServers:[
-  {urls:'stun:stun.l.google.com:19302'},
-  {urls:'stun:stun1.l.google.com:19302'}
-]}};
-
-function initPeer(id, onOpen){
+function initPeer(id,onOpen){
   if(peer&&!peer.destroyed) peer.destroy();
-  peer = id ? new Peer(id, ICE) : new Peer(ICE);
-  peer.on('open',function(){
-    console.log('Peer ID:',peer.id);
-    onOpen();
-  });
+  peer=id?new Peer(id,ICE):new Peer(ICE);
+  peer.on('open',function(){onOpen();});
   peer.on('error',function(err){
-    hideInfo(); setBtns(false);
-    console.error('Peer error:', err.type, err);
-    if(err.type==='unavailable-id') showErr('Bu kod simdi baska biri tarafindan kullaniliyor. Tekrar deneyin.');
-    else if(err.type==='peer-unavailable') showErr('Oda bulunamadi. Kod dogru mu? Oda sahibi bekleme ekraninda olmali.');
+    hideInfo();setBtns(false);
+    if(err.type==='unavailable-id') showErr('Bu kod simdi kullaniliyor. Tekrar deneyin.');
+    else if(err.type==='peer-unavailable') showErr('Oda bulunamadi. Kod dogru mu?');
     else showErr('Baglanti hatasi ('+err.type+'). Tekrar deneyin.');
   });
-  peer.on('disconnected',function(){
-    console.log('Peer disconnected, reconnecting...');
-    peer.reconnect();
-  });
+  peer.on('disconnected',function(){peer.reconnect();});
 }
 
 function setupConn(c){
   conn=c;
-  conn.on('data', onData);
+  conn.on('data',onData);
   conn.on('close',function(){
     var inGame=['sGame','sSetup','sWait'].some(function(id){return document.getElementById(id).classList.contains('active');});
     if(inGame){alert('Rakip baglantisi kesildi.');backToLobby();}
   });
-  conn.on('error',function(e){console.error('conn error',e);});
+  conn.on('error',function(e){console.error('conn err',e);});
 }
 
-function send(msg){
-  if(conn&&conn.open) conn.send(JSON.stringify(msg));
-}
+function send(msg){if(conn&&conn.open) conn.send(JSON.stringify(msg));}
 
-// TEK handleData fonksiyonu — tüm mesaj tipleri burada
+// ── MESAJ HANDLER ─────────────────────────────────────────
 function onData(raw){
-  var msg = typeof raw==='string' ? JSON.parse(raw) : raw;
-  console.log('<-',msg.type,msg);
+  var msg=typeof raw==='string'?JSON.parse(raw):raw;
 
   switch(msg.type){
-
     case 'hello':
       g.oppName=msg.name;
       send({type:'hello_ack',name:g.myName});
@@ -298,89 +364,63 @@ function onData(raw){
       break;
 
     case 'fire':
-      // Rakip bize ates etti — kendi tahtamiza bak
-      var row=msg.row, col=msg.col;
-      g.oppShots[row][col]=1;
-      var hit=g.myBoard[row][col]===1;
-      g.moves++;
-      document.getElementById('totMoves').textContent=g.moves;
-      var lbl=String.fromCharCode(65+col)+(row+1);
-      if(hit) g.hits[1]++;
-      document.getElementById('oppHits').textContent=g.hits[1];
-      renderMyGrid();
-      addLog((g.oppName||'Rakip')+' -> '+lbl+': '+(hit?'Isabet!':'Kacti'));
-      // Sonucu karsi tarafa bildir
-      send({type:'fire_result',row:row,col:col,hit:hit});
-      // Tum gemilerim battiysa kaybettim
-      if(checkLost()){endGame(false);return;}
-      // Sira bana gecti
-      g.myTurn=true;
-      updateBanner(); renderEnemyGrid();
+      receiveAttack(msg.row,msg.col);
       break;
 
     case 'fire_result':
-      // Kendi atisimin sonucu geldi
-      var row2=msg.row, col2=msg.col, hit2=msg.hit;
-      if(hit2){g.oppBoard[row2][col2]=1; g.hits[0]++;}
-      document.getElementById('myHits').textContent=g.hits[0];
-      var lbl2=String.fromCharCode(65+col2)+(row2+1);
-      addLog('Sen -> '+lbl2+': '+(hit2?'Isabet!':'Kacti'));
-      document.getElementById('totMoves').textContent=g.moves;
-      if(checkWon()){endGame(true);return;}
-      // Sira rakibe gecti
-      g.myTurn=false;
-      updateBanner(); renderEnemyGrid();
+      applyResult(msg.row,msg.col,msg.hit,msg.sunk);
       break;
 
-    case 'rematch':
-      g.myReady=false; g.oppReady=false;
-      document.getElementById('rematchMsg').textContent='Rakip kabul etti!';
-      startSetup();
+    case 'chat':
+      addChatMsg(g.oppName,msg.text,'opp');
+      sndChat();
+      break;
+
+    case 'rematch_ok':
+      // Rakip rematch'ı kabul etti
+      document.getElementById('rematchMsg').textContent='Rakip kabul etti! Basliyor...';
+      setTimeout(function(){
+        score.me=score.me; // koruyoruz
+        resetG();
+        // Bağlantı hala açık, setup'a geç
+        g.isHost=peer&&peer.id&&peer.id.length===4;
+        startSetup();
+      },800);
       break;
   }
 }
 
-function setBtns(dis){
-  document.getElementById('btnCreate').disabled=dis;
-  document.getElementById('btnJoin').disabled=dis;
-}
-
-function getName(){
-  var n=document.getElementById('inName').value.trim();
-  if(!n){showErr('Once bir isim gir.');return null;}
-  return n;
-}
+// ── LOBBY ────────────────────────────────────────────────
+function getName(){var n=document.getElementById('inName').value.trim();if(!n){showErr('Once bir isim gir.');return null;}return n;}
+function setBtns(dis){document.getElementById('btnCreate').disabled=dis;document.getElementById('btnJoin').disabled=dis;}
 
 function doCreate(){
-  var name=getName(); if(!name) return;
-  g.myName=name; g.isHost=true;
-  var code=genCode(); g.roomCode=code;
-  setBtns(true);
-  showInfo('Baglanti kuruluyor...');
+  var name=getName();if(!name) return;
+  g.myName=name;g.isHost=true;
+  var code=genCode();g.roomCode=code;
+  setBtns(true);showInfo('Baglanti kuruluyor...');
   initPeer(code,function(){
-    hideInfo(); setBtns(false);
+    hideInfo();setBtns(false);
     document.getElementById('wCode').textContent=code;
     setHBadge('Oda: '+code);
     showScreen('sWait');
     peer.on('connection',function(c){
       setupConn(c);
-      // Katilimci hello gonderecek, biz onData'da cevap verecegiz
     });
   });
 }
 
 function doJoin(){
-  var name=getName(); if(!name) return;
+  var name=getName();if(!name) return;
   var code=document.getElementById('inCode').value.trim().toUpperCase();
   if(code.length!==4){showErr('Oda kodu 4 harf olmali.');return;}
-  g.myName=name; g.isHost=false; g.roomCode=code;
-  setBtns(true);
-  showInfo('Odaya baglaniliyor...');
+  g.myName=name;g.isHost=false;g.roomCode=code;
+  setBtns(true);showInfo('Odaya baglaniliyor...');
   initPeer(undefined,function(){
     var c=peer.connect(code,{reliable:true,serialization:'json'});
     setupConn(c);
     c.on('open',function(){
-      hideInfo(); setBtns(false);
+      hideInfo();setBtns(false);
       setHBadge('Oda: '+code);
       send({type:'hello',name:g.myName});
     });
@@ -395,23 +435,25 @@ function copyCode(){
 function backToLobby(){
   if(conn){conn.close();conn=null;}
   if(peer){peer.destroy();peer=null;}
+  score={me:0,opp:0};
   resetG();
   document.getElementById('hbadge').style.display='none';
-  showScreen('sLobby');
-  setBtns(false); hideInfo();
+  document.getElementById('scoreboard').style.display='none';
+  showScreen('sLobby');setBtns(false);hideInfo();
 }
 
-// ── SETUP ─────────────────────────────────────────────────
+// ── SETUP ────────────────────────────────────────────────
 function startSetup(){
   g.myBoard=mk10();g.myShots=mk10();g.oppShots=mk10();g.oppBoard=mk10();
+  g.sunkMine=[];g.sunkOpp=[];
   g.placedShips={};g.selShip=null;g.orient='H';
-  g.myReady=false;g.oppReady=false;
+  g.myReady=false;g.oppReady=false;g.rematchSent=false;
   document.getElementById('setupWait').style.display='none';
   document.getElementById('btnReady').disabled=true;
   document.getElementById('btnH').classList.add('active');
   document.getElementById('btnV').classList.remove('active');
   showScreen('sSetup');
-  renderPalette(); renderSetupGrid();
+  renderPalette();renderSetupGrid();
 }
 
 function setOrient(o){
@@ -523,10 +565,21 @@ function doReady(){
 }
 
 function checkBothReady(){
-  if(g.myReady&&g.oppReady){
-    g.myTurn=g.isHost;
-    startGame();
-  }
+  if(g.myReady&&g.oppReady){g.myTurn=g.isHost;startGame();}
+}
+
+// ── GEMİ BATTIMI KONTROLÜ ────────────────────────────────
+function checkSunk(shots,board,placedShips,alreadySunk){
+  // Hangi gemiler tam battı
+  var newSunk=[];
+  SHIPS.forEach(function(s){
+    if(alreadySunk.indexOf(s.key)>=0) return;
+    var cells=placedShips[s.key];
+    if(!cells) return;
+    var allHit=cells.every(function(rc){return shots[rc[0]][rc[1]]&&board[rc[0]][rc[1]];});
+    if(allHit) newSunk.push(s.key);
+  });
+  return newSunk;
 }
 
 // ── GAME ─────────────────────────────────────────────────
@@ -535,6 +588,9 @@ function startGame(){
   document.getElementById('ml1').textContent=g.myName+' (sen)';
   document.getElementById('ml2').textContent=g.oppName||'Rakip';
   document.getElementById('enemyTitle').textContent=(g.oppName||'Rakip')+' - Hedef';
+  document.getElementById('chatLog').innerHTML='';
+  document.getElementById('gameLog').innerHTML='';
+  updateScoreboard();
   showScreen('sGame');
   updateBanner();
   buildGrid('myGrid');renderMyGrid();
@@ -551,8 +607,14 @@ function renderMyGrid(){
   for(var r=0;r<10;r++) for(var c=0;c<10;c++){
     var el=gc('myGrid',r,c);if(!el) continue;
     el.className='cell';el.textContent='';
-    if(g.oppShots[r][c]){el.classList.add(g.myBoard[r][c]?'hit':'miss');el.textContent=g.myBoard[r][c]?'x':'.';}
-    else if(g.myBoard[r][c]) el.classList.add('ship');
+    if(g.oppShots[r][c]){
+      var isSunk=g.sunkMine.some(function(k){
+        var cells=g.placedShips[k];
+        return cells&&cells.some(function(rc){return rc[0]===r&&rc[1]===c;});
+      });
+      el.classList.add(isSunk?'sunk':(g.myBoard[r][c]?'hit':'miss'));
+      el.textContent=g.myBoard[r][c]?'x':'.';
+    } else if(g.myBoard[r][c]) el.classList.add('ship');
   }
 }
 
@@ -560,8 +622,14 @@ function renderEnemyGrid(){
   for(var r=0;r<10;r++) for(var c=0;c<10;c++){
     var el=gc('enemyGrid',r,c);if(!el) continue;
     el.className='cell';el.textContent='';
-    if(g.myShots[r][c]){el.classList.add(g.oppBoard[r][c]?'hit':'miss');el.textContent=g.oppBoard[r][c]?'x':'.';}
-    else if(g.myTurn) el.classList.add('tgt');
+    if(g.myShots[r][c]){
+      var isSunk2=g.sunkOpp.some(function(k){
+        // Opp'un placedShips'ini bilmiyoruz; sunk animasyonu sadece hit olarak göster
+        return false;
+      });
+      el.classList.add(g.oppBoard[r][c]?'hit':'miss');
+      el.textContent=g.oppBoard[r][c]?'x':'.';
+    } else if(g.myTurn) el.classList.add('tgt');
   }
 }
 
@@ -569,9 +637,67 @@ function doFire(r,c){
   if(!g.myTurn||g.myShots[r][c]) return;
   g.myShots[r][c]=1;g.moves++;
   send({type:'fire',row:r,col:c});
-  // Sonucu fire_result olarak alacagiz
-  // O zamana kadar tgt class'ini kaldir (cift tiklamayi onle)
   renderEnemyGrid();
+}
+
+// Rakip bize ateş etti — kendi tahtamıza bak, sonucu gönder
+function receiveAttack(row,col){
+  g.oppShots[row][col]=1;
+  var hit=g.myBoard[row][col]===1;
+  g.moves++;
+  document.getElementById('totMoves').textContent=g.moves;
+  var lbl=String.fromCharCode(65+col)+(row+1);
+  if(hit){
+    g.hits[1]++;
+    sndHit();
+  } else {
+    sndMiss();
+  }
+  document.getElementById('oppHits').textContent=g.hits[1];
+
+  // Gemi battı mı?
+  var newSunk=checkSunk(g.oppShots,g.myBoard,g.placedShips,g.sunkMine);
+  newSunk.forEach(function(k){g.sunkMine.push(k);});
+  var sunkKey=newSunk.length>0?newSunk[0]:null;
+  if(sunkKey) sndSunk();
+
+  renderMyGrid();
+  var logTxt=(g.oppName||'Rakip')+' -> '+lbl+': '+(hit?(sunkKey?'BATTI! ('+sunkKey+')':'Isabet!'):'Kacti');
+  addGameLog(logTxt);
+  addChatMsg(null,logTxt,'sys');
+
+  // Sonucu karşıya bildir
+  send({type:'fire_result',row:row,col:col,hit:hit,sunk:sunkKey});
+
+  if(checkLost()){endGame(false);return;}
+  g.myTurn=true;
+  updateBanner();renderEnemyGrid();
+}
+
+// Kendi atışımın sonucu geldi
+function applyResult(row,col,hit,sunk){
+  if(hit){g.oppBoard[row][col]=1;g.hits[0]++;}
+  document.getElementById('myHits').textContent=g.hits[0];
+  var lbl=String.fromCharCode(65+col)+(row+1);
+
+  // Animasyon
+  var el=gc('enemyGrid',row,col);
+  if(el){
+    el.className='cell '+(hit?'hit':'miss');
+    el.textContent=hit?'x':'.';
+    if(hit){el.classList.add('new-hit');setTimeout(function(){el.classList.remove('new-hit');},600);}
+  }
+
+  if(hit) sndHit(); else sndMiss();
+  if(sunk){g.sunkOpp.push(sunk);sndSunk();}
+
+  document.getElementById('totMoves').textContent=g.moves;
+  var logTxt='Sen -> '+lbl+': '+(hit?(sunk?'BATTI! ('+sunk+')':'Isabet!'):'Kacti');
+  addGameLog(logTxt);
+
+  if(checkWon()){endGame(true);return;}
+  g.myTurn=false;
+  updateBanner();renderEnemyGrid();
 }
 
 function checkWon(){
@@ -586,24 +712,60 @@ function checkLost(){
 }
 
 function endGame(won){
+  if(won){score.me++;sndWin();}else{score.opp++;sndLose();}
   document.getElementById('endIcon').textContent=won?'&#127942;':'&#128128;';
   document.getElementById('endTitle').textContent=won?'Kazandin!':'Kaybettin...';
+  document.getElementById('totalScore').innerHTML=
+    g.myName+': <span>'+score.me+'</span> &mdash; '+g.oppName+': <span>'+score.opp+'</span>';
   document.getElementById('endMet').innerHTML=
     '<div class="met"><div class="ml">Senin isabet</div><div class="mv">'+g.hits[0]+'</div></div>'+
     '<div class="met"><div class="ml">Rakip isabet</div><div class="mv">'+g.hits[1]+'</div></div>'+
     '<div class="met"><div class="ml">Toplam hamle</div><div class="mv">'+g.moves+'</div></div>';
   document.getElementById('rematchMsg').style.display='none';
+  document.getElementById('btnRematch').disabled=false;
   showScreen('sEnd');
 }
 
+// ── REMATCH ──────────────────────────────────────────────
 function doRematch(){
-  send({type:'rematch'});
-  var el=document.getElementById('rematchMsg');
-  el.style.display='block';el.textContent='Rakip onayi bekleniyor...';
-  g.myReady=false;g.oppReady=false;
+  document.getElementById('btnRematch').disabled=true;
+  document.getElementById('rematchMsg').style.display='block';
+  document.getElementById('rematchMsg').textContent='Rakip onayi bekleniyor...';
+  g.rematchSent=true;
+  send({type:'rematch_ok'});
+  // Biz de hazırlanıyoruz ama rakip onaylayana kadar bekliyoruz
+  // onData'da 'rematch_ok' gelince startSetup çağrılacak
+  // Ama biz gönderdik, rakip de gönderirse her ikisi de startSetup'a girer
+  // Kendi tarafımızda da hemen başlayalım (her iki taraf da rematch_ok gönderir)
+  var myName=g.myName,oppName=g.oppName,isHost=g.isHost;
+  resetG();
+  g.myName=myName;g.oppName=oppName;g.isHost=isHost;
   startSetup();
 }
 
+// ── CHAT ────────────────────────────────────────────────
+function addChatMsg(from,text,cls){
+  var log=document.getElementById('chatLog');
+  var p=document.createElement('p');
+  p.className=cls||'';
+  p.textContent=from?(from+': '+text):text;
+  log.appendChild(p);
+  log.scrollTop=log.scrollHeight;
+}
+
+function sendChat(){
+  var inp=document.getElementById('chatInput');
+  var txt=inp.value.trim();if(!txt) return;
+  inp.value='';
+  send({type:'chat',text:txt});
+  addChatMsg(g.myName,txt,'me');
+}
+
+document.getElementById('chatInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter') sendChat();
+});
+
+// ── INPUT ────────────────────────────────────────────────
 document.getElementById('inCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
 document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
