@@ -101,6 +101,25 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .score-big{font-size:22px;color:var(--txt2)}
 .score-big span{color:var(--txt);font-weight:700}
 
+
+/* Ayarlar */
+.settings-btn{position:fixed;bottom:1rem;right:1rem;width:42px;height:42px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;transition:all .15s}
+.settings-btn:hover{background:var(--bg3);color:var(--txt)}
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.settings-overlay.open{display:flex}
+.settings-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;width:90%;max-width:360px;display:flex;flex-direction:column;gap:1rem}
+.settings-panel h3{font-size:16px;font-weight:600;margin-bottom:.25rem}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--bdr)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;color:var(--txt2)}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--miss);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--blue)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.seg{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--bdr2)}
+.seg button{flex:1;padding:5px 10px;border:none;background:transparent;color:var(--txt2);font-size:13px;cursor:pointer;transition:all .15s}
+.seg button.active{background:var(--blue);color:#fff}
+
 @media (orientation: landscape) and (max-width: 900px) {
   header{display:none}
   main{padding:.25rem .25rem}
@@ -244,8 +263,170 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+
+<!-- Ayarlar Butonu -->
+<button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
+
+<!-- Ayarlar Paneli -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOutside(event)">
+  <div class="settings-panel" id="settingsPanel">
+    <h3>&#9881; Ayarlar</h3>
+
+    <div class="setting-row">
+      <span class="setting-label">Ses</span>
+      <button class="toggle on" id="togSound" onclick="toggleSetting('sound')"></button>
+    </div>
+
+    <div class="setting-row">
+      <span class="setting-label">Tema</span>
+      <div class="seg">
+        <button id="themeDark" class="active" onclick="setTheme('dark')">Koyu</button>
+        <button id="themeLight" onclick="setTheme('light')">Aydınlık</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <span class="setting-label">Dil</span>
+      <div class="seg">
+        <button id="langTR" class="active" onclick="setLang('TR')">TR</button>
+        <button id="langEN" onclick="setLang('EN')">EN</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <span class="setting-label" id="lblRefire">Tekrar Ateş <small style="color:var(--txt3);font-size:11px">(isabet → tekrar sen)</small></span>
+      <button class="toggle" id="togRefire" onclick="toggleSetting('refire')"></button>
+    </div>
+
+    <button class="btn bo bfull" onclick="closeSettings()">Kapat</button>
+  </div>
+</div>
+
 </main>
 <script>
+
+// ── AYARLAR ──────────────────────────────────────────────
+var settings = {
+  sound: true,
+  theme: 'dark',
+  lang: 'TR',
+  refire: false
+};
+
+var LANG = {
+  TR: {
+    title:'Amiral Battı', subtitle:'Sunucu gerekmez — oda kur, kodu paylaş, oyna.',
+    createBtn:'+ Yeni Oda Kur', joinBtn:'Katıl →', codePlaceholder:'Oda kodu (4 harf)',
+    namePlaceholder:'Adını gir…', waitText:'Rakip bekleniyor…', copyBtn:'Kodu Kopyala',
+    placeTitle:'Gemilerini Yerleştir', readyBtn:'Hazır ✓', autoBtn:'Otomatik', resetBtn:'Sıfırla',
+    horizBtn:'Yatay', vertBtn:'Dikey', boardTitle:'Tahtanız', waitShips:'Rakip gemilerini yerleştiriyor…',
+    myBoard:'Kendi Tahtam', enemyBoard:'Rakip Tahtası', myTurn:'Senin sıran — Hedef al!',
+    enemyTurn:' ateş ediyor…', chatPlaceholder:'Mesaj yaz...', sendBtn:'Gönder',
+    rematchBtn:'Tekrar Oyna', menuBtn:'Ana Menü', winText:'Kazandın!', loseText:'Kaybettin…',
+    myHitsLbl:'Senin isabet', oppHitsLbl:'Rakip isabet', movesLbl:'Hamle',
+    hit:'İsabet!', miss:'Kaçtı', sunk:'BATTI!'
+  },
+  EN: {
+    title:'Battleship', subtitle:'No server needed — create room, share code, play.',
+    createBtn:'+ Create Room', joinBtn:'Join →', codePlaceholder:'Room code (4 letters)',
+    namePlaceholder:'Enter your name…', waitText:'Waiting for opponent…', copyBtn:'Copy Code',
+    placeTitle:'Place Your Ships', readyBtn:'Ready ✓', autoBtn:'Auto', resetBtn:'Reset',
+    horizBtn:'Horizontal', vertBtn:'Vertical', boardTitle:'Your Board', waitShips:'Opponent is placing ships…',
+    myBoard:'My Board', enemyBoard:'Enemy Board', myTurn:'Your turn — Fire!',
+    enemyTurn:' is firing…', chatPlaceholder:'Type a message...', sendBtn:'Send',
+    rematchBtn:'Play Again', menuBtn:'Main Menu', winText:'You Won!', loseText:'You Lost…',
+    myHitsLbl:'Your hits', oppHitsLbl:'Enemy hits', movesLbl:'Moves',
+    hit:'Hit!', miss:'Miss!', sunk:'SUNK!'
+  }
+};
+
+function applyLang(){
+  var L = LANG[settings.lang];
+  // Lobby
+  safeText('btnCreate', L.createBtn);
+  safeText('btnJoin', L.joinBtn);
+  safeAttr('inName', 'placeholder', L.namePlaceholder);
+  safeAttr('inCode', 'placeholder', 'ABCD');
+  // Wait
+  var wt = document.querySelector('#sWait .pulse + span'); if(wt) wt.textContent = L.waitText;
+  var cb = document.querySelector('#sWait .btn'); if(cb) cb.textContent = L.copyBtn;
+  // Setup
+  var pt = document.querySelector('#sSetup h2'); if(pt) pt.textContent = L.placeTitle;
+  safeText('btnReady', L.readyBtn);
+  safeText('btnH', L.horizBtn);
+  safeText('btnV', L.vertBtn);
+  safeAttr('chatInput', 'placeholder', L.chatPlaceholder);
+  // Game
+  safeText('ml1', (g.myName||'Sen')+' ('+( settings.lang==='TR'?'sen':'you')+')');
+  safeText('enemyTitle', (g.oppName||( settings.lang==='TR'?'Rakip':'Enemy'))+' — '+(settings.lang==='TR'?'Hedef':'Target'));
+  // End
+  safeText('endTitle', document.getElementById('endIcon')&&document.getElementById('endIcon').textContent==='🏆' ? L.winText : L.loseText);
+}
+
+function safeText(id, txt){ var e=document.getElementById(id); if(e) e.textContent=txt; }
+function safeAttr(id, attr, val){ var e=document.getElementById(id); if(e) e[attr]=val; }
+
+function applyTheme(){
+  if(settings.theme==='light'){
+    document.documentElement.style.setProperty('--bg','#f0f4f8');
+    document.documentElement.style.setProperty('--bg2','#e2e8f0');
+    document.documentElement.style.setProperty('--bg3','#cbd5e1');
+    document.documentElement.style.setProperty('--surf','#ffffff');
+    document.documentElement.style.setProperty('--bdr','#94a3b8');
+    document.documentElement.style.setProperty('--bdr2','#64748b');
+    document.documentElement.style.setProperty('--txt','#0f172a');
+    document.documentElement.style.setProperty('--txt2','#334155');
+    document.documentElement.style.setProperty('--txt3','#64748b');
+    document.documentElement.style.setProperty('--miss','#94a3b8');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0b0f1a');
+    document.documentElement.style.setProperty('--bg2','#111827');
+    document.documentElement.style.setProperty('--bg3','#1c2536');
+    document.documentElement.style.setProperty('--surf','#1e2d40');
+    document.documentElement.style.setProperty('--bdr','#2a3f58');
+    document.documentElement.style.setProperty('--bdr2','#3a5472');
+    document.documentElement.style.setProperty('--txt','#e8f0fe');
+    document.documentElement.style.setProperty('--txt2','#8aa5c2');
+    document.documentElement.style.setProperty('--txt3','#556a82');
+    document.documentElement.style.setProperty('--miss','#334155');
+  }
+}
+
+function openSettings(){
+  document.getElementById('settingsOverlay').classList.add('open');
+  // Toggle durumlarını güncelle
+  document.getElementById('togSound').classList.toggle('on', settings.sound);
+  document.getElementById('togRefire').classList.toggle('on', settings.refire);
+  document.getElementById('themeDark').classList.toggle('active', settings.theme==='dark');
+  document.getElementById('themeLight').classList.toggle('active', settings.theme==='light');
+  document.getElementById('langTR').classList.toggle('active', settings.lang==='TR');
+  document.getElementById('langEN').classList.toggle('active', settings.lang==='EN');
+}
+function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
+function closeSettingsOutside(e){ if(e.target.id==='settingsOverlay') closeSettings(); }
+
+function toggleSetting(key){
+  settings[key] = !settings[key];
+  document.getElementById('tog'+key.charAt(0).toUpperCase()+key.slice(1)).classList.toggle('on', settings[key]);
+  if(key==='sound' && settings.sound) sndChat();
+  if(key==='refire') send({type:'setting', key:'refire', val:settings.refire});
+}
+
+function setTheme(t){
+  settings.theme=t;
+  document.getElementById('themeDark').classList.toggle('active', t==='dark');
+  document.getElementById('themeLight').classList.toggle('active', t==='light');
+  applyTheme();
+}
+
+function setLang(l){
+  settings.lang=l;
+  document.getElementById('langTR').classList.toggle('active', l==='TR');
+  document.getElementById('langEN').classList.toggle('active', l==='EN');
+  applyLang();
+}
+
+
 // ── SES ──────────────────────────────────────────────────
 var AC = null;
 function getAC(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
@@ -393,7 +574,11 @@ function onData(raw){
 
     case 'chat':
       addChatMsg(g.oppName,msg.text,'opp');
-      sndChat();
+      if(settings.sound) sndChat();
+      break;
+
+    case 'setting':
+      if(msg.key==='refire') settings.refire=msg.val;
       break;
 
     case 'rematch_ok':
@@ -625,8 +810,9 @@ function startGame(){
 
 function updateBanner(){
   var b=document.getElementById('tbanner');
-  if(g.myTurn){b.textContent='Senin siran - Hedef al!';b.className='tbanner';}
-  else{b.textContent=(g.oppName||'Rakip')+' ates ediyor...';b.className='tbanner enemy';}
+  var L=LANG[settings.lang];
+  if(g.myTurn){b.textContent=L.myTurn;b.className='tbanner';}
+  else{b.textContent=(g.oppName||'Rakip')+L.enemyTurn;b.className='tbanner enemy';}
 }
 
 function renderMyGrid(){
@@ -675,9 +861,9 @@ function receiveAttack(row,col){
   var lbl=String.fromCharCode(65+col)+(row+1);
   if(hit){
     g.hits[1]++;
-    sndHit();
+    if(settings.sound) sndHit();
   } else {
-    sndMiss();
+    if(settings.sound) sndMiss();
   }
   document.getElementById('oppHits').textContent=g.hits[1];
 
@@ -685,7 +871,7 @@ function receiveAttack(row,col){
   var newSunk=checkSunk(g.oppShots,g.myBoard,g.placedShips,g.sunkMine);
   newSunk.forEach(function(k){g.sunkMine.push(k);});
   var sunkKey=newSunk.length>0?newSunk[0]:null;
-  if(sunkKey) sndSunk();
+  if(sunkKey && settings.sound) sndSunk();
 
   renderMyGrid();
   var logTxt=(g.oppName||'Rakip')+' -> '+lbl+': '+(hit?(sunkKey?'BATTI! ('+sunkKey+')':'Isabet!'):'Kacti');
@@ -738,7 +924,7 @@ function checkLost(){
 }
 
 function endGame(won){
-  if(won){score.me++;sndWin();}else{score.opp++;sndLose();}
+  if(won){score.me++;if(settings.sound)sndWin();}else{score.opp++;if(settings.sound)sndLose();}
   document.getElementById('endIcon').textContent=won?'&#127942;':'&#128128;';
   document.getElementById('endTitle').textContent=won?'Kazandin!':'Kaybettin...';
   document.getElementById('totalScore').innerHTML=
