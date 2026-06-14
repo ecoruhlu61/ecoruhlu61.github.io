@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amiral Batti</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1c2536;--surf:#1e2d40;
+  --bdr:#2a3f58;--bdr2:#3a5472;
+  --txt:#e8f0fe;--txt2:#8aa5c2;--txt3:#556a82;
+  --blue:#3b82f6;--bl:#60a5fa;--bd:#1e3a5f;
+  --red:#ef4444;--rd:#3f1515;
+  --amber:#f59e0b;--ad:#3d2a00;
+  --green:#22c55e;
+  --miss:#334155;--ship:#2563eb;--hit:#dc2626;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2)}
+.logo{font-size:20px;font-weight:700}.logo span{color:var(--bl)}
+#hbadge{display:none;margin-left:auto;font-size:12px;padding:3px 12px;border-radius:20px;border:1px solid var(--blue);background:var(--bd);color:var(--bl)}
+main{width:100%;max-width:980px;padding:1.5rem 1rem;flex:1}
+.screen{display:none}.screen.active{display:block}
+
+/* shared */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:1.25rem;width:100%}
+.btn{cursor:pointer;border-radius:8px;font-size:14px;font-weight:500;padding:10px 20px;transition:all .15s;border:1px solid transparent}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.bp{background:var(--blue);color:#fff;border-color:var(--blue)}.bp:hover:not(:disabled){background:var(--bl)}
+.bo{background:transparent;color:var(--txt);border-color:var(--bdr2)}.bo:hover:not(:disabled){background:var(--bg3)}
+.bfull{width:100%}
+.divider{display:flex;align-items:center;gap:.75rem;color:var(--txt3);font-size:13px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+input[type=text]{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--txt);font-size:15px;outline:none;transition:border .15s}
+input[type=text]:focus{border-color:var(--blue)}
+input[type=text]::placeholder{color:var(--txt3)}
+label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
+.err{background:var(--rd);border:1px solid var(--red);color:#fca5a5;border-radius:8px;padding:10px 14px;font-size:14px;display:none}
+.err.show{display:block}
+.infobar{background:var(--bd);border:1px solid var(--blue);color:var(--bl);border-radius:8px;padding:10px 14px;font-size:13px;display:none}
+.infobar.show{display:flex;align-items:center;gap:8px}
+.spin{width:14px;height:14px;border:2px solid var(--bl);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* lobby */
+.center{display:flex;flex-direction:column;align-items:center;gap:1.1rem;max-width:420px;margin:2rem auto 0}
+.hero{text-align:center}.hero h1{font-size:38px;font-weight:800;letter-spacing:-1.5px;margin-bottom:.4rem}
+.hero h1 span{color:var(--bl)}.hero p{color:var(--txt2);font-size:14px}
+
+/* wait */
+.wait-box{text-align:center;padding:2rem;max-width:420px;margin:3rem auto}
+.codebox{font-size:52px;font-weight:900;letter-spacing:10px;color:var(--bl);margin:.75rem 0;font-family:monospace}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* setup */
+.setup-wrap{display:flex;flex-direction:column;gap:.9rem}
+.ship-palette{display:flex;flex-wrap:wrap;gap:.5rem}
+.schip{padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:1.5px dashed var(--bdr2);color:var(--bl);background:var(--bd);transition:all .15s}
+.schip.placed{opacity:.35;cursor:not-allowed;border-style:solid}
+.schip.sel{border-style:solid;border-color:var(--bl);box-shadow:0 0 0 2px rgba(96,165,250,.3)}
+.orow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.obtn{padding:5px 14px;border-radius:6px;border:1px solid var(--bdr2);font-size:13px;cursor:pointer;background:transparent;color:var(--txt2);transition:all .15s}
+.obtn.active{background:var(--bg3);border-color:var(--blue);color:var(--bl)}
+
+/* grid */
+.gout{overflow-x:auto}
+.clbl{display:grid;grid-template-columns:22px repeat(10,30px);gap:2px;margin-bottom:2px}
+.clbl span{font-size:11px;color:var(--txt3);text-align:center;line-height:22px}
+.grows{display:flex;flex-direction:column;gap:2px}
+.grow{display:flex;gap:2px;align-items:center}
+.rlbl{width:22px;font-size:11px;color:var(--txt3);text-align:center;flex-shrink:0}
+.cell{width:30px;height:30px;border-radius:4px;background:var(--bg3);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .1s,transform .1s;user-select:none;cursor:default;flex-shrink:0}
+.cell.ship{background:var(--ship);border-color:#1d4ed8}
+.cell.prev{background:#1e3554}.cell.prevbad{background:var(--rd)}
+.cell.hit{background:var(--hit);border-color:#b91c1c;animation:hf .4s}
+.cell.miss{background:var(--miss);border-color:#475569}
+.cell.tgt{cursor:crosshair}.cell.tgt:hover{background:#1e3554;transform:scale(1.12)}
+@keyframes hf{0%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+/* game */
+.game-wrap{display:flex;flex-direction:column;gap:1rem}
+.tbanner{text-align:center;padding:.75rem 1.5rem;border-radius:10px;font-size:15px;font-weight:600;background:var(--bd);color:var(--bl);border:1px solid var(--blue);transition:all .3s}
+.tbanner.enemy{background:var(--ad);color:var(--amber);border-color:var(--amber)}
+.boards-row{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center}
+.bcard{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:1rem}
+.bcard h4{font-size:13px;color:var(--txt2);margin-bottom:.75rem;text-align:center}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.met{background:var(--bg3);border-radius:8px;padding:.75rem;text-align:center}
+.met .ml{font-size:12px;color:var(--txt3);margin-bottom:3px}.met .mv{font-size:22px;font-weight:700}
+.log{max-height:80px;overflow-y:auto;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .75rem;font-size:12px;color:var(--txt2)}
+.log p{margin:2px 0}
+
+/* end */
+.end-wrap{max-width:460px;margin:3rem auto;text-align:center;display:flex;flex-direction:column;gap:1.25rem}
+.end-wrap h2{font-size:32px;font-weight:800}
+.trophy{font-size:64px}
+@media(max-width:600px){.cell{width:26px;height:26px;font-size:11px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">&#9875; Amiral <span>Batt&#305;</span></div>
+  <div id="hbadge"></div>
+</header>
+<main>
+
+<!-- LOBBY -->
+<div id="sLobby" class="screen active">
+  <div class="center">
+    <div class="hero">
+      <h1>Amiral <span>Batt&#305;</span></h1>
+      <p>Sunucu gerekmez &mdash; oda kur, kodu payla&#351;, oyna.</p>
+    </div>
+    <div class="card">
+      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.85rem">Oyuncu ad&#305;n</div>
+      <input type="text" id="inName" placeholder="Ad&#305;n&#305; gir&hellip;" maxlength="20" autocomplete="off">
+    </div>
+    <div id="lobErr" class="err"></div>
+    <div id="lobInfo" class="infobar"><div class="spin"></div><span id="lobInfoTxt"></span></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:.85rem">
+      <button class="btn bp bfull" id="btnCreate" onclick="doCreate()">+ Yeni Oda Kur</button>
+      <div class="divider">veya mevcut odaya kat&#305;l</div>
+      <label>Oda kodu (4 harf)</label>
+      <div style="display:flex;gap:.5rem">
+        <input type="text" id="inCode" placeholder="ABCD" maxlength="4"
+          style="text-transform:uppercase;letter-spacing:5px;font-weight:800;font-size:18px;text-align:center;width:120px">
+        <button class="btn bo" style="flex:1" id="btnJoin" onclick="doJoin()">Kat&#305;l &rarr;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WAIT -->
+<div id="sWait" class="screen">
+  <div class="wait-box card">
+    <p style="color:var(--txt2);font-size:14px;margin-bottom:.25rem">Oda kodun</p>
+    <div class="codebox" id="wCode">----</div>
+    <p style="color:var(--txt2);font-size:14px;margin-bottom:1.5rem">Bu kodu arkada&#351;&#305;na g&ouml;nder</p>
+    <div style="display:flex;align-items:center;gap:.75rem;justify-content:center;margin-bottom:1.5rem">
+      <div class="pulse" style="width:10px;height:10px;border-radius:50%;background:var(--amber)"></div>
+      <span style="color:var(--amber);font-size:14px">Rakip bekleniyor&hellip;</span>
+    </div>
+    <button class="btn bo bfull" onclick="copyCode()">&#128203; Kodu Kopyala</button>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div id="sSetup" class="screen">
+  <div class="setup-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <h2 style="font-size:18px;font-weight:600">Gemilerini Yerle&#351;tir</h2>
+      <span style="font-size:12px;padding:3px 10px;border-radius:20px;background:var(--ad);color:var(--amber);border:1px solid var(--amber)">Haz&#305;rlan&#305;yor</span>
+    </div>
+    <div id="shipPalette" class="ship-palette"></div>
+    <div class="orow">
+      <button class="obtn active" id="btnH" onclick="setOrient('H')">Yatay</button>
+      <button class="obtn" id="btnV" onclick="setOrient('V')">Dikey</button>
+      <button class="btn bo" onclick="doAuto()" style="margin-left:.25rem">Otomatik</button>
+      <button class="btn bo" onclick="doReset()">S&#305;f&#305;rla</button>
+      <button class="btn bp" id="btnReady" onclick="doReady()" disabled style="margin-left:auto">Haz&#305;r &#10003;</button>
+    </div>
+    <div class="bcard" style="display:inline-block">
+      <h4>Tahtan&#305;z</h4>
+      <div class="gout">
+        <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
+        <div class="grows" id="setupGrid"></div>
+      </div>
+    </div>
+    <div id="setupWait" style="display:none;color:var(--txt2);font-size:14px;padding:.75rem;background:var(--ad);border:1px solid var(--amber);border-radius:8px">
+      &#9203; Rakip gemilerini yerle&#351;tiriyor&hellip;
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="sGame" class="screen">
+  <div class="game-wrap">
+    <div id="tbanner" class="tbanner">Y&uuml;kleniyor&hellip;</div>
+    <div class="metrics">
+      <div class="met"><div class="ml" id="ml1">Sen</div><div class="mv" id="myHits">0</div></div>
+      <div class="met"><div class="ml" id="ml2">Rakip</div><div class="mv" id="oppHits">0</div></div>
+      <div class="met"><div class="ml">Hamle</div><div class="mv" id="totMoves">0</div></div>
+    </div>
+    <div class="boards-row">
+      <div class="bcard">
+        <h4>Kendi Tahtam</h4>
+        <div class="gout">
+          <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
+          <div class="grows" id="myGrid"></div>
+        </div>
+      </div>
+      <div class="bcard">
+        <h4 id="enemyTitle">Rakip Tahtas&#305;</h4>
+        <div class="gout">
+          <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
+          <div class="grows" id="enemyGrid"></div>
+        </div>
+      </div>
+    </div>
+    <div class="log" id="gameLog"></div>
+  </div>
+</div>
+
+<!-- END -->
+<div id="sEnd" class="screen">
+  <div class="end-wrap">
+    <div class="trophy" id="endIcon">&#127942;</div>
+    <h2 id="endTitle">Oyun Bitti</h2>
+    <div class="metrics" id="endMet"></div>
+    <div class="card" style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn bp" onclick="doRematch()">Tekrar Oyna</button>
+      <button class="btn bo" onclick="backToLobby()">Ana Men&uuml;</button>
+    </div>
+    <div id="rematchMsg" style="display:none;color:var(--amber);font-size:14px"></div>
+  </div>
+</div>
+
+</main>
+<script>
+// ─── SHIPS ───────────────────────────────────────────────
+var SHIPS = [
+  {key:'carrier',  label:'Tasiyici', size:5},
+  {key:'battle',   label:'Savas',    size:4},
+  {key:'cruiser',  label:'Kruvazor', size:3},
+  {key:'destroy',  label:'Destroyer',size:3},
+  {key:'sub',      label:'Denizalti',size:2}
+];
+var TOTAL = SHIPS.reduce(function(a,s){return a+s.size;},0);
+
+// ─── HELPERS ─────────────────────────────────────────────
+function mk10(){return Array(10).fill(null).map(function(){return Array(10).fill(0);});}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
+function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},5000);}
+function showInfo(m){var e=document.getElementById('lobInfo');document.getElementById('lobInfoTxt').textContent=m;e.classList.add('show');}
+function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
+function setHBadge(t){var e=document.getElementById('hbadge');e.textContent=t;e.style.display='block';}
+function addLog(t){var l=document.getElementById('gameLog');var p=document.createElement('p');p.textContent=t;l.insertBefore(p,l.firstChild);}
+function gc(gid,r,c){return document.querySelector('#'+gid+' [data-r="'+r+'"][data-c="'+c+'"]');}
+
+// ─── PEER / STATE ─────────────────────────────────────────
+var peer = null;
+var conn = null;
+var g = {};
+
+function resetG(){
+  g = {
+    isHost:false, myName:'', oppName:'?', roomCode:'',
+    myBoard:null, oppBoard:null, myShots:null, oppShots:null,
+    placedShips:{}, selShip:null, orient:'H',
+    hits:[0,0], moves:0, myTurn:false,
+    myReady:false, oppReady:false
+  };
+}
+resetG();
+
+// 4 harfli büyük kod üret (I ve O hariç — karışmasın)
+function genCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ';
+  var c='';
+  for(var i=0;i<4;i++) c+=chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+// PeerJS peer ID = oda kodu
+function initPeer(id, onOpen){
+  if(peer && !peer.destroyed) peer.destroy();
+  peer = new Peer(id, {debug:0});
+  peer.on('open', function(){
+    console.log('Peer acik, ID:', peer.id);
+    onOpen();
+  });
+  peer.on('error', function(err){
+    hideInfo();
+    setBtns(false);
+    if(err.type === 'unavailable-id'){
+      showErr('Bu oda kodu zaten kullaniliyor. Tekrar deneyin.');
+    } else if(err.type === 'peer-unavailable'){
+      showErr('Oda bulunamadi. Kodu kontrol edin.');
+    } else {
+      showErr('Baglanti hatasi: ' + err.message);
+    }
+  });
+}
+
+function setBtns(dis){
+  document.getElementById('btnCreate').disabled=dis;
+  document.getElementById('btnJoin').disabled=dis;
+}
+
+// Mesaj gönder
+function send(msg){
+  if(conn && conn.open) conn.send(msg);
+}
+
+// Gelen mesajları işle
+function handleData(msg){
+  console.log('<-', msg.type, msg);
+  switch(msg.type){
+
+    case 'hello':
+      g.oppName = msg.name;
+      send({type:'hello_ack', name:g.myName});
+      // İkisi de bağlı, setup başlasın
+      startSetup();
+      break;
+
+    case 'hello_ack':
+      g.oppName = msg.name;
+      startSetup();
+      break;
+
+    case 'board_ready':
+      g.oppReady = true;
+      checkBothReady();
+      break;
+
+    case 'fire':
+      receiveFireFromOpp(msg.row, msg.col);
+      break;
+
+    case 'rematch':
+      g.oppReady = false;
+      g.myReady  = false;
+      document.getElementById('rematchMsg').textContent = 'Rakip kabul etti! Hazirlaniliyor...';
+      startSetup();
+      break;
+  }
+}
+
+// ─── LOBBY ───────────────────────────────────────────────
+function getName(){
+  var n=document.getElementById('inName').value.trim();
+  if(!n){showErr('Once bir isim gir.');return null;}
+  return n;
+}
+
+function doCreate(){
+  var name=getName(); if(!name) return;
+  g.myName=name; g.isHost=true;
+  var code=genCode();
+  g.roomCode=code;
+  setBtns(true);
+  showInfo('PeerJS sunucusuna baglaniliyor...');
+  initPeer(code, function(){
+    hideInfo();
+    setBtns(false);
+    document.getElementById('wCode').textContent=code;
+    setHBadge('Oda: '+code);
+    showScreen('sWait');
+    // Katılımcı bekle
+    peer.on('connection', function(c){
+      conn=c;
+      conn.on('open', function(){
+        console.log('Rakip baglandi');
+        // Katılımcı hello gönderecek, biz hello_ack ile cevap vereceğiz (handleData'da)
+      });
+      conn.on('data', handleData);
+      conn.on('close', function(){handleDisconnect();});
+      conn.on('error', function(){handleDisconnect();});
+    });
+  });
+}
+
+function doJoin(){
+  var name=getName(); if(!name) return;
+  var code=document.getElementById('inCode').value.trim().toUpperCase();
+  if(code.length!==4){showErr('Oda kodu 4 harf olmali.');return;}
+  g.myName=name; g.isHost=false; g.roomCode=code;
+  setBtns(true);
+  showInfo('Odaya baglaniliyor...');
+  // Katılımcının kendi peer ID'si rastgele
+  initPeer(undefined, function(){
+    conn=peer.connect(code, {reliable:true});
+    conn.on('open', function(){
+      hideInfo();
+      setBtns(false);
+      setHBadge('Oda: '+code);
+      // İlk hello mesajını gönder
+      send({type:'hello', name:g.myName});
+    });
+    conn.on('data', handleData);
+    conn.on('close', function(){handleDisconnect();});
+    conn.on('error', function(){handleDisconnect();});
+  });
+}
+
+function copyCode(){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(g.roomCode).then(function(){alert('Kopyalandi: '+g.roomCode);});
+  } else {
+    prompt('Kodu kopyala:', g.roomCode);
+  }
+}
+
+function handleDisconnect(){
+  var inGame=['sGame','sSetup','sWait'].some(function(id){return document.getElementById(id).classList.contains('active');});
+  if(inGame){alert('Rakip baglantisi kesildi.');backToLobby();}
+}
+
+function backToLobby(){
+  if(conn){conn.close();conn=null;}
+  if(peer){peer.destroy();peer=null;}
+  resetG();
+  document.getElementById('hbadge').style.display='none';
+  showScreen('sLobby');
+  setBtns(false);
+  hideInfo();
+}
+
+// ─── SETUP ───────────────────────────────────────────────
+function startSetup(){
+  g.myBoard=mk10(); g.myShots=mk10(); g.oppShots=mk10(); g.oppBoard=mk10();
+  g.placedShips={}; g.selShip=null; g.orient='H';
+  g.myReady=false; g.oppReady=false;
+  document.getElementById('setupWait').style.display='none';
+  document.getElementById('btnReady').disabled=true;
+  document.getElementById('btnH').classList.add('active');
+  document.getElementById('btnV').classList.remove('active');
+  showScreen('sSetup');
+  renderPalette(); renderSetupGrid();
+}
+
+function setOrient(o){
+  g.orient=o;
+  document.getElementById('btnH').classList.toggle('active',o==='H');
+  document.getElementById('btnV').classList.toggle('active',o==='V');
+}
+
+function renderPalette(){
+  var pal=document.getElementById('shipPalette'); pal.innerHTML='';
+  SHIPS.forEach(function(s){
+    var b=document.createElement('button');
+    var placed=!!g.placedShips[s.key], sel=g.selShip===s.key;
+    b.className='schip'+(placed?' placed':'')+(sel?' sel':'');
+    b.textContent=s.label+' ('+s.size+')';
+    if(!placed)(function(k){b.onclick=function(){g.selShip=k;renderPalette();};})(s.key);
+    pal.appendChild(b);
+  });
+}
+
+function buildGrid(cid, onClick, onEnter, onLeave){
+  var w=document.getElementById(cid); w.innerHTML='';
+  for(var r=0;r<10;r++){
+    var row=document.createElement('div'); row.className='grow';
+    var l=document.createElement('div'); l.className='rlbl'; l.textContent=r+1; row.appendChild(l);
+    for(var c=0;c<10;c++){
+      var cell=document.createElement('div'); cell.className='cell';
+      cell.dataset.r=r; cell.dataset.c=c;
+      if(onClick)(function(rr,cc){cell.onclick=function(){onClick(rr,cc);};})(r,c);
+      if(onEnter)(function(rr,cc){cell.onmouseenter=function(){onEnter(rr,cc);};})(r,c);
+      if(onLeave)(function(rr,cc){cell.onmouseleave=function(){onLeave(rr,cc);};})(r,c);
+      row.appendChild(cell);
+    }
+    w.appendChild(row);
+  }
+}
+
+function sc(r,c){return document.querySelector('#setupGrid [data-r="'+r+'"][data-c="'+c+'"]');}
+
+function renderSetupGrid(){
+  buildGrid('setupGrid',function(r,c){placeShip(r,c);},function(r,c){hoverShip(r,c,true);},function(r,c){hoverShip(r,c,false);});
+  for(var r=0;r<10;r++) for(var c=0;c<10;c++) if(g.myBoard[r][c]) sc(r,c).classList.add('ship');
+}
+
+function calcCells(row,col){
+  var s=SHIPS.filter(function(x){return x.key===g.selShip;})[0]; if(!s) return null;
+  var cells=[];
+  for(var i=0;i<s.size;i++){
+    var r=row,c=col; if(g.orient==='H')c+=i;else r+=i;
+    if(r>=10||c>=10||g.myBoard[r][c]) return null;
+    cells.push([r,c]);
+  }
+  return cells;
+}
+
+function hoverShip(row,col,show){
+  if(!g.selShip) return;
+  var s=SHIPS.filter(function(x){return x.key===g.selShip;})[0]; if(!s) return;
+  var valid=calcCells(row,col);
+  for(var i=0;i<s.size;i++){
+    var r=row,c=col; if(g.orient==='H')c+=i;else r+=i;
+    if(r>=10||c>=10) continue;
+    var el=sc(r,c); if(!el||g.myBoard[r][c]) continue;
+    if(show) el.classList.add(valid?'prev':'prevbad');
+    else {el.classList.remove('prev');el.classList.remove('prevbad');}
+  }
+}
+
+function placeShip(row,col){
+  if(!g.selShip) return;
+  var cells=calcCells(row,col); if(!cells) return;
+  cells.forEach(function(rc){g.myBoard[rc[0]][rc[1]]=1;});
+  g.placedShips[g.selShip]=cells; g.selShip=null;
+  document.getElementById('btnReady').disabled=!SHIPS.every(function(s){return !!g.placedShips[s.key];});
+  renderPalette(); renderSetupGrid();
+}
+
+function doAuto(){
+  g.myBoard=mk10(); g.placedShips={};
+  SHIPS.forEach(function(s){
+    var done=false;
+    while(!done){
+      var o=Math.random()<.5?'H':'V', r0=Math.floor(Math.random()*10), c0=Math.floor(Math.random()*10);
+      var cells=[],ok=true;
+      for(var i=0;i<s.size;i++){
+        var r=r0,c=c0; if(o==='H')c+=i;else r+=i;
+        if(r>=10||c>=10||g.myBoard[r][c]){ok=false;break;}
+        cells.push([r,c]);
+      }
+      if(ok){cells.forEach(function(rc){g.myBoard[rc[0]][rc[1]]=1;});g.placedShips[s.key]=cells;done=true;}
+    }
+  });
+  document.getElementById('btnReady').disabled=false;
+  renderPalette(); renderSetupGrid();
+}
+
+function doReset(){
+  g.myBoard=mk10(); g.placedShips={}; g.selShip=null;
+  document.getElementById('btnReady').disabled=true;
+  renderPalette(); renderSetupGrid();
+}
+
+function doReady(){
+  g.myReady=true;
+  document.getElementById('btnReady').disabled=true;
+  document.getElementById('setupWait').style.display='block';
+  send({type:'board_ready'});
+  checkBothReady();
+}
+
+function checkBothReady(){
+  if(g.myReady && g.oppReady){
+    // Host başlar
+    g.myTurn = g.isHost;
+    startGame();
+  }
+}
+
+// ─── GAME ─────────────────────────────────────────────────
+function startGame(){
+  g.hits=[0,0]; g.moves=0;
+  document.getElementById('ml1').textContent=g.myName+' (sen)';
+  document.getElementById('ml2').textContent=g.oppName||'Rakip';
+  document.getElementById('enemyTitle').textContent=(g.oppName||'Rakip')+' \u2014 Hedef';
+  showScreen('sGame');
+  updateBanner();
+  buildGrid('myGrid'); renderMyGrid();
+  buildGrid('enemyGrid',function(r,c){doFire(r,c);}); renderEnemyGrid();
+}
+
+function updateBanner(){
+  var b=document.getElementById('tbanner');
+  if(g.myTurn){b.textContent='\uD83C\uDFAF Senin siran \u2014 Hedef al!';b.className='tbanner';}
+  else{b.textContent=(g.oppName||'Rakip')+' ates ediyor\u2026';b.className='tbanner enemy';}
+}
+
+function renderMyGrid(){
+  for(var r=0;r<10;r++) for(var c=0;c<10;c++){
+    var el=gc('myGrid',r,c); if(!el) continue;
+    el.className='cell'; el.textContent='';
+    if(g.oppShots[r][c]){el.classList.add(g.myBoard[r][c]?'hit':'miss');el.textContent=g.myBoard[r][c]?'x':'.';}
+    else if(g.myBoard[r][c]) el.classList.add('ship');
+  }
+}
+
+function renderEnemyGrid(){
+  for(var r=0;r<10;r++) for(var c=0;c<10;c++){
+    var el=gc('enemyGrid',r,c); if(!el) continue;
+    el.className='cell'; el.textContent='';
+    if(g.myShots[r][c]){el.classList.add(g.oppBoard[r][c]?'hit':'miss');el.textContent=g.oppBoard[r][c]?'x':'.';}
+    else if(g.myTurn) el.classList.add('tgt');
+  }
+}
+
+function doFire(r,c){
+  if(!g.myTurn||g.myShots[r][c]) return;
+  g.myShots[r][c]=1; g.moves++;
+  send({type:'fire',row:r,col:c});
+  // Sonucu rakipten bekleyeceğiz; rakip kendi tahtasını biliyor
+  // Ama biz de rakibin tahtasını bilmiyoruz — bu p2p'de önemli bir nokta:
+  // Rakip bize "hit mi miss mi" sonucunu gönderecek
+  // Bunun için fire mesajını gönderdikten sonra rakipten fire_result bekliyoruz
+  // Aslında bu implementasyonda fire'ı alan taraf kendi tahtasını kontrol edip
+  // sonucu karşıya gönderir — receiveFireFromOpp bunu yapar
+}
+
+function receiveFireFromOpp(row, col){
+  // Rakip bize ateş etti
+  g.oppShots[row][col]=1;
+  var hit=g.myBoard[row][col]===1;
+  g.moves++;
+  document.getElementById('totMoves').textContent=g.moves;
+  var lbl=String.fromCharCode(65+col)+(row+1);
+  if(hit) g.hits[1]++;
+  document.getElementById('oppHits').textContent=g.hits[1];
+  renderMyGrid();
+  addLog((g.oppName||'Rakip')+' -> '+lbl+': '+(hit?'Isabet!':'Kacti'));
+  // Rakibe sonucu bildir
+  send({type:'fire_result', row:row, col:col, hit:hit});
+  // Sıra bize geçiyor
+  g.myTurn=true;
+  updateBanner(); renderEnemyGrid();
+  // Tüm gemilerim battıysa
+  if(checkLost()) endGame(false);
+}
+
+// fire_result'u handleData'ya ekle
+var _origHandleData = handleData;
+function handleData(msg){
+  if(msg.type==='fire_result'){
+    // Bizim ateşimizin sonucu geldi
+    var row=msg.row, col=msg.col, hit=msg.hit;
+    if(hit){g.oppBoard[row][col]=1; g.hits[0]++;}
+    document.getElementById('myHits').textContent=g.hits[0];
+    var lbl=String.fromCharCode(65+col)+(row+1);
+    addLog('Sen -> '+lbl+': '+(hit?'Isabet!':'Kacti'));
+    document.getElementById('totMoves').textContent=g.moves;
+    renderEnemyGrid();
+    if(checkWon()){endGame(true);return;}
+    // Sıra rakibe geçiyor
+    g.myTurn=false;
+    updateBanner(); renderEnemyGrid();
+    return;
+  }
+  _origHandleData(msg);
+}
+
+function checkWon(){
+  var h=0;
+  for(var r=0;r<10;r++) for(var c=0;c<10;c++) if(g.myShots[r][c]&&g.oppBoard[r][c]) h++;
+  return h>=TOTAL;
+}
+function checkLost(){
+  var h=0;
+  for(var r=0;r<10;r++) for(var c=0;c<10;c++) if(g.oppShots[r][c]&&g.myBoard[r][c]) h++;
+  return h>=TOTAL;
+}
+
+function endGame(won){
+  document.getElementById('endIcon').textContent=won?'\uD83C\uDFC6':'\uD83D\uDC80';
+  document.getElementById('endTitle').textContent=won?'Kazandin!':'Kaybettin\u2026';
+  document.getElementById('endMet').innerHTML=
+    '<div class="met"><div class="ml">Senin isabet</div><div class="mv">'+g.hits[0]+'</div></div>'+
+    '<div class="met"><div class="ml">Rakip isabet</div><div class="mv">'+g.hits[1]+'</div></div>'+
+    '<div class="met"><div class="ml">Toplam hamle</div><div class="mv">'+g.moves+'</div></div>';
+  document.getElementById('rematchMsg').style.display='none';
+  showScreen('sEnd');
+}
+
+function doRematch(){
+  send({type:'rematch'});
+  var el=document.getElementById('rematchMsg');
+  el.style.display='block'; el.textContent='Rakip onayi bekleniyor\u2026';
+  // Kendi setup'ımızı da başlat
+  g.myReady=false; g.oppReady=false;
+  startSetup();
+}
+
+// ─── INPUT HELPERS ───────────────────────────────────────
+document.getElementById('inCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
+document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
+document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
+</script>
+</body>
+</html>
+EOF
