@@ -349,7 +349,7 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
       </div>
     </div>
 
-    <div class="setting-row">
+    <div class="setting-row" id="refireRow">
       <span class="setting-label" id="lblRefire">Tekrar Ateş <small style="color:var(--txt3);font-size:11px">(isabet → tekrar sen)</small></span>
       <button class="toggle" id="togRefire" onclick="toggleSetting('refire')"></button>
     </div>
@@ -624,13 +624,14 @@ function applyTheme(){
 
 function openSettings(){
   document.getElementById('settingsOverlay').classList.add('open');
-  // Toggle durumlarını güncelle
   document.getElementById('togSound').classList.toggle('on', settings.sound);
   document.getElementById('togRefire').classList.toggle('on', settings.refire);
   document.getElementById('themeDark').classList.toggle('active', settings.theme==='dark');
   document.getElementById('themeLight').classList.toggle('active', settings.theme==='light');
   document.getElementById('langTR').classList.toggle('active', settings.lang==='TR');
   document.getElementById('langEN').classList.toggle('active', settings.lang==='EN');
+  // Spektatörde tekrar ateş seçeneğini gizle
+  document.getElementById('refireRow').style.display = isSpectator ? 'none' : '';
 }
 function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
 function closeSettingsOutside(e){ if(e.target.id==='settingsOverlay') closeSettings(); }
