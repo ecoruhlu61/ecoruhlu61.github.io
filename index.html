@@ -102,18 +102,16 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .score-big span{color:var(--txt);font-weight:700}
 
 @media (orientation: landscape) and (max-width: 900px) {
-  .game-wrap{gap:.4rem}
-  .boards-row{flex-wrap:nowrap;align-items:flex-start;gap:.5rem}
-  .bcard{padding:.5rem}
-  .bcard h4{margin-bottom:.4rem;font-size:11px}
-  .metrics{grid-template-columns:repeat(3,1fr);gap:5px}
-  .met{padding:.4rem}
-  .met .ml{font-size:10px}.met .mv{font-size:16px}
-  .tbanner{padding:.4rem .75rem;font-size:13px}
+  header{display:none}
+  main{padding:.25rem .25rem}
+  .game-wrap{gap:.25rem}
+  .tbanner{display:none}
+  .metrics{display:none}
+  .game-log{display:none}
   .chat-wrap{display:none}
-  .game-log{max-height:40px}
-  header{padding:.4rem 1rem}
-  main{padding:.5rem .5rem}
+  .boards-row{flex-wrap:nowrap;align-items:flex-start;gap:.35rem;justify-content:center}
+  .bcard{padding:.35rem;background:transparent;border:none}
+  .bcard h4{margin-bottom:.3rem;font-size:11px;text-align:center}
 }
 @media(max-width:600px){.cell{width:26px;height:26px;font-size:11px}}
 </style>
