@@ -59,13 +59,13 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .obtn{padding:5px 14px;border-radius:6px;border:1px solid var(--bdr2);font-size:13px;cursor:pointer;background:transparent;color:var(--txt2);transition:all .15s}
 .obtn.active{background:var(--bg3);border-color:var(--blue);color:var(--bl)}
 .gout{overflow-x:hidden;width:100%}
-.grid-container{--cs:min(calc((100vw - 80px) / 12), 30px);--lbl:calc(var(--cs) * 0.8);display:inline-block;width:100%}
-.clbl{display:grid;grid-template-columns:var(--lbl) repeat(10,var(--cs));gap:2px;margin-bottom:2px}
-.clbl span{font-size:10px;color:var(--txt3);text-align:center;line-height:var(--cs)}
+.grid-container{display:block;width:100%}
+.clbl{display:grid;grid-template-columns:var(--lbl,20px) repeat(10,var(--cs,28px));gap:2px;margin-bottom:2px}
+.clbl span{font-size:10px;color:var(--txt3);text-align:center;line-height:var(--cs,28px)}
 .grows{display:flex;flex-direction:column;gap:2px}
 .grow{display:flex;gap:2px;align-items:center}
-.rlbl{width:var(--lbl);min-width:var(--lbl);font-size:10px;color:var(--txt3);text-align:center;flex-shrink:0}
-.cell{width:var(--cs);height:var(--cs);border-radius:3px;background:var(--bg3);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs) * 0.4);transition:background .1s,transform .1s;user-select:none;cursor:default;flex-shrink:0}
+.rlbl{width:var(--lbl,20px);min-width:var(--lbl,20px);font-size:10px;color:var(--txt3);text-align:center;flex-shrink:0}
+.cell{width:var(--cs,28px);height:var(--cs,28px);border-radius:3px;background:var(--bg3);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs,28px) * 0.4);transition:background .1s,transform .1s;user-select:none;cursor:default;flex-shrink:0}
 .cell.ship{background:var(--ship);border-color:#1d4ed8}
 .cell.prev{background:#1e3554}.cell.prevbad{background:var(--rd)}
 .cell.hit{background:var(--hit);border-color:#b91c1c}
@@ -767,6 +767,30 @@ document.getElementById('chatInput').addEventListener('keydown',function(e){
 });
 
 // ── INPUT ────────────────────────────────────────────────
+
+// Hücre boyutunu ekrana göre hesapla
+function calcGridSize(){
+  var padding = 32; // bcard padding her iki taraf
+  var lblW = 22;    // satır etiketi genişliği
+  var gap = 2;      // hücreler arası boşluk
+  var maxW = Math.min(window.innerWidth, 480) - padding * 2;
+  var cs = Math.floor((maxW - lblW - gap * 10) / 10);
+  cs = Math.max(22, Math.min(cs, 32)); // min 22px max 32px
+  var lbl = Math.round(cs * 0.75);
+  document.querySelectorAll('.grid-container').forEach(function(el){
+    el.style.setProperty('--cs', cs + 'px');
+    el.style.setProperty('--lbl', lbl + 'px');
+  });
+}
+window.addEventListener('resize', calcGridSize);
+// Screen değişince de çalıştır
+var _origShowScreen = showScreen;
+function showScreen(id){
+  _origShowScreen(id);
+  setTimeout(calcGridSize, 50);
+}
+calcGridSize();
+
 document.getElementById('inCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
 document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
