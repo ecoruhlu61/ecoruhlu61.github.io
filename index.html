@@ -58,13 +58,14 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .orow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .obtn{padding:5px 14px;border-radius:6px;border:1px solid var(--bdr2);font-size:13px;cursor:pointer;background:transparent;color:var(--txt2);transition:all .15s}
 .obtn.active{background:var(--bg3);border-color:var(--blue);color:var(--bl)}
-.gout{overflow-x:auto}
-.clbl{display:grid;grid-template-columns:22px repeat(10,30px);gap:2px;margin-bottom:2px}
-.clbl span{font-size:11px;color:var(--txt3);text-align:center;line-height:22px}
+.gout{overflow-x:hidden;width:100%}
+.grid-container{--cs:min(calc((100vw - 80px) / 12), 30px);--lbl:calc(var(--cs) * 0.8);display:inline-block;width:100%}
+.clbl{display:grid;grid-template-columns:var(--lbl) repeat(10,var(--cs));gap:2px;margin-bottom:2px}
+.clbl span{font-size:10px;color:var(--txt3);text-align:center;line-height:var(--cs)}
 .grows{display:flex;flex-direction:column;gap:2px}
 .grow{display:flex;gap:2px;align-items:center}
-.rlbl{width:22px;font-size:11px;color:var(--txt3);text-align:center;flex-shrink:0}
-.cell{width:30px;height:30px;border-radius:4px;background:var(--bg3);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .1s,transform .1s;user-select:none;cursor:default;flex-shrink:0}
+.rlbl{width:var(--lbl);min-width:var(--lbl);font-size:10px;color:var(--txt3);text-align:center;flex-shrink:0}
+.cell{width:var(--cs);height:var(--cs);border-radius:3px;background:var(--bg3);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs) * 0.4);transition:background .1s,transform .1s;user-select:none;cursor:default;flex-shrink:0}
 .cell.ship{background:var(--ship);border-color:#1d4ed8}
 .cell.prev{background:#1e3554}.cell.prevbad{background:var(--rd)}
 .cell.hit{background:var(--hit);border-color:#b91c1c}
@@ -165,12 +166,12 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
       <button class="btn bo" onclick="doReset()">S&#305;f&#305;rla</button>
       <button class="btn bp" id="btnReady" onclick="doReady()" disabled style="margin-left:auto">Haz&#305;r &#10003;</button>
     </div>
-    <div class="bcard" style="display:inline-block">
+    <div class="bcard">
       <h4>Tahtan&#305;z</h4>
-      <div class="gout">
+      <div class="grid-container"><div class="gout">
         <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
         <div class="grows" id="setupGrid"></div>
-      </div>
+      </div></div>
     </div>
     <div id="setupWait" style="display:none;color:var(--txt2);font-size:14px;padding:.75rem;background:var(--ad);border:1px solid var(--amber);border-radius:8px">
       &#9203; Rakip gemilerini yerle&#351;tiriyor&hellip;
@@ -190,17 +191,17 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
     <div class="boards-row">
       <div class="bcard">
         <h4>Kendi Tahtam</h4>
-        <div class="gout">
+        <div class="grid-container"><div class="gout">
           <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
           <div class="grows" id="myGrid"></div>
-        </div>
+        </div></div>
       </div>
       <div class="bcard">
         <h4 id="enemyTitle">Rakip Tahtas&#305;</h4>
-        <div class="gout">
+        <div class="grid-container"><div class="gout">
           <div class="clbl"><span></span><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span></div>
           <div class="grows" id="enemyGrid"></div>
-        </div>
+        </div></div>
       </div>
     </div>
     <div class="game-log" id="gameLog"></div>
