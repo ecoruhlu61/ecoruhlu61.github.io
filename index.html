@@ -1125,6 +1125,8 @@ function doCreateRoom(){
   g.isHost=true;
   var code=genCode();g.roomCode=code;
   credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; activeBomb=null;
+  // Önce lobby ekranına dön ki showInfo çalışsın
+  showScreen('sLobby');
   setBtns(true);showInfo('Baglanti kuruluyor...');
   initPeer(code,function(){
     hideInfo();setBtns(false);
