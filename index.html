@@ -882,9 +882,13 @@ function receiveAttack(row,col){
   send({type:'fire_result',row:row,col:col,hit:hit,sunk:sunkKey});
 
   if(checkLost()){endGame(false);return;}
-  g.myTurn=true;
+  // Tekrar ates aciksa ve rakip isabet yaptiysa sira yine rakipte kalir
+  if(hit && settings.refire){
+    g.myTurn=false;
+  } else {
+    g.myTurn=true;
+  }
   updateBanner();renderEnemyGrid();
-}
 
 // Kendi atışımın sonucu geldi
 function applyResult(row,col,hit,sunk){
