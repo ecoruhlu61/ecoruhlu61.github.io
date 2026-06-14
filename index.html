@@ -114,6 +114,40 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .spec-boards{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-top:1rem}
 .spec-banner{text-align:center;padding:.6rem 1rem;border-radius:8px;font-size:14px;font-weight:600;background:var(--bd);color:var(--bl);border:1px solid var(--blue);margin-bottom:.75rem}
 .spec-count{font-size:12px;color:var(--txt3);text-align:center;margin-top:.5rem}
+
+.mode-card{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;cursor:pointer;transition:all .2s;text-align:center;flex:1;min-width:140px}
+.mode-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 4px 20px rgba(59,130,246,.2)}
+.mode-card h3{font-size:16px;font-weight:700;margin-bottom:.5rem}
+.mode-card p{font-size:12px;color:var(--txt2);line-height:1.5}
+.mode-icon{font-size:36px;margin-bottom:.75rem}
+.mode-action{border-color:var(--red)!important;background:linear-gradient(135deg,#1a0a0a,#2a1010)}
+.mode-action:hover{border-color:#ff6b6b!important;box-shadow:0 4px 20px rgba(239,68,68,.25)!important}
+/* Shop */
+.shop-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center}
+.shop-overlay.open{display:flex}
+.shop-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;width:92%;max-width:400px;max-height:90vh;overflow-y:auto}
+.shop-panel h3{font-size:16px;font-weight:700;margin-bottom:.25rem}
+.credits-display{font-size:24px;font-weight:800;color:var(--amber);margin-bottom:1rem}
+.bomb-item{display:flex;align-items:center;gap:.75rem;padding:.75rem;border:1px solid var(--bdr);border-radius:10px;margin-bottom:.5rem;background:var(--bg3)}
+.bomb-item .bi-icon{font-size:24px;flex-shrink:0}
+.bomb-item .bi-info{flex:1}
+.bomb-item .bi-name{font-size:14px;font-weight:600}
+.bomb-item .bi-desc{font-size:12px;color:var(--txt2)}
+.bomb-item .bi-cost{font-size:13px;color:var(--amber);font-weight:700}
+.bomb-item .bi-count{font-size:12px;color:var(--green);margin-top:2px}
+.bomb-item .buy-btn{padding:6px 14px;border-radius:8px;border:none;background:var(--amber);color:#000;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0}
+.bomb-item .buy-btn:disabled{opacity:.4;cursor:not-allowed}
+/* Oyun içi bomba paneli */
+.bomb-bar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.5rem .75rem;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px}
+.bomb-bar-title{font-size:11px;color:var(--txt3);margin-right:.25rem}
+.bitem{padding:5px 10px;border-radius:6px;border:1.5px solid var(--bdr2);font-size:12px;cursor:pointer;background:var(--bg3);color:var(--txt2);transition:all .15s;display:flex;align-items:center;gap:4px}
+.bitem:hover{border-color:var(--amber);color:var(--amber)}
+.bitem.active{border-color:var(--amber);background:var(--ad);color:var(--amber)}
+.bitem.empty{opacity:.35;cursor:not-allowed}
+.credits-bar{font-size:13px;color:var(--amber);font-weight:700;margin-left:auto}
+.cell.radar-reveal{background:#1a3a2a;border-color:var(--green)}
+.cell.radar-ship{background:#1a4a1a;border-color:#4ade80}
+.cell.bomb-preview{background:rgba(239,68,68,.3);border-color:var(--red)}
 .settings-btn{position:fixed;bottom:.75rem;right:.75rem;width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex !important;align-items:center;justify-content:center;z-index:999;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .settings-btn:hover{background:var(--bg3);color:var(--txt)}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
@@ -232,6 +266,12 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 <div id="sGame" class="screen">
   <div class="game-wrap">
     <div id="tbanner" class="tbanner">Y&uuml;kleniyor&hellip;</div>
+    <div id="bombBar" class="bomb-bar" style="display:none">
+      <span class="bomb-bar-title">&#128165; Bombalar:</span>
+      <span id="bItemList"></span>
+      <span class="credits-bar" id="creditsBar">&#128176; 200</span>
+      <button class="btn bo" style="padding:4px 10px;font-size:12px;margin-left:.5rem" onclick="openShop()">Market</button>
+    </div>
     <div class="metrics">
       <div class="met"><div class="ml" id="ml1">Sen</div><div class="mv" id="myHits">0</div></div>
       <div class="met"><div class="ml" id="ml2">Rakip</div><div class="mv" id="oppHits">0</div></div>
@@ -284,6 +324,40 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 </div>
 
 
+
+
+<!-- MOD SEÇİMİ -->
+<div id="sModeSelect" class="screen">
+  <div style="max-width:480px;margin:2rem auto;display:flex;flex-direction:column;gap:1.25rem;padding:0 1rem">
+    <div style="text-align:center">
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:.4rem">Oyun Modu Seç</h2>
+      <p style="color:var(--txt2);font-size:14px">Rakibinle hangi modda oynamak istersin?</p>
+    </div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <div class="mode-card" onclick="selectMode('normal')">
+        <div class="mode-icon">&#9875;</div>
+        <h3>Normal Mod</h3>
+        <p>Klasik amiral battı. Sırayla ateş et, tüm gemileri bul.</p>
+      </div>
+      <div class="mode-card mode-action" onclick="selectMode('action')">
+        <div class="mode-icon">&#128165;</div>
+        <h3>Aksiyon Modu</h3>
+        <p>200 kredi ile başla. Bomba al, radar kullan, rakibi ez!</p>
+      </div>
+    </div>
+    <button class="btn bo bfull" onclick="showScreen('sLobby')">&#8592; Geri</button>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div class="shop-overlay" id="shopOverlay" onclick="closeShopOutside(event)">
+  <div class="shop-panel">
+    <h3>&#128165; Bomba Marketi</h3>
+    <div class="credits-display">&#128176; <span id="shopCredits">200</span> Kredi</div>
+    <div id="shopItems"></div>
+    <button class="btn bo bfull" onclick="closeShop()" style="margin-top:.75rem">Kapat</button>
+  </div>
+</div>
 
 <!-- SPECTATOR -->
 <div id="sSpec" class="screen">
@@ -361,6 +435,141 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 </main>
 <script>
 
+
+
+// ── AKSİYON MODU ─────────────────────────────────────────
+var actionMode = false;
+var credits = 200;
+var activeBomb = null;
+var bombInventory = {bomb2x2:0, bomb4block:0, radar3x3:0, atom5x5:0};
+
+var BOMBS = [
+  {key:'bomb2x2',   icon:'💣', label:'2×2 Bomba',     cost:30,  desc:'2×2 alan vurur'},
+  {key:'bomb4block',icon:'🚀', label:'4 Blok Bomba',   cost:35,  desc:'4 blok yatay vurur'},
+  {key:'radar3x3',  icon:'📡', label:'3×3 Radar',      cost:50,  desc:'3×3 alanı tarar (sıra geçmez)'},
+  {key:'atom5x5',   icon:'☢️', label:'Atom Bombası',   cost:100, desc:'5×5 alan vurur'},
+];
+
+function selectMode(mode){
+  actionMode = (mode==='action');
+  doCreateRoom();
+}
+
+function getBombCells(key, row, col){
+  var cells = [];
+  if(key==='bomb2x2'){
+    for(var dr=0;dr<2;dr++) for(var dc=0;dc<2;dc++){
+      if(row+dr<10&&col+dc<10) cells.push([row+dr,col+dc]);
+    }
+  } else if(key==='bomb4block'){
+    for(var dc=0;dc<4;dc++) if(col+dc<10) cells.push([row,col+dc]);
+  } else if(key==='radar3x3'||key==='atom5x5'){
+    var range = key==='radar3x3'?1:2;
+    for(var dr2=-range;dr2<=range;dr2++) for(var dc2=-range;dc2<=range;dc2++){
+      var r=row+dr2, c=col+dc2;
+      if(r>=0&&r<10&&c>=0&&c<10) cells.push([r,c]);
+    }
+  }
+  return cells;
+}
+
+function openShop(){
+  document.getElementById('shopCredits').textContent = credits;
+  var items = document.getElementById('shopItems');
+  items.innerHTML = '';
+  BOMBS.forEach(function(b){
+    var div = document.createElement('div');
+    div.className = 'bomb-item';
+    var canBuy = credits >= b.cost;
+    div.innerHTML = '<span class="bi-icon">'+b.icon+'</span>'+
+      '<div class="bi-info">'+
+        '<div class="bi-name">'+b.label+'</div>'+
+        '<div class="bi-desc">'+b.desc+'</div>'+
+        '<div class="bi-cost">'+b.cost+' kredi</div>'+
+        '<div class="bi-count">Envanter: '+bombInventory[b.key]+'</div>'+
+      '</div>'+
+      '<button class="buy-btn" '+(canBuy?'':'disabled')+' onclick="buyBomb(''+b.key+'','+b.cost+')">Satın Al</button>';
+    items.appendChild(div);
+  });
+  document.getElementById('shopOverlay').classList.add('open');
+}
+
+function closeShop(){ document.getElementById('shopOverlay').classList.remove('open'); }
+function closeShopOutside(e){ if(e.target.id==='shopOverlay') closeShop(); }
+
+function buyBomb(key, cost){
+  if(credits < cost) return;
+  credits -= cost;
+  bombInventory[key]++;
+  openShop(); // yenile
+  updateBombBar();
+}
+
+function updateBombBar(){
+  if(!actionMode){ document.getElementById('bombBar').style.display='none'; return; }
+  document.getElementById('bombBar').style.display='flex';
+  document.getElementById('creditsBar').textContent='💰 '+credits;
+  var list = document.getElementById('bItemList');
+  list.innerHTML = '';
+  BOMBS.forEach(function(b){
+    if(bombInventory[b.key]<=0) return;
+    var span = document.createElement('span');
+    span.className='bitem'+(activeBomb===b.key?' active':'');
+    span.innerHTML = b.icon+' ×'+bombInventory[b.key];
+    span.title = b.label;
+    (function(bk){ span.onclick = function(){ selectBomb(bk); }; })(b.key);
+    list.appendChild(span);
+  });
+}
+
+function selectBomb(key){
+  if(bombInventory[key]<=0) return;
+  activeBomb = (activeBomb===key) ? null : key;
+  updateBombBar();
+  renderEnemyGrid();
+}
+
+function cancelBomb(){ activeBomb=null; updateBombBar(); renderEnemyGrid(); }
+
+// Bomba önizleme
+function showBombPreview(row, col, show){
+  if(!activeBomb) return;
+  var cells = getBombCells(activeBomb, row, col);
+  cells.forEach(function(rc){
+    var el = gc('enemyGrid', rc[0], rc[1]);
+    if(!el) return;
+    if(show && !g.myShots[rc[0]][rc[1]]) el.classList.add('bomb-preview');
+    else el.classList.remove('bomb-preview');
+  });
+}
+
+// Bomba kullan
+function useBomb(row, col){
+  if(!activeBomb || !g.myTurn) return;
+  var key = activeBomb;
+  var cells = getBombCells(key, row, col);
+
+  if(key==='radar3x3'){
+    // Radar: hücreleri tarıyoruz, sıra geçmiyor
+    bombInventory[key]--;
+    credits = Math.max(0, credits);
+    activeBomb = null;
+    send({type:'radar', cells:cells});
+    updateBombBar();
+    return;
+  }
+
+  // Saldırı bombası
+  bombInventory[key]--;
+  activeBomb = null;
+  // Tüm hücrelere ateş et (zaten atılmamışları)
+  var toFire = cells.filter(function(rc){ return !g.myShots[rc[0]][rc[1]]; });
+  toFire.forEach(function(rc){ g.myShots[rc[0]][rc[1]]=1; });
+  g.moves += toFire.length;
+  send({type:'bomb', key:key, cells:toFire});
+  updateBombBar();
+  renderEnemyGrid();
+}
 
 // ── SPECTATOR ─────────────────────────────────────────────
 var spectators = [];
@@ -781,12 +990,13 @@ function onData(raw){
   switch(msg.type){
     case 'hello':
       g.oppName=msg.name;
-      send({type:'hello_ack',name:g.myName});
+      send({type:'hello_ack',name:g.myName,actionMode:actionMode});
       startSetup();
       break;
 
     case 'hello_ack':
       g.oppName=msg.name;
+      if(msg.actionMode!==undefined){ actionMode=msg.actionMode; credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; }
       startSetup();
       break;
 
@@ -811,6 +1021,66 @@ function onData(raw){
 
     case 'setting':
       if(msg.key==='refire') settings.refire=msg.val;
+      break;
+
+    case 'bomb':
+      // Rakip bomba kullandı — kendi tahtamıza uygula
+      var hitCount=0;
+      msg.cells.forEach(function(rc){
+        g.oppShots[rc[0]][rc[1]]=1;
+        if(g.myBoard[rc[0]][rc[1]]) hitCount++;
+      });
+      g.moves+=msg.cells.length;
+      g.hits[1]+=hitCount;
+      document.getElementById('oppHits').textContent=g.hits[1];
+      document.getElementById('totMoves').textContent=g.moves;
+      if(settings.sound){ if(hitCount>0) sndHit(); else sndMiss(); }
+      renderMyGrid();
+      var bombRes={};
+      msg.cells.forEach(function(rc){ bombRes[rc[0]+','+rc[1]]=g.myBoard[rc[0]][rc[1]]===1; });
+      send({type:'bomb_result', results:bombRes, hits:hitCount, moves:g.moves});
+      if(checkLost()){endGame(false);return;}
+      notifySpectatorsAfterFire();
+      if(hitCount>0 && settings.refire){ g.myTurn=false; } else { g.myTurn=true; }
+      updateBanner(); renderEnemyGrid();
+      break;
+
+    case 'bomb_result':
+      // Kendi bombamın sonucu
+      Object.keys(msg.results).forEach(function(key){
+        var parts=key.split(','); var r=parseInt(parts[0]),c=parseInt(parts[1]);
+        if(msg.results[key]){ g.oppBoard[r][c]=1; g.hits[0]++; }
+        var el=gc('enemyGrid',r,c);
+        if(el){ el.className='cell '+(msg.results[key]?'hit':'miss'); el.textContent=msg.results[key]?'x':'.'; }
+      });
+      g.moves=msg.moves;
+      document.getElementById('myHits').textContent=g.hits[0];
+      document.getElementById('totMoves').textContent=g.moves;
+      if(settings.sound) sndHit();
+      notifySpectatorsAfterFire();
+      if(checkWon()){endGame(true);return;}
+      if(msg.hits>0 && settings.refire){ g.myTurn=true; } else { g.myTurn=false; }
+      updateBanner(); renderEnemyGrid();
+      break;
+
+    case 'radar':
+      // Rakip radar kullandı — sadece kendi gemilerimiz üzerinde
+      var radarResult={};
+      msg.cells.forEach(function(rc){ radarResult[rc[0]+','+rc[1]]=g.myBoard[rc[0]][rc[1]]===1; });
+      send({type:'radar_result', results:radarResult});
+      break;
+
+    case 'radar_result':
+      // Radar sonucu — sıra geçmiyor
+      Object.keys(msg.results).forEach(function(key){
+        var parts=key.split(','); var r=parseInt(parts[0]),c=parseInt(parts[1]);
+        if(!g.myShots[r][c]){
+          var el=gc('enemyGrid',r,c);
+          if(el){ el.className='cell '+(msg.results[key]?'radar-ship':'radar-reveal'); el.textContent=msg.results[key]?'?':'·'; }
+        }
+      });
+      if(settings.sound) sndChat();
+      addGameLog('Radar kullanıldı!');
       break;
 
     case 'typing':
@@ -846,8 +1116,15 @@ function setBtns(dis){document.getElementById('btnCreate').disabled=dis;document
 
 function doCreate(){
   var name=getName();if(!name) return;
-  g.myName=name;g.isHost=true;
+  g.myName=name;
+  // Mod seçim ekranına git
+  showScreen('sModeSelect');
+}
+
+function doCreateRoom(){
+  g.isHost=true;
   var code=genCode();g.roomCode=code;
+  credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; activeBomb=null;
   setBtns(true);showInfo('Baglanti kuruluyor...');
   initPeer(code,function(){
     hideInfo();setBtns(false);
@@ -904,6 +1181,8 @@ function backToLobby(){
   spectators.forEach(function(c){try{c.close();}catch(e){}});
   spectators=[];
   isSpectator=false;
+  actionMode=false; credits=200; activeBomb=null;
+  bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0};
   if(conn){conn.close();conn=null;}
   if(peer){peer.destroy();peer=null;}
   score={me:0,opp:0};
@@ -1056,6 +1335,8 @@ function checkSunk(shots,board,placedShips,alreadySunk){
 // ── GAME ─────────────────────────────────────────────────
 function startGame(){
   g.hits=[0,0];g.moves=0;
+  credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; activeBomb=null;
+  updateBombBar();
   document.getElementById('ml1').textContent=g.myName+' (sen)';
   document.getElementById('ml2').textContent=g.oppName||'Rakip';
   document.getElementById('enemyTitle').textContent=(g.oppName||'Rakip')+' - Hedef';
@@ -1065,7 +1346,7 @@ function startGame(){
   showScreen('sGame');
   updateBanner();
   buildGrid('myGrid');renderMyGrid();
-  buildGrid('enemyGrid',function(r,c){doFire(r,c);});renderEnemyGrid();
+  buildGrid('enemyGrid',function(r,c){doFire(r,c);},function(r,c){showBombPreview(r,c,true);},function(r,c){showBombPreview(r,c,false);});renderEnemyGrid();
 }
 
 function updateBanner(){
@@ -1106,7 +1387,9 @@ function renderEnemyGrid(){
 }
 
 function doFire(r,c){
-  if(!g.myTurn||g.myShots[r][c]) return;
+  if(!g.myTurn) return;
+  if(activeBomb){ useBomb(r,c); return; }
+  if(g.myShots[r][c]) return;
   g.myShots[r][c]=1;g.moves++;
   send({type:'fire',row:r,col:c});
   renderEnemyGrid();
