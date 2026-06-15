@@ -444,14 +444,14 @@ var activeBomb = null;
 var bombInventory = {bomb2x2:0, bomb4block:0, radar3x3:0, atom5x5:0};
 
 var BOMBS = [
-  {key:'bomb2x2',   icon:'💣', label:'2×2 Bomba',     cost:30,  desc:'2×2 alan vurur'},
-  {key:'bomb4block',icon:'🚀', label:'4 Blok Bomba',   cost:35,  desc:'4 blok yatay vurur'},
-  {key:'radar3x3',  icon:'📡', label:'3×3 Radar',      cost:50,  desc:'3×3 alanı tarar (sıra geçmez)'},
-  {key:'atom5x5',   icon:'☢️', label:'Atom Bombası',   cost:100, desc:'5×5 alan vurur'},
+  {key:'bomb2x2',    icon:'[B]', label:'2x2 Bomba',    cost:30,  desc:'2x2 alan vurur'},
+  {key:'bomb4block', icon:'[R]', label:'4 Blok Bomba', cost:35,  desc:'4 blok yatay vurur'},
+  {key:'radar3x3',   icon:'[S]', label:'3x3 Radar',    cost:50,  desc:'3x3 alan tarar, sira gecmez'},
+  {key:'atom5x5',    icon:'[A]', label:'Atom Bombasi',  cost:100, desc:'5x5 alan vurur'},
 ];
 
-function selectMode(mode){
-  actionMode = (mode==='action');
+function selectMode(m){
+  actionMode = (m==='action');
   doCreateRoom();
 }
 
@@ -478,18 +478,25 @@ function openShop(){
   var items = document.getElementById('shopItems');
   items.innerHTML = '';
   BOMBS.forEach(function(b){
-    var div = document.createElement('div');
-    div.className = 'bomb-item';
-    var canBuy = credits >= b.cost;
-    div.innerHTML = '<span class="bi-icon">'+b.icon+'</span>'+
-      '<div class="bi-info">'+
-        '<div class="bi-name">'+b.label+'</div>'+
-        '<div class="bi-desc">'+b.desc+'</div>'+
-        '<div class="bi-cost">'+b.cost+' kredi</div>'+
-        '<div class="bi-count">Envanter: '+bombInventory[b.key]+'</div>'+
-      '</div>'+
-      '<button class="buy-btn" '+(canBuy?'':'disabled')+' onclick="buyBomb(''+b.key+'','+b.cost+')">Satın Al</button>';
-    items.appendChild(div);
+    var row = document.createElement('div');
+    row.className = 'bomb-item';
+    var icon = document.createElement('span');
+    icon.className = 'bi-icon';
+    icon.textContent = b.icon;
+    var info = document.createElement('div');
+    info.className = 'bi-info';
+    var nm = document.createElement('div'); nm.className='bi-name'; nm.textContent=b.label;
+    var ds = document.createElement('div'); ds.className='bi-desc'; ds.textContent=b.desc;
+    var cs = document.createElement('div'); cs.className='bi-cost'; cs.textContent=b.cost+' kredi';
+    var cnt = document.createElement('div'); cnt.className='bi-count'; cnt.textContent='Envanter: '+bombInventory[b.key];
+    info.appendChild(nm); info.appendChild(ds); info.appendChild(cs); info.appendChild(cnt);
+    var btn = document.createElement('button');
+    btn.className = 'buy-btn';
+    btn.textContent = 'Satin Al';
+    if(credits < b.cost) btn.disabled = true;
+    (function(bk,bc){ btn.onclick = function(){ buyBomb(bk,bc); }; })(b.key, b.cost);
+    row.appendChild(icon); row.appendChild(info); row.appendChild(btn);
+    items.appendChild(row);
   });
   document.getElementById('shopOverlay').classList.add('open');
 }
@@ -508,14 +515,14 @@ function buyBomb(key, cost){
 function updateBombBar(){
   if(!actionMode){ document.getElementById('bombBar').style.display='none'; return; }
   document.getElementById('bombBar').style.display='flex';
-  document.getElementById('creditsBar').textContent='💰 '+credits;
+  document.getElementById('creditsBar').textContent=' '+credits;
   var list = document.getElementById('bItemList');
   list.innerHTML = '';
   BOMBS.forEach(function(b){
     if(bombInventory[b.key]<=0) return;
     var span = document.createElement('span');
     span.className='bitem'+(activeBomb===b.key?' active':'');
-    span.innerHTML = b.icon+' ×'+bombInventory[b.key];
+    span.innerHTML = b.icon+' x'+bombInventory[b.key];
     span.title = b.label;
     (function(bk){ span.onclick = function(){ selectBomb(bk); }; })(b.key);
     list.appendChild(span);
@@ -754,26 +761,26 @@ var settings = {
 
 var LANG = {
   TR: {
-    title:'Amiral Battı', subtitle:'Sunucu gerekmez — oda kur, kodu paylaş, oyna.',
-    createBtn:'+ Yeni Oda Kur', joinBtn:'Katıl →', codePlaceholder:'Oda kodu (4 harf)',
-    namePlaceholder:'Adını gir…', waitText:'Rakip bekleniyor…', copyBtn:'Kodu Kopyala',
-    placeTitle:'Gemilerini Yerleştir', readyBtn:'Hazır ✓', autoBtn:'Otomatik', resetBtn:'Sıfırla',
-    horizBtn:'Yatay', vertBtn:'Dikey', boardTitle:'Tahtanız', waitShips:'Rakip gemilerini yerleştiriyor…',
-    myBoard:'Kendi Tahtam', enemyBoard:'Rakip Tahtası', myTurn:'Senin sıran — Hedef al!',
-    enemyTurn:' ateş ediyor…', chatPlaceholder:'Mesaj yaz...', sendBtn:'Gönder',
-    rematchBtn:'Tekrar Oyna', menuBtn:'Ana Menü', winText:'Kazandın!', loseText:'Kaybettin…',
+    title:'Amiral Battı', subtitle:'Sunucu gerekmez - oda kur, kodu paylaş, oyna.',
+    createBtn:'+ Yeni Oda Kur', joinBtn:'Katıl ->', codePlaceholder:'Oda kodu (4 harf)',
+    namePlaceholder:'Adını gir...', waitText:'Rakip bekleniyor...', copyBtn:'Kodu Kopyala',
+    placeTitle:'Gemilerini Yerleştir', readyBtn:'Hazır v', autoBtn:'Otomatik', resetBtn:'Sıfırla',
+    horizBtn:'Yatay', vertBtn:'Dikey', boardTitle:'Tahtanız', waitShips:'Rakip gemilerini yerleştiriyor...',
+    myBoard:'Kendi Tahtam', enemyBoard:'Rakip Tahtası', myTurn:'Senin sıran - Hedef al!',
+    enemyTurn:' ateş ediyor...', chatPlaceholder:'Mesaj yaz...', sendBtn:'Gönder',
+    rematchBtn:'Tekrar Oyna', menuBtn:'Ana Menü', winText:'Kazandın!', loseText:'Kaybettin...',
     myHitsLbl:'Senin isabet', oppHitsLbl:'Rakip isabet', movesLbl:'Hamle',
     hit:'İsabet!', miss:'Kaçtı', sunk:'BATTI!'
   },
   EN: {
-    title:'Battleship', subtitle:'No server needed — create room, share code, play.',
-    createBtn:'+ Create Room', joinBtn:'Join →', codePlaceholder:'Room code (4 letters)',
-    namePlaceholder:'Enter your name…', waitText:'Waiting for opponent…', copyBtn:'Copy Code',
-    placeTitle:'Place Your Ships', readyBtn:'Ready ✓', autoBtn:'Auto', resetBtn:'Reset',
-    horizBtn:'Horizontal', vertBtn:'Vertical', boardTitle:'Your Board', waitShips:'Opponent is placing ships…',
-    myBoard:'My Board', enemyBoard:'Enemy Board', myTurn:'Your turn — Fire!',
-    enemyTurn:' is firing…', chatPlaceholder:'Type a message...', sendBtn:'Send',
-    rematchBtn:'Play Again', menuBtn:'Main Menu', winText:'You Won!', loseText:'You Lost…',
+    title:'Battleship', subtitle:'No server needed - create room, share code, play.',
+    createBtn:'+ Create Room', joinBtn:'Join ->', codePlaceholder:'Room code (4 letters)',
+    namePlaceholder:'Enter your name...', waitText:'Waiting for opponent...', copyBtn:'Copy Code',
+    placeTitle:'Place Your Ships', readyBtn:'Ready v', autoBtn:'Auto', resetBtn:'Reset',
+    horizBtn:'Horizontal', vertBtn:'Vertical', boardTitle:'Your Board', waitShips:'Opponent is placing ships...',
+    myBoard:'My Board', enemyBoard:'Enemy Board', myTurn:'Your turn - Fire!',
+    enemyTurn:' is firing...', chatPlaceholder:'Type a message...', sendBtn:'Send',
+    rematchBtn:'Play Again', menuBtn:'Main Menu', winText:'You Won!', loseText:'You Lost...',
     myHitsLbl:'Your hits', oppHitsLbl:'Enemy hits', movesLbl:'Moves',
     hit:'Hit!', miss:'Miss!', sunk:'SUNK!'
   }
@@ -797,7 +804,7 @@ function applyLang(){
   safeAttr('chatInput', 'placeholder', L.chatPlaceholder);
   // Game
   safeText('ml1', (g.myName||'Sen')+' ('+( settings.lang==='TR'?'sen':'you')+')');
-  safeText('enemyTitle', (g.oppName||( settings.lang==='TR'?'Rakip':'Enemy'))+' — '+(settings.lang==='TR'?'Hedef':'Target'));
+  safeText('enemyTitle', (g.oppName||( settings.lang==='TR'?'Rakip':'Enemy'))+' - '+(settings.lang==='TR'?'Hedef':'Target'));
   // End
   safeText('endTitle', document.getElementById('endIcon')&&document.getElementById('endIcon').textContent==='🏆' ? L.winText : L.loseText);
 }
@@ -1024,7 +1031,7 @@ function onData(raw){
       break;
 
     case 'bomb':
-      // Rakip bomba kullandı — kendi tahtamıza uygula
+      // Rakip bomba kullandı - kendi tahtamıza uygula
       var hitCount=0;
       msg.cells.forEach(function(rc){
         g.oppShots[rc[0]][rc[1]]=1;
@@ -1064,14 +1071,14 @@ function onData(raw){
       break;
 
     case 'radar':
-      // Rakip radar kullandı — sadece kendi gemilerimiz üzerinde
+      // Rakip radar kullandı - sadece kendi gemilerimiz üzerinde
       var radarResult={};
       msg.cells.forEach(function(rc){ radarResult[rc[0]+','+rc[1]]=g.myBoard[rc[0]][rc[1]]===1; });
       send({type:'radar_result', results:radarResult});
       break;
 
     case 'radar_result':
-      // Radar sonucu — sıra geçmiyor
+      // Radar sonucu - sıra geçmiyor
       Object.keys(msg.results).forEach(function(key){
         var parts=key.split(','); var r=parseInt(parts[0]),c=parseInt(parts[1]);
         if(!g.myShots[r][c]){
@@ -1397,7 +1404,7 @@ function doFire(r,c){
   renderEnemyGrid();
 }
 
-// Rakip bize ateş etti — kendi tahtamıza bak, sonucu gönder
+// Rakip bize ateş etti - kendi tahtamıza bak, sonucu gönder
 function receiveAttack(row,col){
   g.oppShots[row][col]=1;
   var hit=g.myBoard[row][col]===1;
