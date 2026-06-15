@@ -469,6 +469,56 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 
 
 // ── AKSİYON MODU ─────────────────────────────────────────
+
+// ── PROFIL ────────────────────────────────────────────────
+var COLORS = ['#60a5fa','#34d399','#f59e0b','#f87171','#a78bfa','#fb923c','#38bdf8','#e879f9'];
+var myProfile = {emoji:'ship', color:'#60a5fa'};
+
+function getEmojiChar(key){
+  var map = {ship:'ship',star:'star',fire:'fire',lightning:'bolt',wave:'wave',skull:'skull',crown:'crown'};
+  var html2 = {ship:'&#9875;',star:'&#11088;',fire:'&#128293;',lightning:'&#9889;',wave:'&#127754;',skull:'&#128128;',crown:'&#128081;'};
+  return html2[key] || '&#9875;';
+}
+
+function initProfilePicker(){
+  var ar = document.getElementById('avatarRow');
+  if(!ar) return;
+  ar.innerHTML = '';
+  var keys = ['ship','star','fire','lightning','wave','skull','crown'];
+  keys.forEach(function(k){
+    var btn = document.createElement('button');
+    btn.className = 'avatar-opt' + (myProfile.emoji===k?' sel':'');
+    btn.innerHTML = getEmojiChar(k);
+    btn.title = k;
+    (function(key){ btn.onclick = function(){ myProfile.emoji=key; initProfilePicker(); }; })(k);
+    ar.appendChild(btn);
+  });
+  var cr = document.getElementById('colorRow');
+  if(!cr) return;
+  cr.innerHTML = '';
+  COLORS.forEach(function(c){
+    var btn = document.createElement('button');
+    btn.className = 'color-opt' + (myProfile.color===c?' sel':'');
+    btn.style.background = c;
+    btn.title = c;
+    (function(col){ btn.onclick = function(){ myProfile.color=col; initProfilePicker(); }; })(c);
+    cr.appendChild(btn);
+  });
+}
+
+// ── PATLAMA ANİMASYONU ────────────────────────────────────
+function animateBombCells(gridId, cells){
+  if(!cells) return;
+  cells.forEach(function(rc, i){
+    setTimeout(function(){
+      var el = gc(gridId, rc[0], rc[1]);
+      if(!el) return;
+      el.classList.add('exploding');
+      setTimeout(function(){ el.classList.remove('exploding'); }, 500);
+    }, i * 60);
+  });
+}
+
 var actionMode = false;
 var credits = 200;
 var activeBomb = null;
