@@ -474,6 +474,12 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 var COLORS = ['#60a5fa','#34d399','#f59e0b','#f87171','#a78bfa','#fb923c','#38bdf8','#e879f9'];
 var myProfile = {emoji:'ship', color:'#60a5fa'};
 
+function makeTag(name, profile){
+  var emoji = profile ? getEmojiChar(profile.emoji) : '';
+  var color = profile ? profile.color : 'inherit';
+  return '<span style="color:'+color+';font-weight:700">'+emoji+' '+name+'</span>';
+}
+
 function getEmojiChar(key){
   var map = {ship:'ship',star:'star',fire:'fire',lightning:'bolt',wave:'wave',skull:'skull',crown:'crown'};
   var html2 = {ship:'&#9875;',star:'&#11088;',fire:'&#128293;',lightning:'&#9889;',wave:'&#127754;',skull:'&#128128;',crown:'&#128081;'};
@@ -1029,7 +1035,7 @@ resetG();
 function updateScoreboard(){
   var el=document.getElementById('scoreboard');
   el.style.display='flex';
-  el.innerHTML=g.myName+': <span>'+score.me+'</span>&nbsp;&nbsp;'+g.oppName+': <span>'+score.opp+'</span>';
+  el.innerHTML=makeTag(g.myName,myProfile)+': <span>'+score.me+'</span>&nbsp;&nbsp;'+makeTag(g.oppName||'Rakip',g.oppProfile)+': <span>'+score.opp+'</span>';
 }
 
 // ── PEER ─────────────────────────────────────────────────
@@ -1428,9 +1434,9 @@ function startGame(){
   g.hits=[0,0];g.moves=0;
   credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; activeBomb=null;
   updateBombBar();
-  document.getElementById('ml1').textContent=g.myName+' (sen)';
-  document.getElementById('ml2').textContent=g.oppName||'Rakip';
-  document.getElementById('enemyTitle').textContent=(g.oppName||'Rakip')+' - Hedef';
+  document.getElementById('ml1').innerHTML=makeTag(g.myName,myProfile)+' (sen)';
+  document.getElementById('ml2').innerHTML=makeTag(g.oppName||'Rakip',g.oppProfile);
+  document.getElementById('enemyTitle').innerHTML=makeTag(g.oppName||'Rakip',g.oppProfile)+' — Hedef';
   document.getElementById('chatLog').innerHTML='';
   document.getElementById('gameLog').innerHTML='';
   updateScoreboard();
@@ -1443,8 +1449,13 @@ function startGame(){
 function updateBanner(){
   var b=document.getElementById('tbanner');
   var L=LANG[settings.lang];
-  if(g.myTurn){b.textContent=L.myTurn;b.className='tbanner';}
-  else{b.textContent=(g.oppName||'Rakip')+L.enemyTurn;b.className='tbanner enemy';}
+  if(g.myTurn){
+    b.innerHTML=makeTag(g.myName,myProfile)+' — '+L.myTurn;
+    b.className='tbanner';
+  } else {
+    b.innerHTML=makeTag(g.oppName||'Rakip',g.oppProfile)+L.enemyTurn;
+    b.className='tbanner enemy';
+  }
 }
 
 function renderMyGrid(){
@@ -1619,7 +1630,7 @@ function checkLost(){
 function endGame(won){
   if(won){score.me++;if(settings.sound)sndWin();}else{score.opp++;if(settings.sound)sndLose();}
   document.getElementById('endIcon').textContent=won?'&#127942;':'&#128128;';
-  document.getElementById('endTitle').textContent=won?'Kazandin!':'Kaybettin...';
+  document.getElementById('endTitle').innerHTML=won?makeTag(g.myName,myProfile)+' Kazandı!':makeTag(g.oppName||'Rakip',g.oppProfile)+' Kazandı!';
   document.getElementById('totalScore').innerHTML=
     g.myName+': <span>'+score.me+'</span> &mdash; '+g.oppName+': <span>'+score.opp+'</span>';
   document.getElementById('endMet').innerHTML=
@@ -1654,7 +1665,13 @@ function addChatMsg(from,text,cls){
   var log=document.getElementById('chatLog');
   var p=document.createElement('p');
   p.className=cls||'';
-  p.textContent=from?(from+': '+text):text;
+  if(from && cls!=='sys'){
+    var isMe = (from===g.myName);
+    var prof = isMe ? myProfile : g.oppProfile;
+    p.innerHTML=makeTag(from,prof)+': '+text;
+  } else {
+    p.textContent=from?(from+': '+text):text;
+  }
   log.appendChild(p);
   log.scrollTop=log.scrollHeight;
 }
