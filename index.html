@@ -148,6 +148,32 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .cell.radar-reveal{background:#1a3a2a;border-color:var(--green)}
 .cell.radar-ship{background:#1a4a1a;border-color:#4ade80}
 .cell.bomb-preview{background:rgba(239,68,68,.3);border-color:var(--red)}
+
+/* Profil */
+.avatar-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem}
+.avatar-opt{width:36px;height:36px;border-radius:50%;border:2px solid var(--bdr);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--bg3)}
+.avatar-opt.sel{border-color:var(--blue);background:var(--bd);transform:scale(1.15)}
+.color-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}
+.color-opt{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.color-opt.sel{border-color:#fff;transform:scale(1.2)}
+.player-tag{display:inline-flex;align-items:center;gap:4px;font-weight:600}
+/* Patlama animasyonu */
+@keyframes explode{
+  0%{transform:scale(1);opacity:1}
+  30%{transform:scale(1.8);background:#ff4500;border-color:#ff6600}
+  60%{transform:scale(1.4);background:#ff8c00}
+  100%{transform:scale(1);opacity:1}
+}
+@keyframes explodeRing{
+  0%{transform:scale(0);opacity:1;border-width:3px}
+  100%{transform:scale(3);opacity:0;border-width:1px}
+}
+.cell.exploding{animation:explode .5s ease forwards;z-index:10;position:relative}
+/* End screen tahtalar */
+.end-boards{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-top:1rem}
+.end-board-wrap{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:.75rem}
+.end-board-wrap h4{font-size:12px;color:var(--txt2);margin-bottom:.5rem;text-align:center}
+.cell.revealed{background:#1a2a1a;border-color:#2d4a2d}
 .settings-btn{position:fixed;bottom:.75rem;right:.75rem;width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex !important;align-items:center;justify-content:center;z-index:999;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .settings-btn:hover{background:var(--bg3);color:var(--txt)}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
@@ -196,8 +222,12 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
       <p>Sunucu gerekmez &mdash; oda kur, kodu payla&#351;, oyna.</p>
     </div>
     <div class="card">
-      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.85rem">Oyuncu ad&#305;n</div>
-      <input type="text" id="inName" placeholder="Ad&#305;n&#305; gir&hellip;" maxlength="20" autocomplete="off">
+      <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:.6rem">Oyuncu ad&#305;n</div>
+      <input type="text" id="inName" placeholder="Ad&#305;n&#305; gir&hellip;" maxlength="20" autocomplete="off" style="margin-bottom:.75rem">
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:.4rem">Emoji</div>
+      <div class="avatar-row" id="avatarRow"></div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:.4rem">Renk</div>
+      <div class="color-row" id="colorRow"></div>
     </div>
     <div id="lobErr" class="err"></div>
     <div id="lobInfo" class="infobar"><div class="spin"></div><span id="lobInfoTxt"></span></div>
@@ -315,6 +345,7 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
     <h2 id="endTitle">Oyun Bitti</h2>
     <div class="score-big" id="totalScore"></div>
     <div class="metrics" id="endMet"></div>
+    <div class="end-boards" id="endBoards"></div>
     <div class="card" style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
       <button class="btn bp" id="btnRematch" onclick="doRematch()">Tekrar Oyna</button>
       <button class="btn bo" onclick="backToLobby()">Ana Men&uuml;</button>
@@ -922,7 +953,7 @@ var TOTAL=SHIPS.reduce(function(a,s){return a+s.size;},0);
 
 // ── HELPERS ───────────────────────────────────────────────
 function mk10(){return Array(10).fill(null).map(function(){return Array(10).fill(0);});}
-function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');setTimeout(calcGridSize,50);}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');setTimeout(calcGridSize,50);if(id==='sLobby') initProfilePicker();}
 function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},5000);}
 function showInfo(m){document.getElementById('lobInfoTxt').textContent=m;document.getElementById('lobInfo').classList.add('show');}
 function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
@@ -936,7 +967,7 @@ var g={};
 var score={me:0,opp:0};
 
 function resetG(){
-  g={isHost:false,myName:'',oppName:'?',roomCode:'',
+  g={isHost:false,myName:'',oppName:'?',roomCode:'',oppProfile:null,
      myBoard:null,oppBoard:null,myShots:null,oppShots:null,
      sunkMine:[],sunkOpp:[],
      placedShips:{},selShip:null,orient:'H',
@@ -997,12 +1028,14 @@ function onData(raw){
   switch(msg.type){
     case 'hello':
       g.oppName=msg.name;
-      send({type:'hello_ack',name:g.myName,actionMode:actionMode});
+      g.oppProfile=msg.profile||null;
+      send({type:'hello_ack',name:g.myName,actionMode:actionMode,profile:myProfile});
       startSetup();
       break;
 
     case 'hello_ack':
       g.oppName=msg.name;
+      g.oppProfile=msg.profile||null;
       if(msg.actionMode!==undefined){ actionMode=msg.actionMode; credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; }
       startSetup();
       break;
@@ -1054,6 +1087,7 @@ function onData(raw){
 
     case 'bomb_result':
       // Kendi bombamın sonucu
+      var bCells=[]; Object.keys(msg.results).forEach(function(k){ var p=k.split(','); bCells.push([parseInt(p[0]),parseInt(p[1])]); }); animateBombCells('enemyGrid',bCells);
       Object.keys(msg.results).forEach(function(key){
         var parts=key.split(','); var r=parseInt(parts[0]),c=parseInt(parts[1]);
         if(msg.results[key]){ g.oppBoard[r][c]=1; g.hits[0]++; }
@@ -1175,7 +1209,7 @@ function doJoin(){
       setHBadge('Oda: '+code);
       // Kısa gecikme - karşı tarafın data listener'ı hazır olsun
       setTimeout(function(){
-        send({type:'hello',name:g.myName});
+        send({type:'hello',name:g.myName,profile:myProfile});
       }, 300);
     });
   });
@@ -1444,6 +1478,51 @@ function receiveAttack(row,col){
 
 }
 
+
+function renderEndBoards(){
+  var wrap = document.getElementById('endBoards');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  // Kendi tahtam (tüm gemiler + rakibin attıkları)
+  var b1 = document.createElement('div'); b1.className='end-board-wrap';
+  var t1 = document.createElement('h4'); t1.textContent=g.myName+' (Sen)'; b1.appendChild(t1);
+  b1.appendChild(buildEndGrid(g.myBoard, g.oppShots, false));
+  // Rakip tahtası (keşfettiğimiz kısımlar + gemiler)
+  var b2 = document.createElement('div'); b2.className='end-board-wrap';
+  var t2 = document.createElement('h4'); t2.textContent=g.oppName||'Rakip'; b2.appendChild(t2);
+  b2.appendChild(buildEndGrid(g.oppBoard, g.myShots, true));
+  wrap.appendChild(b1);
+  wrap.appendChild(b2);
+}
+
+function buildEndGrid(board, shots, revealShips){
+  var gridWrap = document.createElement('div');
+  gridWrap.className = 'grid-container';
+  var lbl = document.createElement('div'); lbl.className='clbl';
+  var sp0=document.createElement('span'); lbl.appendChild(sp0);
+  'ABCDEFGHIJ'.split('').forEach(function(c){ var s=document.createElement('span'); s.textContent=c; lbl.appendChild(s); });
+  gridWrap.appendChild(lbl);
+  var rows = document.createElement('div'); rows.className='grows';
+  for(var r=0;r<10;r++){
+    var row = document.createElement('div'); row.className='grow';
+    var rl = document.createElement('div'); rl.className='rlbl'; rl.textContent=r+1; row.appendChild(rl);
+    for(var c=0;c<10;c++){
+      var cell = document.createElement('div'); cell.className='cell';
+      var hasShip = board[r][c]===1;
+      var wasShot = shots[r][c]===1;
+      if(wasShot && hasShip){ cell.classList.add('hit'); cell.textContent='x'; }
+      else if(wasShot && !hasShip){ cell.classList.add('miss'); cell.textContent='.'; }
+      else if(hasShip && revealShips){ cell.classList.add('revealed'); }
+      else if(hasShip){ cell.classList.add('ship'); }
+      row.appendChild(cell);
+    }
+    rows.appendChild(row);
+  }
+  gridWrap.appendChild(rows);
+  setTimeout(calcGridSize, 100);
+  return gridWrap;
+}
+
 // Kendi atışımın sonucu geldi
 function applyResult(row,col,hit,sunk){
   if(hit){g.oppBoard[row][col]=1;g.hits[0]++;}
@@ -1501,6 +1580,7 @@ function endGame(won){
     '<div class="met"><div class="ml">Toplam hamle</div><div class="mv">'+g.moves+'</div></div>';
   document.getElementById('rematchMsg').style.display='none';
   document.getElementById('btnRematch').disabled=false;
+  renderEndBoards();
   showScreen('sEnd');
 }
 
