@@ -1216,11 +1216,9 @@ function doCreateRoom(){
   g.isHost=true;
   var code=genCode();g.roomCode=code;
   credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; activeBomb=null;
-  // Önce lobby ekranına dön ki showInfo çalışsın
-  showScreen('sLobby');
-  setBtns(true);showInfo('Baglanti kuruluyor...');
+  setBtns(true);
   initPeer(code,function(){
-    hideInfo();setBtns(false);
+    setBtns(false);
     document.getElementById('wCode').textContent=code;
     setHBadge('Oda: '+code);
     showScreen('sWait');
@@ -1717,7 +1715,6 @@ document.getElementById('inCode').addEventListener('input',function(){this.value
 document.getElementById('inSpecCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
 document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
-initProfilePicker();
 initProfilePicker();
 </script>
 </body>
