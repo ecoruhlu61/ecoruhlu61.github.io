@@ -204,6 +204,54 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .gold-win-popup h3{color:#ffd700;font-size:22px;margin-bottom:.5rem}
 .gold-win-popup p{color:#c8a84b;font-size:14px}
+
+/* Header altin sayaci */
+.header-gold{display:flex;align-items:center;gap:6px;padding:6px 14px;background:linear-gradient(135deg,#1a1200,#2a1e00);border:1.5px solid #b8860b;border-radius:10px;cursor:pointer;transition:all .15s;margin-left:auto}
+.header-gold:hover{box-shadow:0 0 12px rgba(255,215,0,.4)}
+.header-gold .hg-icon{font-size:22px}
+.header-gold .hg-amount{font-size:20px;font-weight:800;color:#ffd700;letter-spacing:.5px}
+/* Market overlay */
+.market-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.market-overlay.open{display:flex}
+.market-panel{background:linear-gradient(160deg,#0d0d0d,#1a1200);border:2px solid #b8860b;border-radius:20px;padding:1.5rem;width:92%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 0 40px rgba(255,215,0,.2)}
+.market-panel h3{font-size:18px;font-weight:800;color:#ffd700;margin-bottom:.25rem}
+.market-balance{font-size:28px;font-weight:900;color:#ffd700;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+.market-section{font-size:11px;font-weight:700;color:#b8860b;text-transform:uppercase;letter-spacing:.8px;margin:.75rem 0 .4rem}
+.frame-item{display:flex;align-items:center;gap:.75rem;padding:.8rem;border-radius:12px;margin-bottom:.5rem;border:1.5px solid transparent;transition:all .15s}
+.frame-item.copper{background:linear-gradient(135deg,#1a0a00,#2a1200);border-color:#cd7f32}
+.frame-item.silver{background:linear-gradient(135deg,#0d0d10,#1a1a22);border-color:#c0c0c0}
+.frame-item.gold{background:linear-gradient(135deg,#1a1200,#2a1e00);border-color:#ffd700}
+.frame-item.diamond{background:linear-gradient(135deg,#001a1a,#002a2a);border-color:#b9f2ff}
+.frame-preview{width:36px;height:36px;border-radius:6px;flex-shrink:0}
+.frame-preview.copper{border:3px solid #cd7f32;box-shadow:0 0 8px rgba(205,127,50,.5)}
+.frame-preview.silver{border:3px solid #c0c0c0;box-shadow:0 0 8px rgba(192,192,192,.5)}
+.frame-preview.gold{border:3px solid #ffd700;box-shadow:0 0 8px rgba(255,215,0,.6)}
+.frame-preview.diamond{border:3px solid #b9f2ff;box-shadow:0 0 8px rgba(185,242,255,.6)}
+.frame-info{flex:1}
+.frame-name{font-size:14px;font-weight:700}
+.frame-name.copper{color:#cd7f32}
+.frame-name.silver{color:#c0c0c0}
+.frame-name.gold{color:#ffd700}
+.frame-name.diamond{color:#b9f2ff}
+.frame-desc{font-size:12px;color:var(--txt3);margin-top:2px}
+.frame-cost{font-size:12px;font-weight:700;margin-top:3px}
+.frame-btn{padding:7px 14px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.frame-btn.buy-copper{background:#cd7f32;color:#fff}
+.frame-btn.buy-silver{background:#c0c0c0;color:#000}
+.frame-btn.buy-gold{background:#ffd700;color:#000}
+.frame-btn.buy-diamond{background:#b9f2ff;color:#000}
+.frame-btn.equip{background:#22c55e;color:#fff}
+.frame-btn.equipped{background:#14532d;color:#4ade80;cursor:default}
+.frame-btn:disabled{opacity:.4;cursor:not-allowed}
+/* Cerceve efektleri */
+.bcard.frame-copper{border:2px solid #cd7f32 !important;box-shadow:0 0 12px rgba(205,127,50,.5),inset 0 0 8px rgba(205,127,50,.05) !important;animation:copperGlow 2s ease-in-out infinite alternate}
+.bcard.frame-silver{border:2px solid #c0c0c0 !important;box-shadow:0 0 12px rgba(192,192,192,.5),inset 0 0 8px rgba(192,192,192,.05) !important;animation:silverGlow 2s ease-in-out infinite alternate}
+.bcard.frame-gold{border:2px solid #ffd700 !important;box-shadow:0 0 15px rgba(255,215,0,.6),inset 0 0 10px rgba(255,215,0,.05) !important;animation:goldGlowF 2s ease-in-out infinite alternate}
+.bcard.frame-diamond{border:2px solid #b9f2ff !important;box-shadow:0 0 20px rgba(185,242,255,.7),inset 0 0 12px rgba(185,242,255,.05) !important;animation:diamondGlow 2s ease-in-out infinite alternate}
+@keyframes copperGlow{from{box-shadow:0 0 8px rgba(205,127,50,.3)}to{box-shadow:0 0 20px rgba(205,127,50,.7)}}
+@keyframes silverGlow{from{box-shadow:0 0 8px rgba(192,192,192,.3)}to{box-shadow:0 0 20px rgba(192,192,192,.7)}}
+@keyframes goldGlowF{from{box-shadow:0 0 10px rgba(255,215,0,.4)}to{box-shadow:0 0 25px rgba(255,215,0,.8)}}
+@keyframes diamondGlow{from{box-shadow:0 0 12px rgba(185,242,255,.4)}to{box-shadow:0 0 30px rgba(185,242,255,.9)}}
 .settings-btn{position:fixed;bottom:.75rem;right:.75rem;width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex !important;align-items:center;justify-content:center;z-index:999;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .settings-btn:hover{background:var(--bg3);color:var(--txt)}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
@@ -241,6 +289,10 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   <div class="logo">&#9875; Amiral <span>Batt&#305;</span></div>
   <div id="hbadge"></div>
   <div id="scoreboard"></div>
+  <div class="header-gold" onclick="openMarket()" title="Market'i ac">
+    <span class="hg-icon">&#128176;</span>
+    <span class="hg-amount" id="headerGold">0</span>
+  </div>
 </header>
 <main>
 
@@ -258,12 +310,7 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
       <div class="avatar-row" id="avatarRow"></div>
       <div style="font-size:11px;color:var(--txt3);margin-bottom:.4rem">Renk</div>
       <div class="color-row" id="colorRow"></div>
-      <div class="gold-bar" style="margin-top:.75rem">
-        <span class="gold-icon">&#128176;</span>
-        <span class="gold-amount" id="lobbyGold">0</span>
-        <span style="font-size:12px;color:#c8a84b">Altin</span>
-        <button class="gold-frame-btn" id="buyFrameBtn" onclick="buyGoldFrame()" style="margin-left:auto"></button>
-      </div>
+
     </div>
     <div id="lobErr" class="err"></div>
     <div id="lobInfo" class="infobar"><div class="spin"></div><span id="lobInfoTxt"></span></div>
@@ -426,6 +473,20 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+
+<!-- MARKET -->
+<div class="market-overlay" id="marketOverlay" onclick="closeMarketOutside(event)">
+  <div class="market-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+      <h3>&#127981; Market</h3>
+      <button class="btn bo" style="padding:4px 12px;font-size:13px" onclick="closeMarket()">&#x2715;</button>
+    </div>
+    <div class="market-balance">&#128176; <span id="marketGold">0</span></div>
+    <div class="market-section">Tahta Cerceveleri</div>
+    <div id="marketFrames"></div>
+  </div>
+</div>
+
 <!-- SPECTATOR -->
 <div id="sSpec" class="screen">
   <div style="max-width:980px;margin:0 auto">
@@ -510,82 +571,117 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 
 // ── ALTIN SISTEMI ─────────────────────────────────────────
 var goldCoins = parseInt(localStorage.getItem('admiralGold') || '0');
-var hasGoldFrame = localStorage.getItem('admiralGoldFrame') === '1';
 var GOLD_PER_WIN = 200;
-var GOLD_FRAME_COST = 500;
 
-function saveGold(){
-  localStorage.setItem('admiralGold', goldCoins);
-  localStorage.setItem('admiralGoldFrame', hasGoldFrame ? '1' : '0');
-}
+function saveGold(){ localStorage.setItem('admiralGold', goldCoins); }
 
-function updateGoldUI(){
-  var el = document.getElementById('lobbyGold');
+function updateHeaderGold(){
+  var el = document.getElementById('headerGold');
   if(el) el.textContent = goldCoins;
-  var btn = document.getElementById('buyFrameBtn');
-  if(!btn) return;
-  if(hasGoldFrame){
-    btn.textContent = 'Cerceve Aktif ✓';
-    btn.className = 'gold-frame-btn owned';
-    btn.disabled = false;
-    btn.onclick = function(){ toggleGoldFrame(); };
-  } else if(goldCoins >= GOLD_FRAME_COST){
-    btn.textContent = 'Altin Cerceve Al ('+GOLD_FRAME_COST+')';
-    btn.className = 'gold-frame-btn';
-    btn.disabled = false;
-  } else {
-    btn.textContent = 'Altin Cerceve ('+GOLD_FRAME_COST+' - '+goldCoins+' eksik)';
-    btn.className = 'gold-frame-btn';
-    btn.disabled = true;
-  }
-}
-
-function buyGoldFrame(){
-  if(hasGoldFrame){ toggleGoldFrame(); return; }
-  if(goldCoins < GOLD_FRAME_COST) return;
-  goldCoins -= GOLD_FRAME_COST;
-  hasGoldFrame = true;
-  saveGold();
-  updateGoldUI();
-  applyGoldFrame();
-}
-
-function toggleGoldFrame(){
-  // Aktif/pasif yap ama silme
-  var active = localStorage.getItem('admiralGoldFrameActive') !== '0';
-  active = !active;
-  localStorage.setItem('admiralGoldFrameActive', active ? '1' : '0');
-  applyGoldFrame();
-  updateGoldUI();
-}
-
-function applyGoldFrame(){
-  var active = hasGoldFrame && localStorage.getItem('admiralGoldFrameActive') !== '0';
-  document.querySelectorAll('#myGrid, #setupGrid').forEach(function(g2){
-    var card = g2.closest('.bcard');
-    if(card){
-      if(active) card.classList.add('gold-frame');
-      else card.classList.remove('gold-frame');
-    }
-  });
-  var setupCard = document.querySelector('#sSetup .bcard');
-  if(setupCard){
-    if(active) setupCard.classList.add('gold-frame');
-    else setupCard.classList.remove('gold-frame');
-  }
+  var el2 = document.getElementById('marketGold');
+  if(el2) el2.textContent = goldCoins;
 }
 
 function awardGold(amount){
   goldCoins += amount;
   saveGold();
-  updateGoldUI();
-  // Popup goster
+  updateHeaderGold();
   var popup = document.createElement('div');
   popup.className = 'gold-win-popup';
   popup.innerHTML = '<h3>&#128176; +'+amount+' Altin!</h3><p>Toplam: '+goldCoins+' altin</p>';
   document.body.appendChild(popup);
-  setTimeout(function(){ popup.style.transition='opacity .5s'; popup.style.opacity='0'; setTimeout(function(){document.body.removeChild(popup);},500); }, 2000);
+  setTimeout(function(){
+    popup.style.transition='opacity .5s';
+    popup.style.opacity='0';
+    setTimeout(function(){ if(popup.parentNode) popup.parentNode.removeChild(popup); }, 500);
+  }, 2000);
 }
+
+// ── CERCEVE SISTEMI ────────────────────────────────────────
+var FRAMES = [
+  {key:'copper',  name:'Bakir Cerceve',  cost:300,  cls:'copper',  desc:'Kahverengi isiltili cerceve'},
+  {key:'silver',  name:'Gumus Cerceve',  cost:600,  cls:'silver',  desc:'Gumus gibi parlayan cerceve'},
+  {key:'gold',    name:'Altin Cerceve',  cost:1000, cls:'gold',    desc:'Parlak altin cerceve'},
+  {key:'diamond', name:'Elmas Cerceve',  cost:2000, cls:'diamond', desc:'Efsanevi elmas cerceve'},
+];
+var ownedFrames = JSON.parse(localStorage.getItem('admiralFrames') || '[]');
+var equippedFrame = localStorage.getItem('admiralEquipped') || '';
+
+function saveFrames(){
+  localStorage.setItem('admiralFrames', JSON.stringify(ownedFrames));
+  localStorage.setItem('admiralEquipped', equippedFrame);
+}
+
+function openMarket(){
+  updateHeaderGold();
+  renderMarketFrames();
+  document.getElementById('marketOverlay').classList.add('open');
+}
+function closeMarket(){ document.getElementById('marketOverlay').classList.remove('open'); }
+function closeMarketOutside(e){ if(e.target.id==='marketOverlay') closeMarket(); }
+
+function renderMarketFrames(){
+  var wrap = document.getElementById('marketFrames');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  FRAMES.forEach(function(f){
+    var owned = ownedFrames.indexOf(f.key) >= 0;
+    var equipped = equippedFrame === f.key;
+    var canBuy = !owned && goldCoins >= f.cost;
+    var div = document.createElement('div');
+    div.className = 'frame-item '+f.cls;
+    var preview = document.createElement('div');
+    preview.className = 'frame-preview '+f.cls;
+    var info = document.createElement('div'); info.className = 'frame-info';
+    var nm = document.createElement('div'); nm.className='frame-name '+f.cls; nm.textContent=f.name;
+    var ds = document.createElement('div'); ds.className='frame-desc'; ds.textContent=f.desc;
+    var cs = document.createElement('div'); cs.className='frame-cost';
+    if(owned){ cs.style.color='#22c55e'; cs.textContent='Sahipsin'; }
+    else { cs.style.color='#ffd700'; cs.textContent=f.cost+' Altin'; }
+    info.appendChild(nm); info.appendChild(ds); info.appendChild(cs);
+    var btn = document.createElement('button');
+    if(equipped){
+      btn.className='frame-btn equipped'; btn.textContent='Aktif';
+    } else if(owned){
+      btn.className='frame-btn equip'; btn.textContent='Tak';
+      (function(fk){ btn.onclick=function(){ equipFrame(fk); }; })(f.key);
+    } else {
+      btn.className='frame-btn buy-'+f.cls;
+      btn.textContent='Satin Al';
+      btn.disabled = !canBuy;
+      (function(fk,fc){ btn.onclick=function(){ buyFrame(fk,fc); }; })(f.key, f.cost);
+    }
+    div.appendChild(preview); div.appendChild(info); div.appendChild(btn);
+    wrap.appendChild(div);
+  });
+}
+
+function buyFrame(key, cost){
+  if(goldCoins < cost) return;
+  goldCoins -= cost;
+  ownedFrames.push(key);
+  equippedFrame = key;
+  saveGold(); saveFrames();
+  updateHeaderGold();
+  renderMarketFrames();
+  applyFrame();
+}
+
+function equipFrame(key){
+  equippedFrame = (equippedFrame===key) ? '' : key;
+  saveFrames();
+  renderMarketFrames();
+  applyFrame();
+}
+
+function applyFrame(){
+  var frameClasses = ['frame-copper','frame-silver','frame-gold','frame-diamond','gold-frame'];
+  document.querySelectorAll('.bcard').forEach(function(card){
+    frameClasses.forEach(function(c){ card.classList.remove(c); });
+    if(equippedFrame) card.classList.add('frame-'+equippedFrame);
+  });
+}
+
 
 var COLORS = ['#60a5fa','#34d399','#f59e0b','#f87171','#a78bfa','#fb923c','#38bdf8','#e879f9'];
 var myProfile = {emoji:'ship', color:'#60a5fa'};
@@ -612,7 +708,8 @@ function initProfilePicker(){
     btn.className = 'avatar-opt' + (myProfile.emoji===k?' sel':'');
     btn.innerHTML = getEmojiChar(k);
     btn.title = k;
-    (function(key){ btn.onclick = function(){ myProfile.emoji=key; initProfilePicker(); }; })(k);
+    (function(key){ btn.onclick = function(){ myProfile.emoji=key; initProfilePicker();
+updateHeaderGold(); }; })(k);
     ar.appendChild(btn);
   });
   var cr = document.getElementById('colorRow');
@@ -623,10 +720,11 @@ function initProfilePicker(){
     btn.className = 'color-opt' + (myProfile.color===c?' sel':'');
     btn.style.background = c;
     btn.title = c;
-    (function(col){ btn.onclick = function(){ myProfile.color=col; initProfilePicker(); }; })(c);
+    (function(col){ btn.onclick = function(){ myProfile.color=col; initProfilePicker();
+updateHeaderGold(); }; })(c);
     cr.appendChild(btn);
   });
-  updateGoldUI();
+  updateHeaderGold();
 }
 
 // ── PATLAMA ANİMASYONU ────────────────────────────────────
@@ -1126,7 +1224,8 @@ var TOTAL=SHIPS.reduce(function(a,s){return a+s.size;},0);
 
 // ── HELPERS ───────────────────────────────────────────────
 function mk10(){return Array(10).fill(null).map(function(){return Array(10).fill(0);});}
-function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');setTimeout(calcGridSize,50);if(id==='sLobby') initProfilePicker();}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');setTimeout(calcGridSize,50);if(id==='sLobby') initProfilePicker();
+updateHeaderGold();}
 function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},5000);}
 function showInfo(m){document.getElementById('lobInfoTxt').textContent=m;document.getElementById('lobInfo').classList.add('show');}
 function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
@@ -1417,7 +1516,7 @@ function startSetup(){
   document.getElementById('btnH').classList.add('active');
   document.getElementById('btnV').classList.remove('active');
   showScreen('sSetup');
-  setTimeout(applyGoldFrame, 100);
+  setTimeout(applyFrame, 100);
   renderPalette();renderSetupGrid();
 }
 
@@ -1559,7 +1658,7 @@ function startGame(){
   document.getElementById('gameLog').innerHTML='';
   updateScoreboard();
   showScreen('sGame');
-  setTimeout(applyGoldFrame, 100);
+  setTimeout(applyFrame, 100);
   updateBanner();
   buildGrid('myGrid');renderMyGrid();
   buildGrid('enemyGrid',function(r,c){doFire(r,c);},function(r,c){showBombPreview(r,c,true);},function(r,c){showBombPreview(r,c,false);});renderEnemyGrid();
@@ -1852,6 +1951,7 @@ document.getElementById('inSpecCode').addEventListener('input',function(){this.v
 document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
 initProfilePicker();
+updateHeaderGold();
 </script>
 </body>
 </html>
