@@ -174,6 +174,36 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .end-board-wrap{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:.75rem}
 .end-board-wrap h4{font-size:12px;color:var(--txt2);margin-bottom:.5rem;text-align:center}
 .cell.revealed{background:#1a2a1a;border-color:#2d4a2d}
+
+/* Altin sistemi */
+.gold-bar{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;background:linear-gradient(135deg,#1a1200,#2a1e00);border:1px solid #b8860b;border-radius:8px;margin-top:.5rem}
+.gold-icon{font-size:18px}
+.gold-amount{font-size:15px;font-weight:700;color:#ffd700}
+.gold-label{font-size:12px;color:#c8a84b;margin-left:auto}
+.gold-frame-btn{padding:5px 12px;border-radius:6px;border:1px solid #b8860b;background:linear-gradient(135deg,#2a1e00,#3d2d00);color:#ffd700;font-size:12px;cursor:pointer;font-weight:600;transition:all .15s}
+.gold-frame-btn:hover{background:linear-gradient(135deg,#3d2d00,#5a4200);box-shadow:0 0 8px rgba(255,215,0,.3)}
+.gold-frame-btn.owned{background:linear-gradient(135deg,#1a3300,#2a4d00);border-color:#4caf50;color:#4caf50;cursor:default}
+.gold-frame-btn:disabled{opacity:.5;cursor:not-allowed}
+/* Altin cerceve efekti */
+.bcard.gold-frame{
+  border:2px solid #ffd700 !important;
+  box-shadow:0 0 15px rgba(255,215,0,.4),inset 0 0 10px rgba(255,215,0,.05) !important;
+  animation:goldGlow 2s ease-in-out infinite alternate;
+}
+@keyframes goldGlow{
+  from{box-shadow:0 0 8px rgba(255,215,0,.3),inset 0 0 6px rgba(255,215,0,.03)}
+  to{box-shadow:0 0 25px rgba(255,215,0,.7),inset 0 0 15px rgba(255,215,0,.08)}
+}
+.gold-win-popup{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:linear-gradient(135deg,#1a1200,#2a1e00);
+  border:2px solid #ffd700;border-radius:16px;padding:1.5rem 2rem;
+  text-align:center;z-index:2000;animation:popIn .4s ease;
+  box-shadow:0 0 40px rgba(255,215,0,.4);
+}
+@keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.gold-win-popup h3{color:#ffd700;font-size:22px;margin-bottom:.5rem}
+.gold-win-popup p{color:#c8a84b;font-size:14px}
 .settings-btn{position:fixed;bottom:.75rem;right:.75rem;width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex !important;align-items:center;justify-content:center;z-index:999;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .settings-btn:hover{background:var(--bg3);color:var(--txt)}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
@@ -228,6 +258,12 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
       <div class="avatar-row" id="avatarRow"></div>
       <div style="font-size:11px;color:var(--txt3);margin-bottom:.4rem">Renk</div>
       <div class="color-row" id="colorRow"></div>
+      <div class="gold-bar" style="margin-top:.75rem">
+        <span class="gold-icon">&#128176;</span>
+        <span class="gold-amount" id="lobbyGold">0</span>
+        <span style="font-size:12px;color:#c8a84b">Altin</span>
+        <button class="gold-frame-btn" id="buyFrameBtn" onclick="buyGoldFrame()" style="margin-left:auto"></button>
+      </div>
     </div>
     <div id="lobErr" class="err"></div>
     <div id="lobInfo" class="infobar"><div class="spin"></div><span id="lobInfoTxt"></span></div>
@@ -471,6 +507,86 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 // ── AKSİYON MODU ─────────────────────────────────────────
 
 // ── PROFIL ────────────────────────────────────────────────
+
+// ── ALTIN SISTEMI ─────────────────────────────────────────
+var goldCoins = parseInt(localStorage.getItem('admiralGold') || '0');
+var hasGoldFrame = localStorage.getItem('admiralGoldFrame') === '1';
+var GOLD_PER_WIN = 200;
+var GOLD_FRAME_COST = 500;
+
+function saveGold(){
+  localStorage.setItem('admiralGold', goldCoins);
+  localStorage.setItem('admiralGoldFrame', hasGoldFrame ? '1' : '0');
+}
+
+function updateGoldUI(){
+  var el = document.getElementById('lobbyGold');
+  if(el) el.textContent = goldCoins;
+  var btn = document.getElementById('buyFrameBtn');
+  if(!btn) return;
+  if(hasGoldFrame){
+    btn.textContent = 'Cerceve Aktif ✓';
+    btn.className = 'gold-frame-btn owned';
+    btn.disabled = false;
+    btn.onclick = function(){ toggleGoldFrame(); };
+  } else if(goldCoins >= GOLD_FRAME_COST){
+    btn.textContent = 'Altin Cerceve Al ('+GOLD_FRAME_COST+')';
+    btn.className = 'gold-frame-btn';
+    btn.disabled = false;
+  } else {
+    btn.textContent = 'Altin Cerceve ('+GOLD_FRAME_COST+' - '+goldCoins+' eksik)';
+    btn.className = 'gold-frame-btn';
+    btn.disabled = true;
+  }
+}
+
+function buyGoldFrame(){
+  if(hasGoldFrame){ toggleGoldFrame(); return; }
+  if(goldCoins < GOLD_FRAME_COST) return;
+  goldCoins -= GOLD_FRAME_COST;
+  hasGoldFrame = true;
+  saveGold();
+  updateGoldUI();
+  applyGoldFrame();
+}
+
+function toggleGoldFrame(){
+  // Aktif/pasif yap ama silme
+  var active = localStorage.getItem('admiralGoldFrameActive') !== '0';
+  active = !active;
+  localStorage.setItem('admiralGoldFrameActive', active ? '1' : '0');
+  applyGoldFrame();
+  updateGoldUI();
+}
+
+function applyGoldFrame(){
+  var active = hasGoldFrame && localStorage.getItem('admiralGoldFrameActive') !== '0';
+  document.querySelectorAll('#myGrid, #setupGrid').forEach(function(g2){
+    var card = g2.closest('.bcard');
+    if(card){
+      if(active) card.classList.add('gold-frame');
+      else card.classList.remove('gold-frame');
+    }
+  });
+  var setupCard = document.querySelector('#sSetup .bcard');
+  if(setupCard){
+    if(active) setupCard.classList.add('gold-frame');
+    else setupCard.classList.remove('gold-frame');
+  }
+}
+
+function awardGold(amount){
+  goldCoins += amount;
+  saveGold();
+  updateGoldUI();
+  // Popup goster
+  var popup = document.createElement('div');
+  popup.className = 'gold-win-popup';
+  popup.innerHTML = '<h3>&#128176; +'+amount+' Altin!</h3><p>Toplam: '+goldCoins+' altin</p>';
+  document.body.appendChild(popup);
+  setTimeout(function(){ popup.style.transition='opacity .5s'; popup.style.opacity='0'; setTimeout(function(){document.body.removeChild(popup);},500); }, 2000);
+}
+
 var COLORS = ['#60a5fa','#34d399','#f59e0b','#f87171','#a78bfa','#fb923c','#38bdf8','#e879f9'];
 var myProfile = {emoji:'ship', color:'#60a5fa'};
 
@@ -510,6 +626,7 @@ function initProfilePicker(){
     (function(col){ btn.onclick = function(){ myProfile.color=col; initProfilePicker(); }; })(c);
     cr.appendChild(btn);
   });
+  updateGoldUI();
 }
 
 // ── PATLAMA ANİMASYONU ────────────────────────────────────
@@ -1300,6 +1417,7 @@ function startSetup(){
   document.getElementById('btnH').classList.add('active');
   document.getElementById('btnV').classList.remove('active');
   showScreen('sSetup');
+  setTimeout(applyGoldFrame, 100);
   renderPalette();renderSetupGrid();
 }
 
@@ -1441,6 +1559,7 @@ function startGame(){
   document.getElementById('gameLog').innerHTML='';
   updateScoreboard();
   showScreen('sGame');
+  setTimeout(applyGoldFrame, 100);
   updateBanner();
   buildGrid('myGrid');renderMyGrid();
   buildGrid('enemyGrid',function(r,c){doFire(r,c);},function(r,c){showBombPreview(r,c,true);},function(r,c){showBombPreview(r,c,false);});renderEnemyGrid();
@@ -1628,7 +1747,7 @@ function checkLost(){
 }
 
 function endGame(won){
-  if(won){score.me++;if(settings.sound)sndWin();}else{score.opp++;if(settings.sound)sndLose();}
+  if(won){score.me++;if(settings.sound)sndWin();awardGold(GOLD_PER_WIN);}else{score.opp++;if(settings.sound)sndLose();}
   document.getElementById('endIcon').textContent=won?'&#127942;':'&#128128;';
   document.getElementById('endTitle').innerHTML=won?makeTag(g.myName,myProfile)+' Kazandı!':makeTag(g.oppName||'Rakip',g.oppProfile)+' Kazandı!';
   document.getElementById('totalScore').innerHTML=
