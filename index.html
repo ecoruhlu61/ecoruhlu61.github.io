@@ -252,6 +252,45 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 @keyframes silverGlow{from{box-shadow:0 0 8px rgba(192,192,192,.3)}to{box-shadow:0 0 20px rgba(192,192,192,.7)}}
 @keyframes goldGlowF{from{box-shadow:0 0 10px rgba(255,215,0,.4)}to{box-shadow:0 0 25px rgba(255,215,0,.8)}}
 @keyframes diamondGlow{from{box-shadow:0 0 12px rgba(185,242,255,.4)}to{box-shadow:0 0 30px rgba(185,242,255,.9)}}
+
+/* Arkadaslar */
+.friends-btn{position:fixed;bottom:1rem;left:1rem;width:48px;height:48px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.friends-btn:hover{background:var(--bg3);color:var(--txt)}
+.friends-badge{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;display:none}
+.friends-panel{position:fixed;bottom:4.5rem;left:1rem;width:300px;background:var(--surf);border:1px solid var(--bdr);border-radius:16px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none;flex-direction:column;max-height:480px}
+.friends-panel.open{display:flex}
+.friends-header{padding:.75rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:.5rem}
+.friends-header h4{font-size:14px;font-weight:700;flex:1}
+.my-id-badge{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bd);color:var(--bl);border:1px solid var(--blue);font-weight:700;cursor:pointer;letter-spacing:1px}
+.friends-tabs{display:flex;border-bottom:1px solid var(--bdr)}
+.ftab{flex:1;padding:.5rem;font-size:12px;text-align:center;cursor:pointer;color:var(--txt3);border-bottom:2px solid transparent;transition:all .15s}
+.ftab.active{color:var(--bl);border-bottom-color:var(--blue)}
+.friends-body{flex:1;overflow-y:auto;padding:.5rem}
+.friend-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .25rem;border-bottom:1px solid var(--bdr)}
+.friend-item:last-child{border-bottom:none}
+.friend-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.friend-info{flex:1;min-width:0}
+.friend-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.friend-id{font-size:11px;color:var(--txt3)}
+.online-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.online-dot.online{background:#22c55e}
+.online-dot.offline{background:var(--txt3)}
+.invite-btn{padding:3px 8px;border-radius:6px;border:none;background:var(--blue);color:#fff;font-size:11px;cursor:pointer;white-space:nowrap}
+.invite-btn:disabled{opacity:.4;cursor:not-allowed}
+.remove-btn{padding:3px 6px;border-radius:6px;border:1px solid var(--bdr2);background:transparent;color:var(--txt3);font-size:11px;cursor:pointer}
+.add-friend-wrap{display:flex;flex-direction:column;gap:.5rem;padding:.25rem}
+.req-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .25rem;border-bottom:1px solid var(--bdr)}
+.req-item:last-child{border-bottom:none}
+.req-btns{display:flex;gap:.4rem;flex-shrink:0}
+.accept-btn{padding:3px 8px;border-radius:6px;border:none;background:#22c55e;color:#fff;font-size:11px;cursor:pointer}
+.reject-btn{padding:3px 8px;border-radius:6px;border:1px solid var(--bdr2);background:transparent;color:var(--txt3);font-size:11px;cursor:pointer}
+.empty-msg{text-align:center;color:var(--txt3);font-size:13px;padding:1rem}
+/* Davet popup */
+.invite-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surf);border:1px solid var(--blue);border-radius:16px;padding:1.25rem;z-index:2000;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.6);min-width:260px;display:none}
+.invite-popup.open{display:block}
+.invite-popup h4{font-size:15px;font-weight:700;margin-bottom:.5rem}
+.invite-popup p{font-size:13px;color:var(--txt2);margin-bottom:1rem}
+.invite-popup .ip-btns{display:flex;gap:.5rem;justify-content:center}
 .settings-btn{position:fixed;bottom:.75rem;right:.75rem;width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex !important;align-items:center;justify-content:center;z-index:999;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .settings-btn:hover{background:var(--bg3);color:var(--txt)}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
@@ -522,6 +561,40 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+
+<!-- Arkadaslar Butonu -->
+<div style="position:fixed;bottom:1rem;left:1rem;z-index:200">
+  <button class="friends-btn" onclick="toggleFriendsPanel()" title="Arkadaslar">
+    &#128101;
+    <span class="friends-badge" id="friendsBadge">0</span>
+  </button>
+</div>
+
+<!-- Arkadaslar Paneli -->
+<div class="friends-panel" id="friendsPanel">
+  <div class="friends-header">
+    <span style="font-size:16px">&#128101;</span>
+    <h4>Arkadaslar</h4>
+    <span class="my-id-badge" onclick="copyMyId()" title="ID kopyala">&#128272; <span id="myIdDisplay">---</span></span>
+  </div>
+  <div class="friends-tabs">
+    <div class="ftab active" onclick="switchFTab(0)" id="ftab0">Arkadaslar</div>
+    <div class="ftab" onclick="switchFTab(1)" id="ftab1">Ekle</div>
+    <div class="ftab" onclick="switchFTab(2)" id="ftab2">Istekler <span id="reqCount"></span></div>
+  </div>
+  <div class="friends-body" id="friendsBody"></div>
+</div>
+
+<!-- Oyun Davet Popup -->
+<div class="invite-popup" id="invitePopup">
+  <h4>&#127926; Oyun Daveti!</h4>
+  <p id="invitePopupText">Biri seni oyuna davet etti</p>
+  <div class="ip-btns">
+    <button class="btn bp" onclick="acceptInvite()">Katil</button>
+    <button class="btn bo" onclick="rejectInvite()">Reddet</button>
+  </div>
+</div>
+
 <!-- Ayarlar Butonu -->
 <button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
 
@@ -683,6 +756,302 @@ function applyFrame(){
 }
 
 
+
+// ── ARKADAS SISTEMI ────────────────────────────────────────
+var myUserId = localStorage.getItem('admiralUserId');
+if(!myUserId){
+  myUserId = String(Math.floor(Math.random()*900)+100);
+  localStorage.setItem('admiralUserId', myUserId);
+}
+
+var myFriends = JSON.parse(localStorage.getItem('admiralFriends') || '[]');
+// [{id, name, emoji, color}]
+var pendingRequests = JSON.parse(localStorage.getItem('admiralRequests') || '[]');
+// [{id, name, emoji, color}]
+
+var presencePeer = null;
+var friendConns = {}; // id -> conn
+var onlineFriends = {}; // id -> true/false
+var currentInvite = null; // {fromId, fromName, code}
+var ftabIndex = 0;
+
+function saveFriends(){ localStorage.setItem('admiralFriends', JSON.stringify(myFriends)); }
+function saveRequests(){ localStorage.setItem('admiralRequests', JSON.stringify(pendingRequests)); }
+
+function presencePeerId(uid){ return 'amiralbatti-u-'+uid; }
+
+function initPresence(){
+  if(presencePeer && !presencePeer.destroyed) return;
+  var pid = presencePeerId(myUserId);
+  presencePeer = new Peer(pid, {debug:0, config:{iceServers:[{urls:'stun:stun.l.google.com:19302'}]}});
+  presencePeer.on('open', function(){ console.log('Presence acik:', pid); });
+  presencePeer.on('connection', function(c){
+    c.on('data', function(raw){
+      var msg = typeof raw==='string'?JSON.parse(raw):raw;
+      handlePresenceMsg(msg, c);
+    });
+  });
+  presencePeer.on('error', function(e){
+    if(e.type==='unavailable-id'){
+      // ID cakismasi - farkli ID olustur
+      myUserId = String(Math.floor(Math.random()*900)+100);
+      localStorage.setItem('admiralUserId', myUserId);
+      setTimeout(initPresence, 1000);
+    }
+  });
+  presencePeer.on('disconnected', function(){ presencePeer.reconnect(); });
+  document.getElementById('myIdDisplay').textContent = myUserId;
+}
+
+function handlePresenceMsg(msg, c){
+  if(msg.type==='friend_request'){
+    // Zaten arkadas mi?
+    if(myFriends.some(function(f){return f.id===msg.fromId;})) {
+      c.send(JSON.stringify({type:'already_friends'})); return;
+    }
+    pendingRequests.push({id:msg.fromId, name:msg.fromName, emoji:msg.emoji||'ship', color:msg.color||'#60a5fa'});
+    saveRequests();
+    updateFriendsBadge();
+    renderFriendsPanel();
+    c.send(JSON.stringify({type:'request_received'}));
+  } else if(msg.type==='game_invite'){
+    currentInvite = {fromId:msg.fromId, fromName:msg.fromName, code:msg.code};
+    document.getElementById('invitePopupText').textContent = msg.fromName+' (#'+msg.fromId+') seni oyuna davet etti!';
+    document.getElementById('invitePopup').classList.add('open');
+    if(settings.sound) sndChat();
+  } else if(msg.type==='ping'){
+    c.send(JSON.stringify({type:'pong', id:myUserId, name:g.myName||'?', emoji:myProfile.emoji, color:myProfile.color}));
+  }
+}
+
+function checkFriendOnline(friendId, cb){
+  try {
+    var c = presencePeer.connect(presencePeerId(friendId), {reliable:true, serialization:'json'});
+    var done = false;
+    var timer = setTimeout(function(){ if(!done){ done=true; cb(false, null); try{c.close();}catch(e){} } }, 3000);
+    c.on('open', function(){
+      c.send(JSON.stringify({type:'ping'}));
+    });
+    c.on('data', function(raw){
+      if(done) return;
+      var msg = typeof raw==='string'?JSON.parse(raw):raw;
+      if(msg.type==='pong'){
+        done=true; clearTimeout(timer);
+        cb(true, msg);
+        try{c.close();}catch(e){}
+      }
+    });
+    c.on('error', function(){ if(!done){done=true;clearTimeout(timer);cb(false,null);} });
+  } catch(e){ cb(false, null); }
+}
+
+function sendFriendRequest(targetId){
+  if(!presencePeer || presencePeer.destroyed){ alert('Once siteye giris yapin.'); return; }
+  if(targetId===myUserId){ alert('Kendinizi ekleyemezsiniz.'); return; }
+  if(myFriends.some(function(f){return f.id===targetId;})){ alert('Zaten arkadasssiniz.'); return; }
+  try {
+    var c = presencePeer.connect(presencePeerId(targetId), {reliable:true, serialization:'json'});
+    var done = false;
+    var timer = setTimeout(function(){ if(!done){done=true;alert('Kullanici bulunamadi veya cevrimici degil (#'+targetId+').');try{c.close();}catch(e){}} }, 4000);
+    c.on('open', function(){
+      c.send(JSON.stringify({type:'friend_request', fromId:myUserId, fromName:g.myName||'Oyuncu', emoji:myProfile.emoji, color:myProfile.color}));
+    });
+    c.on('data', function(raw){
+      if(done) return;
+      var msg = typeof raw==='string'?JSON.parse(raw):raw;
+      done=true; clearTimeout(timer);
+      if(msg.type==='request_received') alert('Istek gonderildi! Karsindaki kabul ederse arkadaslar listenize eklenecek.');
+      else if(msg.type==='already_friends') alert('Zaten arkadasssiniz.');
+      try{c.close();}catch(e){}
+    });
+    c.on('error', function(){ if(!done){done=true;clearTimeout(timer);alert('Kullanici bulunamadi (#'+targetId+').');} });
+  } catch(e){ alert('Baglanti hatasi.'); }
+}
+
+function acceptRequest(fromId){
+  var req = pendingRequests.find(function(r){return r.id===fromId;});
+  if(!req) return;
+  pendingRequests = pendingRequests.filter(function(r){return r.id!==fromId;});
+  myFriends.push({id:req.id, name:req.name, emoji:req.emoji||'ship', color:req.color||'#60a5fa'});
+  saveRequests(); saveFriends();
+  // Karsi tarafi da ekle
+  try {
+    var c = presencePeer.connect(presencePeerId(fromId), {reliable:true,serialization:'json'});
+    c.on('open', function(){
+      c.send(JSON.stringify({type:'friend_request', fromId:myUserId, fromName:g.myName||'Oyuncu', emoji:myProfile.emoji, color:myProfile.color}));
+      setTimeout(function(){try{c.close();}catch(e){}},1000);
+    });
+  } catch(e){}
+  updateFriendsBadge();
+  renderFriendsPanel();
+}
+
+function rejectRequest(fromId){
+  pendingRequests = pendingRequests.filter(function(r){return r.id!==fromId;});
+  saveRequests();
+  updateFriendsBadge();
+  renderFriendsPanel();
+}
+
+function removeFriend(fid){
+  if(!confirm('Arkadasi listeden cikar?')) return;
+  myFriends = myFriends.filter(function(f){return f.id!==fid;});
+  saveFriends();
+  renderFriendsPanel();
+}
+
+function inviteFriendToGame(fid, fname){
+  if(!g.roomCode){ alert('Once bir oda kur.'); return; }
+  try {
+    var c = presencePeer.connect(presencePeerId(fid), {reliable:true,serialization:'json'});
+    var done=false;
+    setTimeout(function(){if(!done){done=true;alert(fname+' simdilik cevrimici degil.');try{c.close();}catch(e){}}},3000);
+    c.on('open', function(){
+      done=true;
+      c.send(JSON.stringify({type:'game_invite', fromId:myUserId, fromName:g.myName||'Oyuncu', code:g.roomCode}));
+      setTimeout(function(){try{c.close();}catch(e){}},1000);
+    });
+    c.on('error', function(){if(!done){done=true;alert(fname+' simdilik cevrimici degil.');}});
+  } catch(e){}
+}
+
+function acceptInvite(){
+  document.getElementById('invitePopup').classList.remove('open');
+  if(!currentInvite) return;
+  var code = currentInvite.code;
+  var name = g.myName || document.getElementById('inName').value.trim() || 'Oyuncu';
+  g.myName = name;
+  currentInvite = null;
+  document.getElementById('inCode').value = code;
+  doJoin();
+}
+
+function rejectInvite(){
+  document.getElementById('invitePopup').classList.remove('open');
+  currentInvite = null;
+}
+
+// ── UI ────────────────────────────────────────────────────
+function toggleFriendsPanel(){
+  var p = document.getElementById('friendsPanel');
+  var isOpen = p.classList.contains('open');
+  if(!isOpen){
+    p.classList.add('open');
+    renderFriendsPanel();
+  } else {
+    p.classList.remove('open');
+  }
+}
+
+function switchFTab(idx){
+  ftabIndex = idx;
+  for(var i=0;i<3;i++){
+    var t=document.getElementById('ftab'+i);
+    if(t) t.classList.toggle('active', i===idx);
+  }
+  renderFriendsPanel();
+}
+
+function updateFriendsBadge(){
+  var badge = document.getElementById('friendsBadge');
+  if(!badge) return;
+  var n = pendingRequests.length;
+  badge.textContent = n;
+  badge.style.display = n>0 ? 'flex' : 'none';
+  var rc = document.getElementById('reqCount');
+  if(rc) rc.textContent = n>0 ? '('+n+')' : '';
+}
+
+function renderFriendsPanel(){
+  var body = document.getElementById('friendsBody');
+  if(!body) return;
+  body.innerHTML = '';
+
+  if(ftabIndex===0){
+    // Arkadas listesi
+    if(myFriends.length===0){
+      body.innerHTML = '<div class="empty-msg">Henuz arkadasin yok.<br>ID ile arkadas ekle!</div>';
+      return;
+    }
+    myFriends.forEach(function(f){
+      var div = document.createElement('div'); div.className='friend-item';
+      var av = document.createElement('div'); av.className='friend-avatar';
+      av.innerHTML = getEmojiChar(f.emoji||'ship');
+      av.style.borderColor = f.color||'var(--bdr)';
+      av.style.border = '2px solid '+(f.color||'var(--bdr)');
+      var info = document.createElement('div'); info.className='friend-info';
+      var nm = document.createElement('div'); nm.className='friend-name'; nm.style.color=f.color||'inherit'; nm.textContent=f.name;
+      var id = document.createElement('div'); id.className='friend-id'; id.textContent='#'+f.id;
+      info.appendChild(nm); info.appendChild(id);
+      var dot = document.createElement('div'); dot.className='online-dot offline'; dot.id='dot-'+f.id;
+      var invBtn = document.createElement('button'); invBtn.className='invite-btn'; invBtn.textContent='Davet';
+      invBtn.disabled = !g.roomCode;
+      invBtn.title = g.roomCode ? 'Oyuna davet et' : 'Once oda kur';
+      (function(fid,fname){ invBtn.onclick=function(){ inviteFriendToGame(fid,fname); }; })(f.id,f.name);
+      var remBtn = document.createElement('button'); remBtn.className='remove-btn'; remBtn.textContent='x';
+      (function(fid){ remBtn.onclick=function(){ removeFriend(fid); }; })(f.id);
+      div.appendChild(av); div.appendChild(info); div.appendChild(dot); div.appendChild(invBtn); div.appendChild(remBtn);
+      body.appendChild(div);
+      // Online kontrolü
+      checkFriendOnline(f.id, function(online){
+        var d = document.getElementById('dot-'+f.id);
+        if(d) d.className='online-dot '+(online?'online':'offline');
+      });
+    });
+
+  } else if(ftabIndex===1){
+    // Arkadas ekle
+    var wrap = document.createElement('div'); wrap.className='add-friend-wrap';
+    var label = document.createElement('div'); label.style.fontSize='12px'; label.style.color='var(--txt2)'; label.textContent='Arkadasinin 3 haneli ID numarasini gir:';
+    var inp = document.createElement('input'); inp.type='text'; inp.placeholder='Ornek: 042'; inp.maxLength=3;
+    inp.style.letterSpacing='3px'; inp.style.textAlign='center'; inp.style.fontSize='20px'; inp.style.fontWeight='800';
+    inp.addEventListener('input', function(){ this.value=this.value.replace(/\D/g,''); });
+    var btn = document.createElement('button'); btn.className='btn bp bfull'; btn.textContent='Istek Gonder';
+    btn.onclick = function(){
+      var id = inp.value.trim();
+      if(id.length!==3){ alert('3 haneli ID gir.'); return; }
+      sendFriendRequest(id);
+    };
+    var myIdInfo = document.createElement('div');
+    myIdInfo.style.cssText='text-align:center;margin-top:.75rem;font-size:12px;color:var(--txt3)';
+    myIdInfo.innerHTML='Senin ID numaraniz: <strong style="color:var(--bl);font-size:16px;letter-spacing:2px">#'+myUserId+'</strong><br><span style="font-size:11px">Arkadasina bunu ver</span>';
+    wrap.appendChild(label); wrap.appendChild(inp); wrap.appendChild(btn); wrap.appendChild(myIdInfo);
+    body.appendChild(wrap);
+
+  } else {
+    // Gelen istekler
+    if(pendingRequests.length===0){
+      body.innerHTML = '<div class="empty-msg">Gelen istek yok</div>';
+      return;
+    }
+    pendingRequests.forEach(function(r){
+      var div = document.createElement('div'); div.className='req-item';
+      var av = document.createElement('div'); av.className='friend-avatar';
+      av.innerHTML = getEmojiChar(r.emoji||'ship');
+      av.style.border='2px solid '+(r.color||'var(--bdr)');
+      var info = document.createElement('div'); info.className='friend-info';
+      var nm = document.createElement('div'); nm.className='friend-name'; nm.style.color=r.color||'inherit'; nm.textContent=r.name;
+      var id2 = document.createElement('div'); id2.className='friend-id'; id2.textContent='#'+r.id;
+      info.appendChild(nm); info.appendChild(id2);
+      var btns = document.createElement('div'); btns.className='req-btns';
+      var acc = document.createElement('button'); acc.className='accept-btn'; acc.textContent='Kabul';
+      var rej = document.createElement('button'); rej.className='reject-btn'; rej.textContent='Reddet';
+      (function(rid){ acc.onclick=function(){acceptRequest(rid);}; rej.onclick=function(){rejectRequest(rid);}; })(r.id);
+      btns.appendChild(acc); btns.appendChild(rej);
+      div.appendChild(av); div.appendChild(info); div.appendChild(btns);
+      body.appendChild(div);
+    });
+  }
+}
+
+function copyMyId(){
+  if(navigator.clipboard) navigator.clipboard.writeText('#'+myUserId).then(function(){
+    var el=document.getElementById('myIdDisplay');
+    var old=el.textContent; el.textContent='Kopyalandi!';
+    setTimeout(function(){el.textContent=old;},1500);
+  });
+}
+
 var COLORS = ['#60a5fa','#34d399','#f59e0b','#f87171','#a78bfa','#fb923c','#38bdf8','#e879f9'];
 var myProfile = {emoji:'ship', color:'#60a5fa'};
 
@@ -709,7 +1078,9 @@ function initProfilePicker(){
     btn.innerHTML = getEmojiChar(k);
     btn.title = k;
     (function(key){ btn.onclick = function(){ myProfile.emoji=key; initProfilePicker();
-updateHeaderGold(); }; })(k);
+updateHeaderGold();
+initPresence();
+updateFriendsBadge(); }; })(k);
     ar.appendChild(btn);
   });
   var cr = document.getElementById('colorRow');
@@ -721,7 +1092,9 @@ updateHeaderGold(); }; })(k);
     btn.style.background = c;
     btn.title = c;
     (function(col){ btn.onclick = function(){ myProfile.color=col; initProfilePicker();
-updateHeaderGold(); }; })(c);
+updateHeaderGold();
+initPresence();
+updateFriendsBadge(); }; })(c);
     cr.appendChild(btn);
   });
   updateHeaderGold();
@@ -1225,7 +1598,9 @@ var TOTAL=SHIPS.reduce(function(a,s){return a+s.size;},0);
 // ── HELPERS ───────────────────────────────────────────────
 function mk10(){return Array(10).fill(null).map(function(){return Array(10).fill(0);});}
 function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');setTimeout(calcGridSize,50);if(id==='sLobby') initProfilePicker();
-updateHeaderGold();}
+updateHeaderGold();
+initPresence();
+updateFriendsBadge();}
 function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},5000);}
 function showInfo(m){document.getElementById('lobInfoTxt').textContent=m;document.getElementById('lobInfo').classList.add('show');}
 function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
@@ -1952,6 +2327,8 @@ document.getElementById('inName').addEventListener('keydown',function(e){if(e.ke
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
 initProfilePicker();
 updateHeaderGold();
+initPresence();
+updateFriendsBadge();
 </script>
 </body>
 </html>
