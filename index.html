@@ -503,7 +503,7 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
         <p>200 kredi ile başla. Bomba al, radar kullan, rakibi ez!</p>
       </div>
     </div>
-    <button class="btn bo bfull" onclick="showScreen('sLobby')">&#8592; Geri</button>
+    <button class="btn bo bfull" onclick="pendingInviteTarget=null;showScreen('sLobby')">&#8592; Geri</button>
   </div>
 </div>
 
@@ -1081,7 +1081,7 @@ function inviteFriendToGame(fid, fname){
   g.myName = name;
   pendingInviteTarget = {fid:fid, fname:fname};
   toggleFriendsPanel();
-  doCreateRoom();
+  showScreen('sModeSelect');
 }
 
 function acceptInvite(){
