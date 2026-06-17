@@ -888,11 +888,13 @@ function saveRequests(){ localStorage.setItem('admiralRequests', JSON.stringify(
 
 function presencePeerId(uid){ return 'amiralbatti-u-'+uid; }
 
+var presenceRetryCount = 0;
+
 function initPresence(){
   if(presencePeer && !presencePeer.destroyed) return;
   var pid = presencePeerId(myUserId);
   presencePeer = new Peer(pid, {debug:0, config:{iceServers:[{urls:'stun:stun.l.google.com:19302'}]}});
-  presencePeer.on('open', function(){ console.log('Presence acik:', pid); });
+  presencePeer.on('open', function(){ console.log('Presence acik:', pid); presenceRetryCount = 0; });
   presencePeer.on('connection', function(c){
     c.on('data', function(raw){
       var msg = typeof raw==='string'?JSON.parse(raw):raw;
@@ -901,15 +903,32 @@ function initPresence(){
   });
   presencePeer.on('error', function(e){
     if(e.type==='unavailable-id'){
-      // ID cakismasi - farkli ID olustur
-      myUserId = String(Math.floor(Math.random()*900)+100);
-      localStorage.setItem('admiralUserId', myUserId);
-      setTimeout(initPresence, 1000);
+      presenceRetryCount++;
+      try{ presencePeer.destroy(); }catch(err){}
+      if(presenceRetryCount <= 4){
+        // Onceki oturumun baglantisi henuz serbest kalmamis olabilir - ayni ID ile tekrar dene
+        setTimeout(initPresence, 2000 * presenceRetryCount);
+      } else {
+        // Gercekten baska biri kullaniyor - yeni ID al ve buluta kaydet
+        myUserId = genRandomUserId();
+        localStorage.setItem('admiralUserId', myUserId);
+        if(sbClient && myAccountCode){
+          sbClient.from('accounts').update({user_id: myUserId}).eq('account_code', myAccountCode).then(function(){});
+        }
+        var idDisp2 = document.getElementById('myIdDisplay');
+        if(idDisp2) idDisp2.textContent = myUserId;
+        presenceRetryCount = 0;
+        setTimeout(initPresence, 1000);
+      }
     }
   });
-  presencePeer.on('disconnected', function(){ presencePeer.reconnect(); });
+  presencePeer.on('disconnected', function(){ if(presencePeer && !presencePeer.destroyed) presencePeer.reconnect(); });
   document.getElementById('myIdDisplay').textContent = myUserId;
 }
+
+window.addEventListener('beforeunload', function(){
+  try{ if(presencePeer) presencePeer.destroy(); }catch(e){}
+});
 
 function handlePresenceMsg(msg, c){
   if(msg.type==='friend_request'){
