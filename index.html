@@ -163,6 +163,26 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 .cell.radar-reveal{background:#1a3a2a;border-color:var(--green)}
 .cell.radar-ship{background:#1a4a1a;border-color:#4ade80}
 .cell.bomb-preview{background:rgba(239,68,68,.3);border-color:var(--red)}
+/* Profil karti */
+.profile-card-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1500;align-items:center;justify-content:center}
+.profile-card-overlay.open{display:flex}
+.profile-card{background:var(--surf);border:1px solid var(--bdr);border-radius:18px;padding:1.5rem;width:90%;max-width:340px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.pc-avatar{width:72px;height:72px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto .75rem;border:3px solid var(--bdr)}
+.pc-name{font-size:18px;font-weight:800;margin-bottom:2px}
+.pc-id{font-size:12px;color:var(--txt3);margin-bottom:1rem}
+.pc-stats{display:flex;justify-content:center;gap:1.5rem;margin-bottom:1rem}
+.pc-stat{text-align:center}
+.pc-stat .pv{font-size:20px;font-weight:800}
+.pc-stat .pl{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.pc-frame-row{display:flex;justify-content:center;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap}
+.pc-frame-badge{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.pc-frame-badge.copper{border:2px solid #cd7f32;color:#cd7f32}
+.pc-frame-badge.silver{border:2px solid #c0c0c0;color:#c0c0c0}
+.pc-frame-badge.gold{border:2px solid #ffd700;color:#ffd700}
+.pc-frame-badge.diamond{border:2px solid #b9f2ff;color:#b9f2ff}
+.pc-loading{color:var(--txt3);font-size:13px;padding:1rem 0}
+.clickable-name{cursor:pointer}
+.clickable-name:hover{text-decoration:underline}
 
 /* Profil */
 .avatar-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem}
@@ -545,6 +565,13 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
   </div>
 </div>
 
+<!-- PROFIL KARTI -->
+<div class="profile-card-overlay" id="profileCardOverlay" onclick="closeProfileCardOutside(event)">
+  <div class="profile-card" id="profileCardBody">
+    <div class="pc-loading">Yukleniyor...</div>
+  </div>
+</div>
+
 <!-- SPECTATOR -->
 <div id="sSpec" class="screen">
   <div style="max-width:980px;margin:0 auto">
@@ -693,6 +720,8 @@ function loadAccount(){
       if(res && res.data){
         myUserId = res.data.user_id || myUserId;
         goldCoins = (typeof res.data.gold === 'number') ? res.data.gold : goldCoins;
+        wins = (typeof res.data.wins === 'number') ? res.data.wins : wins;
+        losses = (typeof res.data.losses === 'number') ? res.data.losses : losses;
         ownedFrames = res.data.owned_frames || ownedFrames;
         equippedFrame = (res.data.equipped_frame!=null) ? res.data.equipped_frame : equippedFrame;
         myFriends = res.data.friends || myFriends;
@@ -703,7 +732,7 @@ function loadAccount(){
       } else {
         var tryId = myUserId || genRandomUserId();
         return sbClient.from('accounts').insert({
-          account_code: myAccountCode, user_id: tryId, gold: goldCoins,
+          account_code: myAccountCode, user_id: tryId, gold: goldCoins, wins: wins, losses: losses,
           owned_frames: ownedFrames, equipped_frame: equippedFrame,
           friends: myFriends, pending_requests: pendingRequests,
           profile_emoji: myProfile.emoji, profile_color: myProfile.color
@@ -711,7 +740,7 @@ function loadAccount(){
           if(insertRes && insertRes.error){
             tryId = genRandomUserId();
             return sbClient.from('accounts').insert({
-              account_code: myAccountCode, user_id: tryId, gold: goldCoins,
+              account_code: myAccountCode, user_id: tryId, gold: goldCoins, wins: wins, losses: losses,
               owned_frames: ownedFrames, equipped_frame: equippedFrame,
               friends: myFriends, pending_requests: pendingRequests,
               profile_emoji: myProfile.emoji, profile_color: myProfile.color
@@ -724,7 +753,7 @@ function loadAccount(){
     .catch(function(e){ console.error('Hesap yuklenemedi:', e); })
     .then(function(){
       localStorage.setItem('admiralUserId', myUserId);
-      saveGold(); saveFrames(); saveFriends(); saveRequests();
+      saveGold(); saveStats(); saveFrames(); saveFriends(); saveRequests();
       var idDisp = document.getElementById('myIdDisplay');
       if(idDisp) idDisp.textContent = myUserId;
     });
@@ -732,12 +761,12 @@ function loadAccount(){
 
 var syncTimer = null;
 function syncAccountToCloud(){
-  saveGold(); saveFrames(); saveFriends(); saveRequests();
+  saveGold(); saveStats(); saveFrames(); saveFriends(); saveRequests();
   if(!sbClient || !myAccountCode) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(function(){
     sbClient.from('accounts').update({
-      gold: goldCoins, owned_frames: ownedFrames, equipped_frame: equippedFrame,
+      gold: goldCoins, wins: wins, losses: losses, owned_frames: ownedFrames, equipped_frame: equippedFrame,
       friends: myFriends, pending_requests: pendingRequests,
       profile_emoji: myProfile.emoji, profile_color: myProfile.color,
       session_peer_id: mySessionPeerId, last_seen: new Date().toISOString(),
@@ -752,6 +781,65 @@ function showAccountCode(){
   alert('Hesap kodun:\n\n'+myAccountCode+'\n\nBu kodu bir yere kaydet! Baska bir cihazda "Hesabi Geri Yukle" ile bu kodu girersen altinin, cercevelerin ve arkadaslarin orada da gorunur.');
 }
 
+// ── PROFIL KARTI ──────────────────────────────────────────
+function fetchPublicProfile(userId, cb){
+  if(!sbClient){ cb(null); return; }
+  sbClient.from('accounts').select('user_id,profile_emoji,profile_color,wins,losses,equipped_frame,owned_frames')
+    .eq('user_id', userId).maybeSingle()
+    .then(function(res){ cb(res && res.data ? res.data : null); })
+    .catch(function(){ cb(null); });
+}
+
+function showProfileCard(userId, fallback){
+  if(!userId) return;
+  var overlay = document.getElementById('profileCardOverlay');
+  var body = document.getElementById('profileCardBody');
+  var fb = fallback || {};
+  body.innerHTML = '';
+  var av = document.createElement('div'); av.className='pc-avatar';
+  av.innerHTML = getEmojiChar(fb.emoji||'ship');
+  av.style.borderColor = fb.color||'var(--bdr)';
+  var nm = document.createElement('div'); nm.className='pc-name'; nm.style.color=fb.color||'inherit'; nm.textContent = fb.name || ('Oyuncu #'+userId);
+  var idEl = document.createElement('div'); idEl.className='pc-id'; idEl.textContent = '#'+userId;
+  var loading = document.createElement('div'); loading.className='pc-loading'; loading.id='pcLoading'; loading.textContent='Istatistikler yukleniyor...';
+  var closeBtn = document.createElement('button'); closeBtn.className='btn bo bfull'; closeBtn.style.marginTop='.5rem'; closeBtn.textContent='Kapat'; closeBtn.onclick=closeProfileCard;
+  body.appendChild(av); body.appendChild(nm); body.appendChild(idEl); body.appendChild(loading); body.appendChild(closeBtn);
+  overlay.classList.add('open');
+
+  fetchPublicProfile(userId, function(data){
+    var ld = document.getElementById('pcLoading');
+    if(!data){ if(ld) ld.textContent='Bilgi bulunamadi.'; return; }
+    av.innerHTML = getEmojiChar(data.profile_emoji||fb.emoji||'ship');
+    av.style.borderColor = data.profile_color||fb.color||'var(--bdr)';
+    nm.style.color = data.profile_color||fb.color||'inherit';
+    var w = data.wins||0, l = data.losses||0;
+    var total = w+l;
+    var rate = total>0 ? Math.round((w/total)*100) : 0;
+    var statsRow = document.createElement('div'); statsRow.className='pc-stats';
+    statsRow.innerHTML =
+      '<div class="pc-stat"><div class="pv" style="color:#4ade80">'+w+'</div><div class="pl">Galibiyet</div></div>'+
+      '<div class="pc-stat"><div class="pv" style="color:#f87171">'+l+'</div><div class="pl">Maglubiyet</div></div>'+
+      '<div class="pc-stat"><div class="pv">'+rate+'%</div><div class="pl">Kazanma</div></div>';
+    if(ld) ld.replaceWith(statsRow);
+
+    var owned = data.owned_frames || [];
+    if(owned.length>0){
+      var frameRow = document.createElement('div'); frameRow.className='pc-frame-row';
+      var frameLabel = {copper:'B',silver:'G',gold:'A',diamond:'E'};
+      owned.forEach(function(fk){
+        var badge = document.createElement('div'); badge.className='pc-frame-badge '+fk;
+        badge.textContent = frameLabel[fk]||'?';
+        badge.title = fk + (data.equipped_frame===fk ? ' (takili)' : '');
+        frameRow.appendChild(badge);
+      });
+      statsRow.insertAdjacentElement('afterend', frameRow);
+    }
+  });
+}
+
+function closeProfileCard(){ document.getElementById('profileCardOverlay').classList.remove('open'); }
+function closeProfileCardOutside(e){ if(e.target.id==='profileCardOverlay') closeProfileCard(); }
+
 function restoreAccount(){
   var code = prompt('Diger cihazdaki hesap kodunu yapistir:');
   if(!code) return;
@@ -764,9 +852,12 @@ function restoreAccount(){
 
 // ── ALTIN SISTEMI ─────────────────────────────────────────
 var goldCoins = parseInt(localStorage.getItem('admiralGold') || '0');
+var wins = parseInt(localStorage.getItem('admiralWins') || '0');
+var losses = parseInt(localStorage.getItem('admiralLosses') || '0');
 var GOLD_PER_WIN = 200;
 
 function saveGold(){ localStorage.setItem('admiralGold', goldCoins); }
+function saveStats(){ localStorage.setItem('admiralWins', wins); localStorage.setItem('admiralLosses', losses); }
 
 function updateHeaderGold(){
   var el = document.getElementById('headerGold');
@@ -1158,14 +1249,15 @@ function renderFriendsPanel(){
     }
     myFriends.forEach(function(f){
       var div = document.createElement('div'); div.className='friend-item';
-      var av = document.createElement('div'); av.className='friend-avatar';
+      var av = document.createElement('div'); av.className='friend-avatar clickable-name';
       av.innerHTML = getEmojiChar(f.emoji||'ship');
       av.style.borderColor = f.color||'var(--bdr)';
       av.style.border = '2px solid '+(f.color||'var(--bdr)');
-      var info = document.createElement('div'); info.className='friend-info';
+      var info = document.createElement('div'); info.className='friend-info clickable-name';
       var nm = document.createElement('div'); nm.className='friend-name'; nm.style.color=f.color||'inherit'; nm.textContent=f.name;
       var id = document.createElement('div'); id.className='friend-id'; id.textContent='#'+f.id;
       info.appendChild(nm); info.appendChild(id);
+      (function(fid,fdata){ var openCard=function(){ showProfileCard(fid,{name:fdata.name,emoji:fdata.emoji,color:fdata.color}); }; av.onclick=openCard; info.onclick=openCard; })(f.id,f);
       var dot = document.createElement('div'); dot.className='online-dot offline'; dot.id='dot-'+f.id;
       var invBtn = document.createElement('button'); invBtn.className='invite-btn'; invBtn.textContent='Davet';
       invBtn.title = g.roomCode ? 'Oyuna davet et' : 'Oda kurup davet et';
@@ -1787,7 +1879,7 @@ var g={};
 var score={me:0,opp:0};
 
 function resetG(){
-  g={isHost:false,myName:'',oppName:'?',roomCode:'',oppProfile:null,
+  g={isHost:false,myName:'',oppName:'?',roomCode:'',oppProfile:null,oppUserId:null,
      myBoard:null,oppBoard:null,myShots:null,oppShots:null,
      sunkMine:[],sunkOpp:[],
      placedShips:{},selShip:null,orient:'H',
@@ -1849,13 +1941,15 @@ function onData(raw){
     case 'hello':
       g.oppName=msg.name;
       g.oppProfile=msg.profile||null;
-      send({type:'hello_ack',name:g.myName,actionMode:actionMode,profile:myProfile});
+      g.oppUserId=msg.userId||null;
+      send({type:'hello_ack',name:g.myName,actionMode:actionMode,profile:myProfile,userId:myUserId});
       startSetup();
       break;
 
     case 'hello_ack':
       g.oppName=msg.name;
       g.oppProfile=msg.profile||null;
+      g.oppUserId=msg.userId||null;
       if(msg.actionMode!==undefined){ actionMode=msg.actionMode; credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; }
       startSetup();
       break;
@@ -2032,7 +2126,7 @@ function doJoin(){
       setHBadge('Oda: '+code);
       // Kısa gecikme - karşı tarafın data listener'ı hazır olsun
       setTimeout(function(){
-        send({type:'hello',name:g.myName,profile:myProfile});
+        send({type:'hello',name:g.myName,profile:myProfile,userId:myUserId});
       }, 300);
     });
   });
@@ -2206,7 +2300,10 @@ function startGame(){
   updateBombBar();
   document.getElementById('ml1').innerHTML=makeTag(g.myName,myProfile)+' (sen)';
   document.getElementById('ml2').innerHTML=makeTag(g.oppName||'Rakip',g.oppProfile);
-  document.getElementById('enemyTitle').innerHTML=makeTag(g.oppName||'Rakip',g.oppProfile)+' — Hedef';
+  var etEl=document.getElementById('enemyTitle');
+  etEl.innerHTML=makeTag(g.oppName||'Rakip',g.oppProfile)+' — Hedef';
+  etEl.classList.add('clickable-name');
+  etEl.onclick=function(){ if(g.oppUserId) showProfileCard(g.oppUserId,{name:g.oppName,emoji:g.oppProfile?g.oppProfile.emoji:'ship',color:g.oppProfile?g.oppProfile.color:'#60a5fa'}); };
   document.getElementById('chatLog').innerHTML='';
   document.getElementById('gameLog').innerHTML='';
   updateScoreboard();
@@ -2399,7 +2496,7 @@ function checkLost(){
 }
 
 function endGame(won){
-  if(won){score.me++;if(settings.sound)sndWin();awardGold(GOLD_PER_WIN);}else{score.opp++;if(settings.sound)sndLose();}
+  if(won){score.me++;wins++;if(settings.sound)sndWin();awardGold(GOLD_PER_WIN);}else{score.opp++;losses++;if(settings.sound)sndLose();syncAccountToCloud();}
   document.getElementById('endIcon').textContent=won?'&#127942;':'&#128128;';
   document.getElementById('endTitle').innerHTML=won?makeTag(g.myName,myProfile)+' Kazandı!':makeTag(g.oppName||'Rakip',g.oppProfile)+' Kazandı!';
   document.getElementById('totalScore').innerHTML=
