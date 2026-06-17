@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Amiral Batti</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -349,6 +350,10 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
       <div class="avatar-row" id="avatarRow"></div>
       <div style="font-size:11px;color:var(--txt3);margin-bottom:.4rem">Renk</div>
       <div class="color-row" id="colorRow"></div>
+      <div style="margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bdr);display:flex;gap:.5rem">
+        <button class="btn bo" style="padding:5px 8px;font-size:11px;flex:1" onclick="showAccountCode()">&#128272; Hesap Kodum</button>
+        <button class="btn bo" style="padding:5px 8px;font-size:11px;flex:1" onclick="restoreAccount()">&#9851; Hesabi Geri Yukle</button>
+      </div>
 
     </div>
     <div id="lobErr" class="err"></div>
@@ -642,6 +647,106 @@ label{display:block;font-size:13px;color:var(--txt2);margin-bottom:5px}
 
 // ── PROFIL ────────────────────────────────────────────────
 
+// ── SUPABASE HESAP SISTEMI ──────────────────────────────────
+var SUPABASE_URL = 'https://pxfiltovwkbupapepody.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_wcVPrdJ5iJ1QOTs9GR_ocg_x0mNAzOW';
+var sbClient = null;
+try {
+  if(typeof supabase !== 'undefined' && supabase.createClient){
+    sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch(e){ console.error('Supabase baslatilamadi:', e); }
+
+var myAccountCode = localStorage.getItem('admiralAccountCode') || '';
+
+function genAccountCode(){
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var s = '';
+  for(var i=0;i<16;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s.slice(0,4)+'-'+s.slice(4,8)+'-'+s.slice(8,12)+'-'+s.slice(12,16);
+}
+
+function genRandomUserId(){ return String(Math.floor(Math.random()*900)+100); }
+
+function loadAccount(){
+  if(!sbClient) return Promise.resolve();
+  if(!myAccountCode){
+    myAccountCode = genAccountCode();
+    localStorage.setItem('admiralAccountCode', myAccountCode);
+  }
+  return sbClient.from('accounts').select('*').eq('account_code', myAccountCode).maybeSingle()
+    .then(function(res){
+      if(res && res.data){
+        myUserId = res.data.user_id || myUserId;
+        goldCoins = (typeof res.data.gold === 'number') ? res.data.gold : goldCoins;
+        ownedFrames = res.data.owned_frames || ownedFrames;
+        equippedFrame = (res.data.equipped_frame!=null) ? res.data.equipped_frame : equippedFrame;
+        myFriends = res.data.friends || myFriends;
+        pendingRequests = res.data.pending_requests || pendingRequests;
+        if(res.data.profile_emoji) myProfile.emoji = res.data.profile_emoji;
+        if(res.data.profile_color) myProfile.color = res.data.profile_color;
+        return null;
+      } else {
+        var tryId = myUserId || genRandomUserId();
+        return sbClient.from('accounts').insert({
+          account_code: myAccountCode, user_id: tryId, gold: goldCoins,
+          owned_frames: ownedFrames, equipped_frame: equippedFrame,
+          friends: myFriends, pending_requests: pendingRequests,
+          profile_emoji: myProfile.emoji, profile_color: myProfile.color
+        }).then(function(insertRes){
+          if(insertRes && insertRes.error){
+            tryId = genRandomUserId();
+            return sbClient.from('accounts').insert({
+              account_code: myAccountCode, user_id: tryId, gold: goldCoins,
+              owned_frames: ownedFrames, equipped_frame: equippedFrame,
+              friends: myFriends, pending_requests: pendingRequests,
+              profile_emoji: myProfile.emoji, profile_color: myProfile.color
+            }).then(function(){ myUserId = tryId; });
+          }
+          myUserId = tryId;
+        });
+      }
+    })
+    .catch(function(e){ console.error('Hesap yuklenemedi:', e); })
+    .then(function(){
+      localStorage.setItem('admiralUserId', myUserId);
+      saveGold(); saveFrames(); saveFriends(); saveRequests();
+      var idDisp = document.getElementById('myIdDisplay');
+      if(idDisp) idDisp.textContent = myUserId;
+    });
+}
+
+var syncTimer = null;
+function syncAccountToCloud(){
+  saveGold(); saveFrames(); saveFriends(); saveRequests();
+  if(!sbClient || !myAccountCode) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(function(){
+    sbClient.from('accounts').update({
+      gold: goldCoins, owned_frames: ownedFrames, equipped_frame: equippedFrame,
+      friends: myFriends, pending_requests: pendingRequests,
+      profile_emoji: myProfile.emoji, profile_color: myProfile.color,
+      updated_at: new Date().toISOString()
+    }).eq('account_code', myAccountCode).then(function(r){
+      if(r && r.error) console.error('Senkron hatasi:', r.error);
+    });
+  }, 700);
+}
+
+function showAccountCode(){
+  alert('Hesap kodun:\n\n'+myAccountCode+'\n\nBu kodu bir yere kaydet! Baska bir cihazda "Hesabi Geri Yukle" ile bu kodu girersen altinin, cercevelerin ve arkadaslarin orada da gorunur.');
+}
+
+function restoreAccount(){
+  var code = prompt('Diger cihazdaki hesap kodunu yapistir:');
+  if(!code) return;
+  code = code.trim().toUpperCase();
+  if(code.length<8){ alert('Gecersiz kod.'); return; }
+  localStorage.setItem('admiralAccountCode', code);
+  alert('Hesap degistirildi! Sayfa yenileniyor...');
+  location.reload();
+}
+
 // ── ALTIN SISTEMI ─────────────────────────────────────────
 var goldCoins = parseInt(localStorage.getItem('admiralGold') || '0');
 var GOLD_PER_WIN = 200;
@@ -658,6 +763,7 @@ function updateHeaderGold(){
 function awardGold(amount){
   goldCoins += amount;
   saveGold();
+  syncAccountToCloud();
   updateHeaderGold();
   var popup = document.createElement('div');
   popup.className = 'gold-win-popup';
@@ -735,6 +841,7 @@ function buyFrame(key, cost){
   ownedFrames.push(key);
   equippedFrame = key;
   saveGold(); saveFrames();
+  syncAccountToCloud();
   updateHeaderGold();
   renderMarketFrames();
   applyFrame();
@@ -743,6 +850,7 @@ function buyFrame(key, cost){
 function equipFrame(key){
   equippedFrame = (equippedFrame===key) ? '' : key;
   saveFrames();
+  syncAccountToCloud();
   renderMarketFrames();
   applyFrame();
 }
@@ -811,6 +919,7 @@ function handlePresenceMsg(msg, c){
     }
     pendingRequests.push({id:msg.fromId, name:msg.fromName, emoji:msg.emoji||'ship', color:msg.color||'#60a5fa'});
     saveRequests();
+    syncAccountToCloud();
     updateFriendsBadge();
     renderFriendsPanel();
     c.send(JSON.stringify({type:'request_received'}));
@@ -874,6 +983,7 @@ function acceptRequest(fromId){
   pendingRequests = pendingRequests.filter(function(r){return r.id!==fromId;});
   myFriends.push({id:req.id, name:req.name, emoji:req.emoji||'ship', color:req.color||'#60a5fa'});
   saveRequests(); saveFriends();
+  syncAccountToCloud();
   // Karsi tarafi da ekle
   try {
     var c = presencePeer.connect(presencePeerId(fromId), {reliable:true,serialization:'json'});
@@ -889,6 +999,7 @@ function acceptRequest(fromId){
 function rejectRequest(fromId){
   pendingRequests = pendingRequests.filter(function(r){return r.id!==fromId;});
   saveRequests();
+  syncAccountToCloud();
   updateFriendsBadge();
   renderFriendsPanel();
 }
@@ -897,6 +1008,7 @@ function removeFriend(fid){
   if(!confirm('Arkadasi listeden cikar?')) return;
   myFriends = myFriends.filter(function(f){return f.id!==fid;});
   saveFriends();
+  syncAccountToCloud();
   renderFriendsPanel();
 }
 
@@ -1077,10 +1189,7 @@ function initProfilePicker(){
     btn.className = 'avatar-opt' + (myProfile.emoji===k?' sel':'');
     btn.innerHTML = getEmojiChar(k);
     btn.title = k;
-    (function(key){ btn.onclick = function(){ myProfile.emoji=key; initProfilePicker();
-updateHeaderGold();
-initPresence();
-updateFriendsBadge(); }; })(k);
+    (function(key){ btn.onclick = function(){ myProfile.emoji=key; initProfilePicker(); syncAccountToCloud(); }; })(k);
     ar.appendChild(btn);
   });
   var cr = document.getElementById('colorRow');
@@ -1091,10 +1200,7 @@ updateFriendsBadge(); }; })(k);
     btn.className = 'color-opt' + (myProfile.color===c?' sel':'');
     btn.style.background = c;
     btn.title = c;
-    (function(col){ btn.onclick = function(){ myProfile.color=col; initProfilePicker();
-updateHeaderGold();
-initPresence();
-updateFriendsBadge(); }; })(c);
+    (function(col){ btn.onclick = function(){ myProfile.color=col; initProfilePicker(); syncAccountToCloud(); }; })(c);
     cr.appendChild(btn);
   });
   updateHeaderGold();
@@ -1597,10 +1703,7 @@ var TOTAL=SHIPS.reduce(function(a,s){return a+s.size;},0);
 
 // ── HELPERS ───────────────────────────────────────────────
 function mk10(){return Array(10).fill(null).map(function(){return Array(10).fill(0);});}
-function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');setTimeout(calcGridSize,50);if(id==='sLobby') initProfilePicker();
-updateHeaderGold();
-initPresence();
-updateFriendsBadge();}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');setTimeout(calcGridSize,50);if(id==='sLobby'){initProfilePicker();updateHeaderGold();}}
 function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},5000);}
 function showInfo(m){document.getElementById('lobInfoTxt').textContent=m;document.getElementById('lobInfo').classList.add('show');}
 function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
@@ -2325,10 +2428,12 @@ document.getElementById('inCode').addEventListener('input',function(){this.value
 document.getElementById('inSpecCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
 document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
 document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
-initProfilePicker();
-updateHeaderGold();
-initPresence();
-updateFriendsBadge();
+loadAccount().then(function(){
+  initProfilePicker();
+  updateHeaderGold();
+  initPresence();
+  updateFriendsBadge();
+});
 </script>
 </body>
 </html>
