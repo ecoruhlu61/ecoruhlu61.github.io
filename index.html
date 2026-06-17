@@ -1050,8 +1050,9 @@ function removeFriend(fid){
   renderFriendsPanel();
 }
 
-function inviteFriendToGame(fid, fname){
-  if(!g.roomCode){ alert('Once bir oda kur.'); return; }
+var pendingInviteTarget = null;
+
+function sendGameInviteTo(fid, fname){
   lookupFriendSession(fid, function(sessionId){
     if(!sessionId){ alert(fname+' simdilik cevrimdisi.'); return; }
     try {
@@ -1062,10 +1063,25 @@ function inviteFriendToGame(fid, fname){
         done=true;
         c.send(JSON.stringify({type:'game_invite', fromId:myUserId, fromName:g.myName||'Oyuncu', code:g.roomCode}));
         setTimeout(function(){try{c.close();}catch(e){}},1000);
+        alert(fname+' davet edildi! Katilmasini bekle.');
       });
       c.on('error', function(){if(!done){done=true;alert(fname+' simdilik cevrimdisi.');}});
     } catch(e){}
   });
+}
+
+function inviteFriendToGame(fid, fname){
+  if(g.roomCode){
+    sendGameInviteTo(fid, fname);
+    return;
+  }
+  // Henuz oda yok - oyuncu adi var mi kontrol et, sonra otomatik oda kur ve davet gonder
+  var name = g.myName || document.getElementById('inName').value.trim();
+  if(!name){ alert('Once ana ekranda oyuncu adini gir.'); return; }
+  g.myName = name;
+  pendingInviteTarget = {fid:fid, fname:fname};
+  toggleFriendsPanel();
+  doCreateRoom();
 }
 
 function acceptInvite(){
@@ -1138,8 +1154,7 @@ function renderFriendsPanel(){
       info.appendChild(nm); info.appendChild(id);
       var dot = document.createElement('div'); dot.className='online-dot offline'; dot.id='dot-'+f.id;
       var invBtn = document.createElement('button'); invBtn.className='invite-btn'; invBtn.textContent='Davet';
-      invBtn.disabled = !g.roomCode;
-      invBtn.title = g.roomCode ? 'Oyuna davet et' : 'Once oda kur';
+      invBtn.title = g.roomCode ? 'Oyuna davet et' : 'Oda kurup davet et';
       (function(fid,fname){ invBtn.onclick=function(){ inviteFriendToGame(fid,fname); }; })(f.id,f.name);
       var remBtn = document.createElement('button'); remBtn.className='remove-btn'; remBtn.textContent='x';
       (function(fid){ remBtn.onclick=function(){ removeFriend(fid); }; })(f.id);
@@ -1963,6 +1978,11 @@ function doCreateRoom(){
     document.getElementById('wCode').textContent=code;
     setHBadge('Oda: '+code);
     showScreen('sWait');
+    if(pendingInviteTarget){
+      var t = pendingInviteTarget;
+      pendingInviteTarget = null;
+      setTimeout(function(){ sendGameInviteTo(t.fid, t.fname); }, 400);
+    }
     peer.on('connection',function(c){
       console.log('Host: incoming connection');
       // Spectator mı oyuncu mu? İlk mesaja bak
