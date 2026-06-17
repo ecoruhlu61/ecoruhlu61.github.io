@@ -726,6 +726,7 @@ function syncAccountToCloud(){
       gold: goldCoins, owned_frames: ownedFrames, equipped_frame: equippedFrame,
       friends: myFriends, pending_requests: pendingRequests,
       profile_emoji: myProfile.emoji, profile_color: myProfile.color,
+      session_peer_id: mySessionPeerId, last_seen: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }).eq('account_code', myAccountCode).then(function(r){
       if(r && r.error) console.error('Senkron hatasi:', r.error);
@@ -878,6 +879,8 @@ var pendingRequests = JSON.parse(localStorage.getItem('admiralRequests') || '[]'
 // [{id, name, emoji, color}]
 
 var presencePeer = null;
+var mySessionPeerId = null;
+var presenceHeartbeatTimer = null;
 var friendConns = {}; // id -> conn
 var onlineFriends = {}; // id -> true/false
 var currentInvite = null; // {fromId, fromName, code}
@@ -886,48 +889,51 @@ var ftabIndex = 0;
 function saveFriends(){ localStorage.setItem('admiralFriends', JSON.stringify(myFriends)); }
 function saveRequests(){ localStorage.setItem('admiralRequests', JSON.stringify(pendingRequests)); }
 
-function presencePeerId(uid){ return 'amiralbatti-u-'+uid; }
+function genSessionPeerId(){
+  return 'amiralbatti-s-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10);
+}
 
-var presenceRetryCount = 0;
+function lookupFriendSession(targetId, cb){
+  if(!sbClient){ cb(null,null); return; }
+  sbClient.from('accounts').select('user_id,session_peer_id,last_seen,profile_emoji,profile_color')
+    .eq('user_id', targetId).maybeSingle()
+    .then(function(res){
+      if(res && res.data && res.data.session_peer_id){
+        var lastSeen = res.data.last_seen ? new Date(res.data.last_seen).getTime() : 0;
+        var fresh = (Date.now() - lastSeen) < 35000;
+        cb(fresh ? res.data.session_peer_id : null, res.data);
+      } else {
+        cb(null, res && res.data ? res.data : null);
+      }
+    })
+    .catch(function(){ cb(null,null); });
+}
 
 function initPresence(){
   if(presencePeer && !presencePeer.destroyed) return;
-  var pid = presencePeerId(myUserId);
-  presencePeer = new Peer(pid, {debug:0, config:{iceServers:[{urls:'stun:stun.l.google.com:19302'}]}});
-  presencePeer.on('open', function(){ console.log('Presence acik:', pid); presenceRetryCount = 0; });
+  if(!mySessionPeerId) mySessionPeerId = genSessionPeerId();
+  presencePeer = new Peer(mySessionPeerId, {debug:0, config:{iceServers:[{urls:'stun:stun.l.google.com:19302'}]}});
+  presencePeer.on('open', function(){
+    console.log('Presence acik:', mySessionPeerId);
+    syncAccountToCloud();
+    if(presenceHeartbeatTimer) clearInterval(presenceHeartbeatTimer);
+    presenceHeartbeatTimer = setInterval(syncAccountToCloud, 20000);
+  });
   presencePeer.on('connection', function(c){
     c.on('data', function(raw){
       var msg = typeof raw==='string'?JSON.parse(raw):raw;
       handlePresenceMsg(msg, c);
     });
   });
-  presencePeer.on('error', function(e){
-    if(e.type==='unavailable-id'){
-      presenceRetryCount++;
-      try{ presencePeer.destroy(); }catch(err){}
-      if(presenceRetryCount <= 4){
-        // Onceki oturumun baglantisi henuz serbest kalmamis olabilir - ayni ID ile tekrar dene
-        setTimeout(initPresence, 2000 * presenceRetryCount);
-      } else {
-        // Gercekten baska biri kullaniyor - yeni ID al ve buluta kaydet
-        myUserId = genRandomUserId();
-        localStorage.setItem('admiralUserId', myUserId);
-        if(sbClient && myAccountCode){
-          sbClient.from('accounts').update({user_id: myUserId}).eq('account_code', myAccountCode).then(function(){});
-        }
-        var idDisp2 = document.getElementById('myIdDisplay');
-        if(idDisp2) idDisp2.textContent = myUserId;
-        presenceRetryCount = 0;
-        setTimeout(initPresence, 1000);
-      }
-    }
-  });
+  presencePeer.on('error', function(e){ console.error('Presence hata:', e); });
   presencePeer.on('disconnected', function(){ if(presencePeer && !presencePeer.destroyed) presencePeer.reconnect(); });
-  document.getElementById('myIdDisplay').textContent = myUserId;
+  var idDisp2 = document.getElementById('myIdDisplay');
+  if(idDisp2) idDisp2.textContent = myUserId;
 }
 
 window.addEventListener('beforeunload', function(){
   try{ if(presencePeer) presencePeer.destroy(); }catch(e){}
+  try{ if(presenceHeartbeatTimer) clearInterval(presenceHeartbeatTimer); }catch(e){}
 });
 
 function handlePresenceMsg(msg, c){
@@ -953,47 +959,57 @@ function handlePresenceMsg(msg, c){
 }
 
 function checkFriendOnline(friendId, cb){
-  try {
-    var c = presencePeer.connect(presencePeerId(friendId), {reliable:true, serialization:'json'});
-    var done = false;
-    var timer = setTimeout(function(){ if(!done){ done=true; cb(false, null); try{c.close();}catch(e){} } }, 3000);
-    c.on('open', function(){
-      c.send(JSON.stringify({type:'ping'}));
-    });
-    c.on('data', function(raw){
-      if(done) return;
-      var msg = typeof raw==='string'?JSON.parse(raw):raw;
-      if(msg.type==='pong'){
-        done=true; clearTimeout(timer);
-        cb(true, msg);
-        try{c.close();}catch(e){}
-      }
-    });
-    c.on('error', function(){ if(!done){done=true;clearTimeout(timer);cb(false,null);} });
-  } catch(e){ cb(false, null); }
+  lookupFriendSession(friendId, function(sessionId){
+    if(!sessionId){ cb(false,null); return; }
+    try {
+      var c = presencePeer.connect(sessionId, {reliable:true, serialization:'json'});
+      var done = false;
+      var timer = setTimeout(function(){ if(!done){ done=true; cb(false, null); try{c.close();}catch(e){} } }, 3000);
+      c.on('open', function(){
+        c.send(JSON.stringify({type:'ping'}));
+      });
+      c.on('data', function(raw){
+        if(done) return;
+        var msg = typeof raw==='string'?JSON.parse(raw):raw;
+        if(msg.type==='pong'){
+          done=true; clearTimeout(timer);
+          cb(true, msg);
+          try{c.close();}catch(e){}
+        }
+      });
+      c.on('error', function(){ if(!done){done=true;clearTimeout(timer);cb(false,null);} });
+    } catch(e){ cb(false, null); }
+  });
 }
 
 function sendFriendRequest(targetId){
   if(!presencePeer || presencePeer.destroyed){ alert('Once siteye giris yapin.'); return; }
   if(targetId===myUserId){ alert('Kendinizi ekleyemezsiniz.'); return; }
   if(myFriends.some(function(f){return f.id===targetId;})){ alert('Zaten arkadasssiniz.'); return; }
-  try {
-    var c = presencePeer.connect(presencePeerId(targetId), {reliable:true, serialization:'json'});
-    var done = false;
-    var timer = setTimeout(function(){ if(!done){done=true;alert('Kullanici bulunamadi veya cevrimici degil (#'+targetId+').');try{c.close();}catch(e){}} }, 4000);
-    c.on('open', function(){
-      c.send(JSON.stringify({type:'friend_request', fromId:myUserId, fromName:g.myName||'Oyuncu', emoji:myProfile.emoji, color:myProfile.color}));
-    });
-    c.on('data', function(raw){
-      if(done) return;
-      var msg = typeof raw==='string'?JSON.parse(raw):raw;
-      done=true; clearTimeout(timer);
-      if(msg.type==='request_received') alert('Istek gonderildi! Karsindaki kabul ederse arkadaslar listenize eklenecek.');
-      else if(msg.type==='already_friends') alert('Zaten arkadasssiniz.');
-      try{c.close();}catch(e){}
-    });
-    c.on('error', function(){ if(!done){done=true;clearTimeout(timer);alert('Kullanici bulunamadi (#'+targetId+').');} });
-  } catch(e){ alert('Baglanti hatasi.'); }
+  lookupFriendSession(targetId, function(sessionId, rowData){
+    if(!sessionId){
+      if(rowData) alert('Kullanici su an cevrimdisi (#'+targetId+'). Cevrimiciyken tekrar deneyin.');
+      else alert('Bu ID ile bir kullanici bulunamadi (#'+targetId+').');
+      return;
+    }
+    try {
+      var c = presencePeer.connect(sessionId, {reliable:true, serialization:'json'});
+      var done = false;
+      var timer = setTimeout(function(){ if(!done){done=true;alert('Kullanici yanit vermedi (#'+targetId+').');try{c.close();}catch(e){}} }, 4000);
+      c.on('open', function(){
+        c.send(JSON.stringify({type:'friend_request', fromId:myUserId, fromName:g.myName||'Oyuncu', emoji:myProfile.emoji, color:myProfile.color}));
+      });
+      c.on('data', function(raw){
+        if(done) return;
+        var msg = typeof raw==='string'?JSON.parse(raw):raw;
+        done=true; clearTimeout(timer);
+        if(msg.type==='request_received') alert('Istek gonderildi! Karsindaki kabul ederse arkadaslar listenize eklenecek.');
+        else if(msg.type==='already_friends') alert('Zaten arkadasssiniz.');
+        try{c.close();}catch(e){}
+      });
+      c.on('error', function(){ if(!done){done=true;clearTimeout(timer);alert('Baglanti hatasi (#'+targetId+').');} });
+    } catch(e){ alert('Baglanti hatasi.'); }
+  });
 }
 
 function acceptRequest(fromId){
@@ -1003,14 +1019,17 @@ function acceptRequest(fromId){
   myFriends.push({id:req.id, name:req.name, emoji:req.emoji||'ship', color:req.color||'#60a5fa'});
   saveRequests(); saveFriends();
   syncAccountToCloud();
-  // Karsi tarafi da ekle
-  try {
-    var c = presencePeer.connect(presencePeerId(fromId), {reliable:true,serialization:'json'});
-    c.on('open', function(){
-      c.send(JSON.stringify({type:'friend_request', fromId:myUserId, fromName:g.myName||'Oyuncu', emoji:myProfile.emoji, color:myProfile.color}));
-      setTimeout(function(){try{c.close();}catch(e){}},1000);
-    });
-  } catch(e){}
+  // Karsi tarafi da ekle (cevrimiciyse)
+  lookupFriendSession(fromId, function(sessionId){
+    if(!sessionId) return;
+    try {
+      var c = presencePeer.connect(sessionId, {reliable:true,serialization:'json'});
+      c.on('open', function(){
+        c.send(JSON.stringify({type:'friend_request', fromId:myUserId, fromName:g.myName||'Oyuncu', emoji:myProfile.emoji, color:myProfile.color}));
+        setTimeout(function(){try{c.close();}catch(e){}},1000);
+      });
+    } catch(e){}
+  });
   updateFriendsBadge();
   renderFriendsPanel();
 }
@@ -1033,17 +1052,20 @@ function removeFriend(fid){
 
 function inviteFriendToGame(fid, fname){
   if(!g.roomCode){ alert('Once bir oda kur.'); return; }
-  try {
-    var c = presencePeer.connect(presencePeerId(fid), {reliable:true,serialization:'json'});
-    var done=false;
-    setTimeout(function(){if(!done){done=true;alert(fname+' simdilik cevrimici degil.');try{c.close();}catch(e){}}},3000);
-    c.on('open', function(){
-      done=true;
-      c.send(JSON.stringify({type:'game_invite', fromId:myUserId, fromName:g.myName||'Oyuncu', code:g.roomCode}));
-      setTimeout(function(){try{c.close();}catch(e){}},1000);
-    });
-    c.on('error', function(){if(!done){done=true;alert(fname+' simdilik cevrimici degil.');}});
-  } catch(e){}
+  lookupFriendSession(fid, function(sessionId){
+    if(!sessionId){ alert(fname+' simdilik cevrimdisi.'); return; }
+    try {
+      var c = presencePeer.connect(sessionId, {reliable:true,serialization:'json'});
+      var done=false;
+      setTimeout(function(){if(!done){done=true;alert(fname+' simdilik cevrimdisi.');try{c.close();}catch(e){}}},3000);
+      c.on('open', function(){
+        done=true;
+        c.send(JSON.stringify({type:'game_invite', fromId:myUserId, fromName:g.myName||'Oyuncu', code:g.roomCode}));
+        setTimeout(function(){try{c.close();}catch(e){}},1000);
+      });
+      c.on('error', function(){if(!done){done=true;alert(fname+' simdilik cevrimdisi.');}});
+    } catch(e){}
+  });
 }
 
 function acceptInvite(){
