@@ -15,6 +15,8 @@
   --purple:#a78bfa;
   --amber:#f59e0b;
   --red:#ef4444;
+  --green:#22c55e;
+  --teal:#2dd4bf;
 }
 body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem}
 .hero{text-align:center;margin-bottom:2.5rem}
@@ -30,11 +32,16 @@ body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans
 .gcard.wordhunt h2{color:var(--purple)}
 .gcard.connect4 h2{color:var(--amber)}
 .gcard.xox h2{color:var(--red)}
+.gcard.memory h2{color:var(--teal)}
+.gcard.snake h2{color:var(--green)}
 .gcard .tag{display:inline-block;margin-top:.85rem;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700}
 .gcard.battleship .tag{background:#1e3a5f;color:var(--bl)}
 .gcard.wordhunt .tag{background:#2e1f4d;color:var(--purple)}
 .gcard.connect4 .tag{background:#3d2a00;color:var(--amber)}
 .gcard.xox .tag{background:#3f1515;color:var(--red)}
+.gcard.memory .tag{background:#0f2e2a;color:var(--teal)}
+.gcard.snake .tag{background:#14331f;color:var(--green)}
+.section-label{width:100%;text-align:center;color:var(--txt3);font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:2rem 0 .5rem}
 footer{margin-top:3rem;color:var(--txt3);font-size:12px;text-align:center}
 </style>
 </head>
@@ -72,6 +79,22 @@ footer{margin-top:3rem;color:var(--txt3);font-size:12px;text-align:center}
     <h2>XOX</h2>
     <p>Klasik 3x3 XOX. Yatay, dikey veya capraz 3 tane dizen kazanir.</p>
     <span class="tag">2 Oyuncu</span>
+  </a>
+
+  <div class="section-label">Tek Ki&#351;ilik</div>
+
+  <a href="hafiza.html" class="gcard memory">
+    <div class="emoji">&#129504;</div>
+    <h2>Haf&#305;za</h2>
+    <p>S&#305;ray&#305; izle, tekrarla. Her turda bir blok daha eklenir, ka&ccedil; tura kadar dayanabilirsin?</p>
+    <span class="tag">1 Oyuncu</span>
+  </a>
+
+  <a href="yilan.html" class="gcard snake">
+    <div class="emoji">&#128034;</div>
+    <h2>Y&#305;lan</h2>
+    <p>Elmay&#305; ye, b&uuml;y&uuml; &mdash; duvara veya kendine &ccedil;arpmadan en y&uuml;ksek skoru yap.</p>
+    <span class="tag">1 Oyuncu</span>
   </a>
 </div>
 
