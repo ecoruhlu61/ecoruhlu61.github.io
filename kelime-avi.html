@@ -159,6 +159,9 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
 .toggle.on{background:var(--purple)}
 .toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
 .toggle.on::after{transform:translateX(20px)}
+.seg{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--bdr2)}
+.seg button{flex:1;padding:5px 10px;border:none;background:transparent;color:var(--txt2);font-size:13px;cursor:pointer;transition:all .15s}
+.seg button.active{background:var(--purple);color:#1a1030}
 </style>
 </head>
 <body>
@@ -175,26 +178,26 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
 <!-- LOBI -->
 <div id="sLobby" class="screen active">
   <div class="hero">
-    <h1>Kelime <span>Av&#305;</span></h1>
-    <p>Ipucu ver, kelimeyi tahmin et &mdash; kim once bilirse kazanir.</p>
+    <h1 id="heroTitle">Kelime <span>Av&#305;</span></h1>
+    <p id="heroSubtitle">Ipucu ver, kelimeyi tahmin et &mdash; kim once bilirse kazanir.</p>
   </div>
   <div class="lobby-wrap">
     <div class="card">
-      <label>Oyuncu adin</label>
+      <label id="lblName">Oyuncu adin</label>
       <input type="text" id="inName" placeholder="Adini gir&hellip;" maxlength="20" autocomplete="off" style="margin-bottom:.75rem">
-      <label>Emoji</label>
+      <label id="lblEmoji">Emoji</label>
       <div class="avatar-row" id="avatarRow"></div>
-      <label>Renk</label>
+      <label id="lblColor">Renk</label>
       <div class="color-row" id="colorRow"></div>
       <div style="margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bdr);display:flex;gap:.5rem">
-        <button class="btn bo" style="padding:5px 8px;font-size:11px;flex:1" onclick="showAccountCode()">&#128272; Hesap Kodum</button>
-        <button class="btn bo" style="padding:5px 8px;font-size:11px;flex:1" onclick="restoreAccount()">&#9851; Hesabi Geri Yukle</button>
+        <button class="btn bo" style="padding:5px 8px;font-size:11px;flex:1" onclick="showAccountCode()" id="btnAccountCode">&#128272; Hesap Kodum</button>
+        <button class="btn bo" style="padding:5px 8px;font-size:11px;flex:1" onclick="restoreAccount()" id="btnRestoreAccount">&#9851; Hesabi Geri Yukle</button>
       </div>
     </div>
     <div class="card" style="display:flex;flex-direction:column;gap:.85rem">
       <button class="btn bp bfull" id="btnCreate" onclick="doCreate()">+ Yeni Oda Kur</button>
-      <div class="divider">veya mevcut odaya katil</div>
-      <label>Oda kodu (4 harf)</label>
+      <div class="divider" id="dividerJoin">veya mevcut odaya katil</div>
+      <label id="lblCode">Oda kodu (4 harf)</label>
       <div style="display:flex;gap:.5rem">
         <input type="text" id="inCode" placeholder="ABCD" maxlength="4"
           style="text-transform:uppercase;letter-spacing:5px;font-weight:800;font-size:18px;text-align:center;width:120px">
@@ -209,10 +212,10 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
 <!-- BEKLEME -->
 <div id="sWait" class="screen">
   <div class="wait-box">
-    <p style="color:var(--txt2);font-size:14px;margin-bottom:.5rem">Oda kodun</p>
+    <p style="color:var(--txt2);font-size:14px;margin-bottom:.5rem" id="waitCodeLbl">Oda kodun</p>
     <div class="codebox" id="wCode">ABCD</div>
-    <p class="pulse" style="color:var(--txt2);font-size:14px">Arkadasinin katilmasi bekleniyor&hellip;</p>
-    <button class="btn bo" style="margin-top:1.5rem" onclick="backToLobby()">&#8592; Iptal</button>
+    <p class="pulse" style="color:var(--txt2);font-size:14px" id="waitText">Arkadasinin katilmasi bekleniyor&hellip;</p>
+    <button class="btn bo" style="margin-top:1.5rem" onclick="backToLobby()" id="btnCancelWait">&#8592; Iptal</button>
   </div>
 </div>
 
@@ -223,11 +226,11 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
   <!-- IPUCU VEREN EKRANI (kelime henuz girilmedi) -->
   <div id="giverSetup" style="display:none">
     <div class="card">
-      <label>Gizli kelime</label>
+      <label id="lblSecretWord">Gizli kelime</label>
       <input type="text" id="inSecretWord" placeholder="Orn: zurafa" maxlength="30" autocomplete="off">
-      <label style="margin-top:.85rem">Ipucu / Tanim</label>
+      <label style="margin-top:.85rem" id="lblHint">Ipucu / Tanim</label>
       <textarea id="inHint" placeholder="Orn: Uzun boynu olan Afrika hayvani"></textarea>
-      <button class="btn bp bfull" style="margin-top:.85rem" onclick="submitWord()">Turu Baslat</button>
+      <button class="btn bp bfull" style="margin-top:.85rem" onclick="submitWord()" id="btnStartRound">Turu Baslat</button>
     </div>
   </div>
 
@@ -235,7 +238,7 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
   <div id="giverWatch" style="display:none">
     <div class="clue-box" id="giverClueDisplay"></div>
     <div class="attempts-row" id="giverAttemptsRow"></div>
-    <div class="giver-watch">Rakip tahmin ediyor, bekle&hellip;</div>
+    <div class="giver-watch" id="giverWatchTxt">Rakip tahmin ediyor, bekle&hellip;</div>
     <div class="guess-history" id="giverGuessHistory"></div>
   </div>
 
@@ -246,7 +249,7 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
     <div class="attempts-row" id="attemptsRow"></div>
     <div class="card" style="display:flex;gap:.5rem;margin-bottom:1rem">
       <input type="text" id="inGuess" placeholder="Tahminini yaz&hellip;" autocomplete="off" style="flex:1">
-      <button class="btn bp" onclick="submitGuess()">Tahmin Et</button>
+      <button class="btn bp" onclick="submitGuess()" id="btnSubmitGuess">Tahmin Et</button>
     </div>
     <div class="guess-history" id="guessHistory"></div>
   </div>
@@ -260,11 +263,11 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
     <div class="typing-ind" id="typingInd"></div>
     <div class="chat-input-row">
       <input type="text" id="chatInput" placeholder="Mesaj yaz...">
-      <button onclick="sendChat()">G&ouml;nder</button>
+      <button onclick="sendChat()" id="btnSendChat">G&ouml;nder</button>
     </div>
   </div>
 
-  <button class="btn bo bfull" style="margin-top:1rem" onclick="backToLobby()">&#8592; Oyundan Cik</button>
+  <button class="btn bo bfull" style="margin-top:1rem" onclick="backToLobby()" id="btnExitGame">&#8592; Oyundan Cik</button>
 </div>
 
 <button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
@@ -272,12 +275,26 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
 <!-- Ayarlar Paneli -->
 <div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOutside(event)">
   <div class="settings-panel" id="settingsPanel">
-    <h3>&#9881; Ayarlar</h3>
+    <h3 id="settingsTitle">&#9881; Ayarlar</h3>
     <div class="setting-row">
-      <span class="setting-label">Ses</span>
+      <span class="setting-label" id="lblSound">Ses</span>
       <button class="toggle" id="togSound" onclick="toggleSetting('sound')"></button>
     </div>
-    <button class="btn bo bfull" onclick="closeSettings()">Kapat</button>
+    <div class="setting-row">
+      <span class="setting-label" id="lblTheme">Tema</span>
+      <div class="seg">
+        <button id="themeDark" class="active" onclick="setTheme('dark')">Koyu</button>
+        <button id="themeLight" onclick="setTheme('light')">Ayd&#305;nl&#305;k</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label" id="lblLang">Dil</span>
+      <div class="seg">
+        <button id="langTR" class="active" onclick="setLang('TR')">TR</button>
+        <button id="langEN" onclick="setLang('EN')">EN</button>
+      </div>
+    </div>
+    <button class="btn bo bfull" onclick="closeSettings()" id="btnCloseSettings">Kapat</button>
   </div>
 </div>
 
@@ -293,13 +310,13 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
 <div class="friends-panel" id="friendsPanel">
   <div class="friends-header">
     <span style="font-size:16px">&#128101;</span>
-    <h4>Arkadaslar</h4>
+    <h4 id="friendsTitleTxt">Arkadaslar</h4>
     <span class="my-id-badge" onclick="copyMyId()" title="ID kopyala">&#128272; <span id="myIdDisplay">---</span></span>
   </div>
   <div class="friends-tabs">
     <div class="ftab active" onclick="switchFTab(0)" id="ftab0">Arkadaslar</div>
     <div class="ftab" onclick="switchFTab(1)" id="ftab1">Ekle</div>
-    <div class="ftab" onclick="switchFTab(2)" id="ftab2">Istekler <span id="reqCount"></span></div>
+    <div class="ftab" onclick="switchFTab(2)" id="ftab2"><span id="ftab2Txt">Istekler</span> <span id="reqCount"></span></div>
   </div>
   <div class="friends-body" id="friendsBody"></div>
 </div>
@@ -339,6 +356,106 @@ var g = {
   timerHandle:null
 };
 var soundOn = (localStorage.getItem('kaSound')!=='0');
+var uiSettings = { theme: localStorage.getItem('kaTheme')||'dark', lang: localStorage.getItem('kaLang')||'TR' };
+
+var LANG = {
+  TR: {
+    heroTitle:'Kelime <span>Av&#305;</span>', heroSubtitle:'Ipucu ver, kelimeyi tahmin et &mdash; kim once bilirse kazanir.',
+    lblName:'Oyuncu adin', namePlaceholder:'Adini gir...', lblEmoji:'Emoji', lblColor:'Renk',
+    btnAccountCode:'\u{1F512} Hesap Kodum', btnRestoreAccount:'\u{21BB} Hesabi Geri Yukle',
+    btnCreate:'+ Yeni Oda Kur', dividerJoin:'veya mevcut odaya katil', lblCode:'Oda kodu (4 harf)', btnJoin:'Katil \u2192',
+    waitCodeLbl:'Oda kodun', waitText:'Arkadasinin katilmasi bekleniyor...', btnCancelWait:'\u2190 Iptal',
+    lblSecretWord:'Gizli kelime', secretWordPlaceholder:'Orn: zurafa', lblHint:'Ipucu / Tanim', hintPlaceholder:'Orn: Uzun boynu olan Afrika hayvani',
+    btnStartRound:'Turu Baslat', giverWatchTxt:'Rakip tahmin ediyor, bekle...', guessPlaceholder:'Tahminini yaz...', btnSubmitGuess:'Tahmin Et',
+    chatPlaceholder:'Mesaj yaz...', btnSendChat:'G\u00f6nder', btnExitGame:'\u2190 Oyundan Cik',
+    roleGiver:'Tur {n} \u2014 Sen ipucu veriyorsun', roleWaitGiver:'Tur {n} \u2014 Rakip kelime seciyor, bekle...', roleGuesser:'Tur {n} \u2014 Tahmin sirasi sende!',
+    reasonTimeout:'Sure doldu!', reasonAttempts:'Hak kalmadi!', reasonCorrect:'Dogru bilindi!',
+    winTitle:'\u{1F389} Bu turu kazandin!', loseTitle:'\u{1F614} Bu turu kaybettin', btnNextRound:'Sonraki Tur \u2192',
+    typingTxt:' yaziyor...', settingsTitle:'\u2699 Ayarlar', lblSound:'Ses', lblTheme:'Tema', themeDark:'Koyu', themeLight:'Ayd\u0131nl\u0131k',
+    lblLang:'Dil', btnCloseSettings:'Kapat', friendsTitle:'Arkadaslar', ftab0:'Arkadaslar', ftab1:'Ekle', ftab2:'Istekler'
+  },
+  EN: {
+    heroTitle:'Word <span>Hunt</span>', heroSubtitle:'Give a clue, guess the word &mdash; whoever guesses first wins.',
+    lblName:'Your name', namePlaceholder:'Enter your name...', lblEmoji:'Emoji', lblColor:'Color',
+    btnAccountCode:'\u{1F512} My Account Code', btnRestoreAccount:'\u{21BB} Restore Account',
+    btnCreate:'+ Create Room', dividerJoin:'or join an existing room', lblCode:'Room code (4 letters)', btnJoin:'Join \u2192',
+    waitCodeLbl:'Your room code', waitText:'Waiting for your friend to join...', btnCancelWait:'\u2190 Cancel',
+    lblSecretWord:'Secret word', secretWordPlaceholder:'E.g: giraffe', lblHint:'Clue / Definition', hintPlaceholder:'E.g: A tall African animal',
+    btnStartRound:'Start Round', giverWatchTxt:'Opponent is guessing, wait...', guessPlaceholder:'Type your guess...', btnSubmitGuess:'Guess',
+    chatPlaceholder:'Type a message...', btnSendChat:'Send', btnExitGame:'\u2190 Leave Game',
+    roleGiver:'Round {n} \u2014 You give the clue', roleWaitGiver:'Round {n} \u2014 Opponent is picking a word, wait...', roleGuesser:'Round {n} \u2014 Your turn to guess!',
+    reasonTimeout:'Time\'s up!', reasonAttempts:'Out of guesses!', reasonCorrect:'Correctly guessed!',
+    winTitle:'\u{1F389} You won this round!', loseTitle:'\u{1F614} You lost this round', btnNextRound:'Next Round \u2192',
+    typingTxt:' is typing...', settingsTitle:'\u2699 Settings', lblSound:'Sound', lblTheme:'Theme', themeDark:'Dark', themeLight:'Light',
+    lblLang:'Language', btnCloseSettings:'Close', friendsTitle:'Friends', ftab0:'Friends', ftab1:'Add', ftab2:'Requests'
+  }
+};
+
+function safeText(id, txt){ var e=document.getElementById(id); if(e) e.textContent=txt; }
+function safeHTML(id, html){ var e=document.getElementById(id); if(e) e.innerHTML=html; }
+function safeAttr(id, attr, val){ var e=document.getElementById(id); if(e) e[attr]=val; }
+function tr(key){ var n={}; return (LANG[uiSettings.lang]&&LANG[uiSettings.lang][key])!=null ? LANG[uiSettings.lang][key] : key; }
+
+function applyLang(){
+  var L = LANG[uiSettings.lang];
+  safeHTML('heroTitle', L.heroTitle);
+  safeHTML('heroSubtitle', L.heroSubtitle);
+  safeText('lblName', L.lblName); safeAttr('inName','placeholder',L.namePlaceholder);
+  safeText('lblEmoji', L.lblEmoji); safeText('lblColor', L.lblColor);
+  safeText('btnAccountCode', L.btnAccountCode); safeText('btnRestoreAccount', L.btnRestoreAccount);
+  safeText('btnCreate', L.btnCreate); safeText('dividerJoin', L.dividerJoin);
+  safeText('lblCode', L.lblCode); safeText('btnJoin', L.btnJoin);
+  safeText('waitCodeLbl', L.waitCodeLbl); safeText('waitText', L.waitText); safeText('btnCancelWait', L.btnCancelWait);
+  safeText('lblSecretWord', L.lblSecretWord); safeAttr('inSecretWord','placeholder',L.secretWordPlaceholder);
+  safeText('lblHint', L.lblHint); safeAttr('inHint','placeholder',L.hintPlaceholder);
+  safeText('btnStartRound', L.btnStartRound); safeText('giverWatchTxt', L.giverWatchTxt);
+  safeAttr('inGuess','placeholder',L.guessPlaceholder); safeText('btnSubmitGuess', L.btnSubmitGuess);
+  safeAttr('chatInput','placeholder',L.chatPlaceholder); safeText('btnSendChat', L.btnSendChat);
+  safeText('btnExitGame', L.btnExitGame);
+  safeText('settingsTitle', L.settingsTitle); safeText('lblSound', L.lblSound);
+  safeText('lblTheme', L.lblTheme); safeText('themeDark', L.themeDark); safeText('themeLight', L.themeLight);
+  safeText('lblLang', L.lblLang); safeText('btnCloseSettings', L.btnCloseSettings);
+  safeText('friendsTitleTxt', L.friendsTitle); safeText('ftab0', L.ftab0); safeText('ftab1', L.ftab1); safeText('ftab2Txt', L.ftab2);
+}
+
+function applyTheme(){
+  if(uiSettings.theme==='light'){
+    document.documentElement.style.setProperty('--bg','#f0f4f8');
+    document.documentElement.style.setProperty('--bg2','#e2e8f0');
+    document.documentElement.style.setProperty('--bg3','#cbd5e1');
+    document.documentElement.style.setProperty('--surf','#ffffff');
+    document.documentElement.style.setProperty('--bdr','#94a3b8');
+    document.documentElement.style.setProperty('--bdr2','#64748b');
+    document.documentElement.style.setProperty('--txt','#0f172a');
+    document.documentElement.style.setProperty('--txt2','#334155');
+    document.documentElement.style.setProperty('--txt3','#64748b');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0b0f1a');
+    document.documentElement.style.setProperty('--bg2','#111827');
+    document.documentElement.style.setProperty('--bg3','#1c2536');
+    document.documentElement.style.setProperty('--surf','#1e2d40');
+    document.documentElement.style.setProperty('--bdr','#2a3f58');
+    document.documentElement.style.setProperty('--bdr2','#3a5472');
+    document.documentElement.style.setProperty('--txt','#e8f0fe');
+    document.documentElement.style.setProperty('--txt2','#8aa5c2');
+    document.documentElement.style.setProperty('--txt3','#556a82');
+  }
+}
+
+function setTheme(t){
+  uiSettings.theme=t;
+  localStorage.setItem('kaTheme', t);
+  document.getElementById('themeDark').classList.toggle('active', t==='dark');
+  document.getElementById('themeLight').classList.toggle('active', t==='light');
+  applyTheme();
+}
+function setLang(l){
+  uiSettings.lang=l;
+  localStorage.setItem('kaLang', l);
+  document.getElementById('langTR').classList.toggle('active', l==='TR');
+  document.getElementById('langEN').classList.toggle('active', l==='EN');
+  applyLang();
+}
 var MAX_ATTEMPTS = 6;
 var ROUND_SECONDS = 90;
 var currentInvite = null;
@@ -969,14 +1086,14 @@ function renderRoleScreen(){
   var banner = document.getElementById('roleBanner');
   if(g.myRole==='giver'){
     banner.className='role-banner giver';
-    banner.textContent = 'Tur '+g.roundNum+' \u2014 Sen ipucu veriyorsun';
+    banner.textContent = tr('roleGiver').replace('{n}', g.roundNum);
     document.getElementById('giverSetup').style.display='block';
     document.getElementById('inSecretWord').value='';
     document.getElementById('inHint').value='';
     setTimeout(function(){document.getElementById('inSecretWord').focus();},100);
   } else {
     banner.className='role-banner guesser';
-    banner.textContent = 'Tur '+g.roundNum+' \u2014 Rakip kelime seciyor, bekle...';
+    banner.textContent = tr('roleWaitGiver').replace('{n}', g.roundNum);
   }
 }
 
@@ -1046,7 +1163,7 @@ function showGuesserPlay(hint){
   document.getElementById('guessHistory').innerHTML='';
   document.getElementById('inGuess').value='';
   renderAttemptsRow('attemptsRow', g.attemptsLeft);
-  document.getElementById('roleBanner').textContent = 'Tur '+g.roundNum+' \u2014 Tahmin sirasi sende!';
+  document.getElementById('roleBanner').textContent = tr('roleGuesser').replace('{n}', g.roundNum);
   document.getElementById('guesserPlay').style.display='block';
   startGuesserTimerUI();
   setTimeout(function(){document.getElementById('inGuess').focus();},100);
@@ -1126,12 +1243,12 @@ function showRoundResult(iWon, word, reason){
   var box = document.getElementById('roundResult');
   box.style.display='block';
   box.className = 'round-result '+(iWon?'win':'lose');
-  var reasonTxt = reason==='timeout' ? 'Sure doldu!' : (reason==='attempts' ? 'Hak kalmadi!' : 'Dogru bilindi!');
+  var reasonTxt = reason==='timeout' ? tr('reasonTimeout') : (reason==='attempts' ? tr('reasonAttempts') : tr('reasonCorrect'));
   box.innerHTML =
-    '<h3>'+(iWon ? '&#127881; Bu turu kazandin!' : '&#128548; Bu turu kaybettin')+'</h3>'+
+    '<h3>'+(iWon ? tr('winTitle') : tr('loseTitle'))+'</h3>'+
     '<div style="color:var(--txt2);font-size:13px">'+reasonTxt+'</div>'+
     '<div class="word-reveal">'+word+'</div>'+
-    '<button class="btn bp bfull" id="nextRoundBtn" style="margin-top:1rem">Sonraki Tur &rarr;</button>';
+    '<button class="btn bp bfull" id="nextRoundBtn" style="margin-top:1rem">'+tr('btnNextRound')+'</button>';
   document.getElementById('nextRoundBtn').onclick = nextRound;
 }
 
@@ -1169,7 +1286,7 @@ function addChatMsg(from,text,isMe){
 }
 function showTypingIndicator(){
   var el = document.getElementById('typingInd');
-  if(el) el.textContent = (g.oppName||'Rakip')+' yaziyor...';
+  if(el) el.textContent = (g.oppName||'?')+tr('typingTxt');
   clearTimeout(oppTypingTimeout);
   oppTypingTimeout = setTimeout(hideTypingIndicator, 3000);
 }
@@ -1182,6 +1299,10 @@ function hideTypingIndicator(){
 function openSettings(){
   document.getElementById('settingsOverlay').classList.add('open');
   document.getElementById('togSound').classList.toggle('on', soundOn);
+  document.getElementById('themeDark').classList.toggle('active', uiSettings.theme==='dark');
+  document.getElementById('themeLight').classList.toggle('active', uiSettings.theme==='light');
+  document.getElementById('langTR').classList.toggle('active', uiSettings.lang==='TR');
+  document.getElementById('langEN').classList.toggle('active', uiSettings.lang==='EN');
 }
 function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
 function closeSettingsOutside(e){ if(e.target.id==='settingsOverlay') closeSettings(); }
@@ -1218,6 +1339,13 @@ document.getElementById('chatInput').addEventListener('input',function(){
 document.getElementById('inSecretWord').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('inHint').focus();});
 
 // ── BASLANGIC ─────────────────────────────────────────────
+applyTheme();
+document.getElementById('themeDark').classList.toggle('active', uiSettings.theme==='dark');
+document.getElementById('themeLight').classList.toggle('active', uiSettings.theme==='light');
+document.getElementById('langTR').classList.toggle('active', uiSettings.lang==='TR');
+document.getElementById('langEN').classList.toggle('active', uiSettings.lang==='EN');
+applyLang();
+
 loadAccount().then(function(){
   initProfilePicker();
   initPresence();
