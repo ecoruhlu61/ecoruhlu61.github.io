@@ -1384,13 +1384,13 @@ function animateBombCells(gridId, cells){
 var actionMode = false;
 var credits = 200;
 var activeBomb = null;
-var bombInventory = {bomb2x2:0, bomb4block:0, radar3x3:0, atom5x5:0};
+var bombInventory = {bomb2x2:0, bomb4block:0, radar3x3:0, atom4x4:0};
 
 var BOMBS = [
   {key:'bomb2x2',    icon:'[B]', label:'2x2 Bomba',    cost:30,  desc:'2x2 alan vurur'},
   {key:'bomb4block', icon:'[R]', label:'4 Blok Bomba', cost:35,  desc:'4 blok yatay vurur'},
   {key:'radar3x3',   icon:'[S]', label:'3x3 Radar',    cost:50,  desc:'3x3 alan tarar, sira gecmez'},
-  {key:'atom5x5',    icon:'[A]', label:'Atom Bombasi',  cost:100, desc:'5x5 alan vurur'},
+  {key:'atom4x4',    icon:'[A]', label:'Atom Bombasi',  cost:125, desc:'4x4 alan vurur'},
 ];
 
 function selectMode(m){
@@ -1406,9 +1406,12 @@ function getBombCells(key, row, col){
     }
   } else if(key==='bomb4block'){
     for(var dc=0;dc<4;dc++) if(col+dc<10) cells.push([row,col+dc]);
-  } else if(key==='radar3x3'||key==='atom5x5'){
-    var range = key==='radar3x3'?1:2;
-    for(var dr2=-range;dr2<=range;dr2++) for(var dc2=-range;dc2<=range;dc2++){
+  } else if(key==='atom4x4'){
+    for(var dr3=0;dr3<4;dr3++) for(var dc3=0;dc3<4;dc3++){
+      if(row+dr3<10&&col+dc3<10) cells.push([row+dr3,col+dc3]);
+    }
+  } else if(key==='radar3x3'){
+    for(var dr2=-1;dr2<=1;dr2++) for(var dc2=-1;dc2<=1;dc2++){
       var r=row+dr2, c=col+dc2;
       if(r>=0&&r<10&&c>=0&&c<10) cells.push([r,c]);
     }
@@ -1950,7 +1953,7 @@ function onData(raw){
       g.oppName=msg.name;
       g.oppProfile=msg.profile||null;
       g.oppUserId=msg.userId||null;
-      if(msg.actionMode!==undefined){ actionMode=msg.actionMode; credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; }
+      if(msg.actionMode!==undefined){ actionMode=msg.actionMode; credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom4x4:0}; }
       startSetup();
       break;
 
@@ -2079,7 +2082,7 @@ function doCreate(){
 function doCreateRoom(){
   g.isHost=true;
   var code=genCode();g.roomCode=code;
-  credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; activeBomb=null;
+  credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom4x4:0}; activeBomb=null;
   setBtns(true);
   initPeer(code,function(){
     setBtns(false);
@@ -2142,7 +2145,7 @@ function backToLobby(){
   spectators=[];
   isSpectator=false;
   actionMode=false; credits=200; activeBomb=null;
-  bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0};
+  bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom4x4:0};
   if(conn){conn.close();conn=null;}
   if(peer){peer.destroy();peer=null;}
   score={me:0,opp:0};
@@ -2296,7 +2299,7 @@ function checkSunk(shots,board,placedShips,alreadySunk){
 // ── GAME ─────────────────────────────────────────────────
 function startGame(){
   g.hits=[0,0];g.moves=0;
-  credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom5x5:0}; activeBomb=null;
+  credits=200; bombInventory={bomb2x2:0,bomb4block:0,radar3x3:0,atom4x4:0}; activeBomb=null;
   updateBombBar();
   document.getElementById('ml1').innerHTML=makeTag(g.myName,myProfile)+' (sen)';
   document.getElementById('ml2').innerHTML=makeTag(g.oppName||'Rakip',g.oppProfile);
