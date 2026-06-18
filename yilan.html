@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yılan Oyunu - Tek Kişilik Oyna</title>
+<meta name="description" content="Klasik yılan oyununu oyna! Elma ye, büyü, kendine veya duvara çarpmadan en yüksek skoru yap.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1c2536;--surf:#1e2d40;
+  --bdr:#2a3f58;--bdr2:#3a5472;
+  --txt:#e8f0fe;--txt2:#8aa5c2;--txt3:#556a82;
+  --blue:#3b82f6;--bl:#60a5fa;--bd:#1e3a5f;
+  --red:#ef4444;--rd:#3f1515;
+  --amber:#f59e0b;--ad:#3d2a00;
+  --green:#22c55e;--gd:#14331f;
+  --purple:#a78bfa;--pd:#2e1f4d;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2)}
+.logo{font-size:20px;font-weight:700;text-decoration:none;color:var(--txt)}
+main{width:100%;max-width:420px;padding:2rem 1rem;flex:1;display:flex;flex-direction:column;align-items:center}
+.hero{text-align:center;margin-bottom:1.25rem}
+.hero h1{font-size:34px;font-weight:800;letter-spacing:-1px;margin-bottom:.4rem}
+.hero p{color:var(--txt2);font-size:14px}
+.scores{display:flex;justify-content:center;gap:2.5rem;margin-bottom:1.1rem}
+.score-item{text-align:center}
+.score-item .sv{font-size:26px;font-weight:800}
+.score-item .sl{font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.canvas-wrap{position:relative;width:100%;max-width:340px;margin-bottom:1.1rem}
+canvas{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--bdr2);background:var(--bg3)}
+.overlay-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.75rem;background:rgba(11,15,26,.82);border-radius:12px}
+.overlay-msg.hidden{display:none}
+.overlay-msg h3{font-size:20px;font-weight:800}
+.overlay-msg p{font-size:13px;color:var(--txt2)}
+.btn{cursor:pointer;border-radius:10px;font-size:15px;font-weight:700;padding:12px 28px;transition:all .15s;border:1px solid transparent;background:var(--purple);color:#1a1030}
+.btn:hover{background:#bca4fc}
+.btn:active{transform:scale(.97)}
+.btn.bo{background:transparent;color:var(--txt);border-color:var(--bdr2)}
+.btn.bo:hover{background:var(--bg3)}
+.dpad{display:grid;grid-template-columns:60px 60px 60px;grid-template-rows:60px 60px 60px;gap:6px;margin-top:.5rem}
+.dpad button{border-radius:10px;border:1px solid var(--bdr2);background:var(--surf);color:var(--txt);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none}
+.dpad button:active{background:var(--bg3)}
+.dpad .up{grid-column:2;grid-row:1}
+.dpad .left{grid-column:1;grid-row:2}
+.dpad .down{grid-column:2;grid-row:2}
+.dpad .right{grid-column:3;grid-row:2}
+.hint{font-size:12px;color:var(--txt3);text-align:center;margin-top:.4rem}
+/* Ayarlar */
+.settings-btn{position:fixed;bottom:1rem;right:1rem;width:48px;height:48px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;transition:all .15s}
+.settings-btn:hover{background:var(--bg3);color:var(--txt)}
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
+.settings-overlay.open{display:flex}
+.settings-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;width:90%;max-width:360px;display:flex;flex-direction:column;gap:1rem}
+.settings-panel h3{font-size:16px;font-weight:600}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--bdr)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;color:var(--txt2)}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--bdr2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--purple)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.seg{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--bdr2)}
+.seg button{flex:1;padding:5px 10px;border:none;background:transparent;color:var(--txt2);font-size:13px;cursor:pointer}
+.seg button.active{background:var(--purple);color:#1a1030}
+.bfull{width:100%}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">&#128034; Y&#305;lan</a>
+</header>
+
+<main>
+  <div class="hero">
+    <h1 id="heroTitle">Y&#305;lan Oyunu</h1>
+    <p id="heroSubtitle">Elmay&#305; ye, b&uuml;y&uuml; &mdash; duvara veya kendine &ccedil;arpma!</p>
+  </div>
+
+  <div class="scores">
+    <div class="score-item"><div class="sv" id="curScore">0</div><div class="sl" id="lblScore">Skor</div></div>
+    <div class="score-item"><div class="sv" id="highScore">0</div><div class="sl" id="lblHighScore">En Y&uuml;ksek</div></div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas" width="342" height="342"></canvas>
+    <div class="overlay-msg" id="overlayMsg">
+      <h3 id="overlayTitle">Y&#305;lan Oyunu</h3>
+      <p id="overlaySub">Ba&#351;lamak i&#231;in butona bas</p>
+      <button class="btn" id="startBtn" onclick="startGame()">Ba&#351;la</button>
+    </div>
+  </div>
+
+  <div class="dpad">
+    <button class="up" onclick="setDirection(0,-1)">&#8593;</button>
+    <button class="left" onclick="setDirection(-1,0)">&#8592;</button>
+    <button class="down" onclick="setDirection(0,1)">&#8595;</button>
+    <button class="right" onclick="setDirection(1,0)">&#8594;</button>
+  </div>
+  <p class="hint" id="hintTxt">Klavyede ok tu&#351;lar&#305; veya WASD da kullanabilirsin</p>
+</main>
+
+<button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
+
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOutside(event)">
+  <div class="settings-panel">
+    <h3 id="settingsTitle">&#9881; Ayarlar</h3>
+    <div class="setting-row">
+      <span class="setting-label" id="lblSound">Ses</span>
+      <button class="toggle" id="togSound" onclick="toggleSetting('sound')"></button>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label" id="lblTheme">Tema</span>
+      <div class="seg">
+        <button id="themeDark" class="active" onclick="setTheme('dark')">Koyu</button>
+        <button id="themeLight" onclick="setTheme('light')">Ayd&#305;nl&#305;k</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label" id="lblLang">Dil</span>
+      <div class="seg">
+        <button id="langTR" class="active" onclick="setLang('TR')">TR</button>
+        <button id="langEN" onclick="setLang('EN')">EN</button>
+      </div>
+    </div>
+    <button class="btn bo bfull" onclick="closeSettings()" id="btnCloseSettings">Kapat</button>
+  </div>
+</div>
+
+<script>
+var GRID=19, CELL=18;
+var canvas, ctx;
+var snake, dir, nextDir, food, score, speed, isPlaying, gameLoopHandle;
+var highScore = parseInt(localStorage.getItem('yilanHighScore')||'0');
+var soundOn = (localStorage.getItem('yilanSound')!=='0');
+var uiSettings = { theme: localStorage.getItem('yilanTheme')||'dark', lang: localStorage.getItem('yilanLang')||'TR' };
+
+var LANG = {
+  TR: {
+    heroTitle:'Y&#305;lan Oyunu', heroSubtitle:'Elmay&#305; ye, b&uuml;y&uuml; &mdash; duvara veya kendine &ccedil;arpma!',
+    lblScore:'Skor', lblHighScore:'En Y&uuml;ksek', overlayTitle:'Y&#305;lan Oyunu', overlaySub:'Ba&#351;lamak i&#231;in butona bas',
+    btnStart:'Ba&#351;la', btnRetry:'Tekrar Oyna', gameOverTitle:'Oyun Bitti!', gameOverSub:'Skor: {n}',
+    hintTxt:'Klavyede ok tu&#351;lar&#305; veya WASD da kullanabilirsin',
+    settingsTitle:'&#9881; Ayarlar', lblSound:'Ses', lblTheme:'Tema', themeDark:'Koyu', themeLight:'Ayd&#305;nl&#305;k', lblLang:'Dil', btnCloseSettings:'Kapat'
+  },
+  EN: {
+    heroTitle:'Snake', heroSubtitle:'Eat the apple, grow &mdash; don\u2019t hit the wall or yourself!',
+    lblScore:'Score', lblHighScore:'Best', overlayTitle:'Snake', overlaySub:'Press the button to start',
+    btnStart:'Start', btnRetry:'Play Again', gameOverTitle:'Game Over!', gameOverSub:'Score: {n}',
+    hintTxt:'You can also use arrow keys or WASD on keyboard',
+    settingsTitle:'&#9881; Settings', lblSound:'Sound', lblTheme:'Theme', themeDark:'Dark', themeLight:'Light', lblLang:'Language', btnCloseSettings:'Close'
+  }
+};
+
+function safeText(id,txt){ var e=document.getElementById(id); if(e) e.innerHTML=txt; }
+function tr(key){ return (LANG[uiSettings.lang]&&LANG[uiSettings.lang][key])!=null ? LANG[uiSettings.lang][key] : key; }
+
+function applyLang(){
+  var L = LANG[uiSettings.lang];
+  safeText('heroTitle', L.heroTitle); safeText('heroSubtitle', L.heroSubtitle);
+  safeText('lblScore', L.lblScore); safeText('lblHighScore', L.lblHighScore);
+  safeText('startBtn', L.btnStart); safeText('hintTxt', L.hintTxt);
+  safeText('settingsTitle', L.settingsTitle); safeText('lblSound', L.lblSound);
+  safeText('lblTheme', L.lblTheme); safeText('themeDark', L.themeDark); safeText('themeLight', L.themeLight);
+  safeText('lblLang', L.lblLang); safeText('btnCloseSettings', L.btnCloseSettings);
+  if(!isPlaying){
+    safeText('overlayTitle', L.overlayTitle);
+    safeText('overlaySub', L.overlaySub);
+  }
+}
+
+function applyTheme(){
+  if(uiSettings.theme==='light'){
+    document.documentElement.style.setProperty('--bg','#f0f4f8');
+    document.documentElement.style.setProperty('--bg2','#e2e8f0');
+    document.documentElement.style.setProperty('--bg3','#cbd5e1');
+    document.documentElement.style.setProperty('--surf','#ffffff');
+    document.documentElement.style.setProperty('--bdr','#94a3b8');
+    document.documentElement.style.setProperty('--bdr2','#64748b');
+    document.documentElement.style.setProperty('--txt','#0f172a');
+    document.documentElement.style.setProperty('--txt2','#334155');
+    document.documentElement.style.setProperty('--txt3','#64748b');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0b0f1a');
+    document.documentElement.style.setProperty('--bg2','#111827');
+    document.documentElement.style.setProperty('--bg3','#1c2536');
+    document.documentElement.style.setProperty('--surf','#1e2d40');
+    document.documentElement.style.setProperty('--bdr','#2a3f58');
+    document.documentElement.style.setProperty('--bdr2','#3a5472');
+    document.documentElement.style.setProperty('--txt','#e8f0fe');
+    document.documentElement.style.setProperty('--txt2','#8aa5c2');
+    document.documentElement.style.setProperty('--txt3','#556a82');
+  }
+  if(canvas) draw();
+}
+function setTheme(t){
+  uiSettings.theme=t; localStorage.setItem('yilanTheme', t);
+  document.getElementById('themeDark').classList.toggle('active', t==='dark');
+  document.getElementById('themeLight').classList.toggle('active', t==='light');
+  applyTheme();
+}
+function setLang(l){
+  uiSettings.lang=l; localStorage.setItem('yilanLang', l);
+  document.getElementById('langTR').classList.toggle('active', l==='TR');
+  document.getElementById('langEN').classList.toggle('active', l==='EN');
+  applyLang();
+}
+function openSettings(){
+  document.getElementById('settingsOverlay').classList.add('open');
+  document.getElementById('togSound').classList.toggle('on', soundOn);
+}
+function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
+function closeSettingsOutside(e){ if(e.target.id==='settingsOverlay') closeSettings(); }
+function toggleSetting(key){
+  if(key==='sound'){
+    soundOn = !soundOn;
+    localStorage.setItem('yilanSound', soundOn?'1':'0');
+    document.getElementById('togSound').classList.toggle('on', soundOn);
+    if(soundOn) playTone(440,0.15);
+  }
+}
+
+// ── SES ───────────────────────────────────────────────────
+var AC=null;
+function getAC(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function playTone(freq,dur,type){
+  if(!soundOn) return;
+  var ac=getAC(); if(!ac) return;
+  try{
+    var o=ac.createOscillator(), gn=ac.createGain();
+    o.connect(gn); gn.connect(ac.destination);
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,ac.currentTime);
+    gn.gain.setValueAtTime(0.3,ac.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+(dur||0.2));
+    o.start(); o.stop(ac.currentTime+(dur||0.2));
+  }catch(e){}
+}
+function sndEat(){ playTone(600,0.1); setTimeout(function(){playTone(800,0.12);},60); }
+function sndGameOver(){ [300,250,200,150].forEach(function(f,i){ setTimeout(function(){playTone(f,0.3,'sawtooth');},i*130); }); }
+
+// ── OYUN ──────────────────────────────────────────────────
+function initCanvas(){
+  canvas = document.getElementById('gameCanvas');
+  ctx = canvas.getContext('2d');
+}
+
+function resetState(){
+  var mid = Math.floor(GRID/2);
+  snake = [{x:mid,y:mid},{x:mid-1,y:mid},{x:mid-2,y:mid}];
+  dir = {x:1,y:0}; nextDir = {x:1,y:0};
+  score = 0; speed = 140;
+  placeFood();
+}
+
+function placeFood(){
+  var ok=false;
+  while(!ok){
+    food = {x:Math.floor(Math.random()*GRID), y:Math.floor(Math.random()*GRID)};
+    ok = !snake.some(function(s){return s.x===food.x && s.y===food.y;});
+  }
+}
+
+function startGame(){
+  resetState();
+  isPlaying=true;
+  document.getElementById('curScore').textContent='0';
+  document.getElementById('overlayMsg').classList.add('hidden');
+  clearInterval(gameLoopHandle);
+  draw();
+  gameLoopHandle = setInterval(tick, speed);
+}
+
+function setDirection(x,y){
+  if(!isPlaying) return;
+  if(x!==0 && dir.x===0) nextDir={x:x,y:0};
+  else if(y!==0 && dir.y===0) nextDir={x:0,y:y};
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowUp'||e.key==='w'||e.key==='W') setDirection(0,-1);
+  else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S') setDirection(0,1);
+  else if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') setDirection(-1,0);
+  else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') setDirection(1,0);
+});
+
+function tick(){
+  dir = nextDir;
+  var head = snake[0];
+  var newHead = {x:head.x+dir.x, y:head.y+dir.y};
+  if(newHead.x<0||newHead.x>=GRID||newHead.y<0||newHead.y>=GRID){ return endGame(); }
+  if(snake.some(function(s){return s.x===newHead.x && s.y===newHead.y;})){ return endGame(); }
+  snake.unshift(newHead);
+  if(newHead.x===food.x && newHead.y===food.y){
+    score++;
+    sndEat();
+    document.getElementById('curScore').textContent=score;
+    placeFood();
+    if(score%5===0 && speed>70){
+      speed-=10;
+      clearInterval(gameLoopHandle);
+      gameLoopHandle=setInterval(tick,speed);
+    }
+  } else {
+    snake.pop();
+  }
+  draw();
+}
+
+function endGame(){
+  isPlaying=false;
+  clearInterval(gameLoopHandle);
+  sndGameOver();
+  if(score>highScore){ highScore=score; localStorage.setItem('yilanHighScore', highScore); }
+  document.getElementById('highScore').textContent = highScore;
+  safeText('overlayTitle', tr('gameOverTitle'));
+  safeText('overlaySub', tr('gameOverSub').replace('{n}', score));
+  safeText('startBtn', tr('btnRetry'));
+  document.getElementById('overlayMsg').classList.remove('hidden');
+}
+
+function cssVar(name, fallback){
+  if(typeof getComputedStyle==='function'){
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+    if(v) return v.trim();
+  }
+  return fallback;
+}
+
+function draw(){
+  if(!ctx) return;
+  ctx.fillStyle = cssVar('--bg3','#1c2536');
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = cssVar('--red','#ef4444');
+  ctx.fillRect(food.x*CELL+2, food.y*CELL+2, CELL-4, CELL-4);
+  for(var i=0;i<snake.length;i++){
+    ctx.fillStyle = i===0 ? cssVar('--green','#22c55e') : '#16a34a';
+    ctx.fillRect(snake[i].x*CELL+1, snake[i].y*CELL+1, CELL-2, CELL-2);
+  }
+}
+
+document.getElementById('highScore').textContent = highScore;
+
+initCanvas();
+resetState();
+draw();
+
+applyTheme();
+document.getElementById('themeDark').classList.toggle('active', uiSettings.theme==='dark');
+document.getElementById('themeLight').classList.toggle('active', uiSettings.theme==='light');
+document.getElementById('langTR').classList.toggle('active', uiSettings.lang==='TR');
+document.getElementById('langEN').classList.toggle('active', uiSettings.lang==='EN');
+applyLang();
+</script>
+</body>
+</html>
