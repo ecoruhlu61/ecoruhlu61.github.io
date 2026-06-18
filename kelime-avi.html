@@ -343,6 +343,8 @@ label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weig
 <script>
 // ── DURUM ─────────────────────────────────────────────────
 var CURRENT_GAME = 'kelime-avi';
+function gamePageFor(id){ return id==='kelime-avi' ? 'kelime-avi.html' : (id==='dortlu' ? 'dortlu.html' : 'amiral-batti.html'); }
+function gameLabelFor(id){ return id==='kelime-avi' ? 'Kelime Avi' : (id==='dortlu' ? 'Dortlu' : 'Amiral Batti'); }
 var peer=null, conn=null;
 var g = {
   isHost:false, myName:'', oppName:'?', roomCode:'', oppProfile:null, oppUserId:null,
@@ -732,7 +734,7 @@ function handlePresenceMsg(msg, c){
     c.send(JSON.stringify({type:'request_received'}));
   } else if(msg.type==='game_invite'){
     currentInvite = {fromId:msg.fromId, fromName:msg.fromName, code:msg.code, game:msg.game||'kelime-avi'};
-    var gameLabel = currentInvite.game==='kelime-avi' ? 'Kelime Avi' : 'Amiral Batti';
+    var gameLabel = gameLabelFor(currentInvite.game);
     document.getElementById('invitePopupText').textContent = msg.fromName+' (#'+msg.fromId+') seni '+gameLabel+'\'na davet etti!';
     document.getElementById('invitePopup').classList.add('open');
     sndChat();
@@ -846,7 +848,7 @@ function acceptInvite(){
   document.getElementById('invitePopup').classList.remove('open');
   if(!currentInvite) return;
   if(currentInvite.game !== CURRENT_GAME){
-    var targetPage = currentInvite.game==='kelime-avi' ? 'kelime-avi.html' : 'amiral-batti.html';
+    var targetPage = gamePageFor(currentInvite.game);
     var nm = g.myName || document.getElementById('inName').value.trim() || '';
     window.location.href = targetPage+'?code='+currentInvite.code+'&name='+encodeURIComponent(nm);
     return;
