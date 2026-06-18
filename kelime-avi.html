@@ -1311,6 +1311,7 @@ function toggleSetting(key){
     soundOn = !soundOn;
     localStorage.setItem('kaSound', soundOn?'1':'0');
     document.getElementById('togSound').classList.toggle('on', soundOn);
+    if(soundOn) sndChat();
   }
 }
 
