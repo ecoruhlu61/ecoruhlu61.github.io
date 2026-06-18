@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kelime Avı - Online Multiplayer Oyna</title>
+<meta name="description" content="Kelime Avı'yı arkadaşınla online oyna! İpucu ver, kelimeyi tahmin et, kim önce bilirse o turu kazanır.">
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1c2536;--surf:#1e2d40;
+  --bdr:#2a3f58;--bdr2:#3a5472;
+  --txt:#e8f0fe;--txt2:#8aa5c2;--txt3:#556a82;
+  --blue:#3b82f6;--bl:#60a5fa;--bd:#1e3a5f;
+  --red:#ef4444;--rd:#3f1515;
+  --amber:#f59e0b;--ad:#3d2a00;
+  --green:#22c55e;--gd:#14331f;
+  --purple:#a78bfa;--pd:#2e1f4d;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2);flex-wrap:wrap}
+.logo{font-size:20px;font-weight:700;text-decoration:none;color:var(--txt)}.logo span{color:var(--purple)}
+.home-link{font-size:13px;color:var(--txt2);text-decoration:none;margin-left:auto;padding:6px 12px;border-radius:8px;border:1px solid var(--bdr2)}
+.home-link:hover{background:var(--bg3)}
+#hbadge{display:none;font-size:12px;padding:3px 12px;border-radius:20px;border:1px solid var(--purple);background:var(--pd);color:var(--purple)}
+#scoreboard{display:none;font-size:14px;color:var(--txt2);gap:.5rem;align-items:center}
+#scoreboard span{font-weight:800;color:var(--txt);font-size:16px}
+main{width:100%;max-width:640px;padding:1.5rem 1rem;flex:1}
+.screen{display:none}.screen.active{display:block}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:1.25rem;width:100%}
+.btn{cursor:pointer;border-radius:8px;font-size:14px;font-weight:600;padding:11px 20px;transition:all .15s;border:1px solid transparent}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.bp{background:var(--purple);color:#1a1030}.bp:hover:not(:disabled){background:#bca4fc}
+.bo{background:transparent;color:var(--txt);border-color:var(--bdr2)}.bo:hover:not(:disabled){background:var(--bg3)}
+.bfull{width:100%}
+.divider{display:flex;align-items:center;gap:.75rem;color:var(--txt3);font-size:13px;margin:1rem 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+input[type=text]{width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--txt);font-size:15px;outline:none;transition:border .15s}
+input[type=text]:focus{border-color:var(--purple)}
+input[type=text]::placeholder{color:var(--txt3)}
+textarea{width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--bdr2);background:var(--bg3);color:var(--txt);font-size:15px;outline:none;resize:vertical;min-height:70px;font-family:inherit}
+textarea:focus{border-color:var(--purple)}
+label{display:block;font-size:12px;color:var(--txt2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.err{background:var(--rd);border:1px solid var(--red);color:#fca5a5;border-radius:8px;padding:10px 14px;font-size:14px;display:none;margin-top:.75rem}
+.err.show{display:block}
+.infobar{background:var(--pd);border:1px solid var(--purple);color:var(--purple);border-radius:8px;padding:10px 14px;font-size:13px;display:none;margin-top:.75rem}
+.infobar.show{display:flex;align-items:center;gap:8px}
+.spin{width:14px;height:14px;border:2px solid var(--purple);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero{text-align:center;margin-bottom:1.5rem}.hero h1{font-size:34px;font-weight:800;letter-spacing:-1px;margin-bottom:.4rem}
+.hero h1 span{color:var(--purple)}.hero p{color:var(--txt2);font-size:14px}
+.wait-box{text-align:center;padding:2rem;max-width:420px;margin:2rem auto}
+.codebox{font-size:48px;font-weight:900;letter-spacing:9px;color:var(--purple);margin:.75rem 0;font-family:monospace}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+/* Lobi */
+.lobby-wrap{display:flex;flex-direction:column;gap:1rem;max-width:420px;margin:0 auto}
+/* Oyun ekrani */
+.role-banner{text-align:center;padding:.85rem 1rem;border-radius:10px;font-size:14px;font-weight:700;margin-bottom:1rem}
+.role-banner.giver{background:var(--ad);color:var(--amber);border:1px solid var(--amber)}
+.role-banner.guesser{background:var(--gd);color:var(--green);border:1px solid var(--green)}
+.clue-box{font-size:22px;font-weight:700;text-align:center;padding:1.25rem;background:var(--bg3);border:1px solid var(--bdr2);border-radius:12px;margin-bottom:1rem;min-height:60px;display:flex;align-items:center;justify-content:center;line-height:1.4}
+.timer-bar-wrap{height:8px;background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:1rem}
+.timer-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--amber));transition:width 1s linear;border-radius:6px}
+.timer-bar.warn{background:linear-gradient(90deg,var(--amber),var(--red))}
+.attempts-row{display:flex;justify-content:center;gap:6px;margin-bottom:1rem}
+.attempt-dot{width:14px;height:14px;border-radius:50%;background:var(--bdr2)}
+.attempt-dot.used{background:var(--red)}
+.guess-history{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem;max-height:140px;overflow-y:auto}
+.guess-item{padding:7px 12px;border-radius:8px;font-size:14px;background:var(--bg3);border:1px solid var(--bdr)}
+.guess-item.wrong{color:var(--red);border-color:var(--red)}
+.guess-item.right{color:var(--green);border-color:var(--green);font-weight:700}
+.giver-watch{text-align:center;color:var(--txt2);font-size:13px;padding:.75rem;background:var(--bg3);border-radius:8px;margin-bottom:1rem}
+.round-result{text-align:center;padding:1.5rem;border-radius:14px;margin-bottom:1rem}
+.round-result.win{background:var(--gd);border:1px solid var(--green)}
+.round-result.lose{background:var(--rd);border:1px solid var(--red)}
+.round-result h3{font-size:20px;margin-bottom:.5rem}
+.round-result .word-reveal{font-size:24px;font-weight:800;margin:.5rem 0;letter-spacing:1px}
+/* Chat */
+.chat-wrap{margin-top:1.25rem;background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:.75rem}
+.chat-log{height:90px;overflow-y:auto;font-size:13px;display:flex;flex-direction:column;gap:4px;margin-bottom:.5rem}
+.chat-log p{color:var(--txt2)}
+.chat-log p.me{color:var(--txt)}
+.chat-input-row{display:flex;gap:.5rem}
+.chat-input-row input{flex:1}
+.chat-input-row button{padding:8px 14px;border-radius:8px;border:none;background:var(--purple);color:#1a1030;font-size:13px;font-weight:700;cursor:pointer}
+.settings-btn{position:fixed;bottom:1rem;right:1rem;width:44px;height:44px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+@media(max-width:600px){.clue-box{font-size:18px;padding:1rem}.codebox{font-size:36px;letter-spacing:6px}}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">&#128172; Kelime <span>Av&#305;</span></a>
+  <div id="hbadge"></div>
+  <div id="scoreboard"></div>
+  <a href="index.html" class="home-link">&#8962; Ana Sayfa</a>
+</header>
+
+<main>
+
+<!-- LOBI -->
+<div id="sLobby" class="screen active">
+  <div class="hero">
+    <h1>Kelime <span>Av&#305;</span></h1>
+    <p>Ipucu ver, kelimeyi tahmin et &mdash; kim once bilirse kazanir.</p>
+  </div>
+  <div class="lobby-wrap">
+    <div class="card">
+      <label>Oyuncu adin</label>
+      <input type="text" id="inName" placeholder="Adini gir&hellip;" maxlength="20" autocomplete="off">
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:.85rem">
+      <button class="btn bp bfull" id="btnCreate" onclick="doCreate()">+ Yeni Oda Kur</button>
+      <div class="divider">veya mevcut odaya katil</div>
+      <label>Oda kodu (4 harf)</label>
+      <div style="display:flex;gap:.5rem">
+        <input type="text" id="inCode" placeholder="ABCD" maxlength="4"
+          style="text-transform:uppercase;letter-spacing:5px;font-weight:800;font-size:18px;text-align:center;width:120px">
+        <button class="btn bo" style="flex:1" id="btnJoin" onclick="doJoin()">Katil &rarr;</button>
+      </div>
+    </div>
+    <div id="lobErr" class="err"></div>
+    <div id="lobInfo" class="infobar"><div class="spin"></div><span id="lobInfoTxt"></span></div>
+  </div>
+</div>
+
+<!-- BEKLEME -->
+<div id="sWait" class="screen">
+  <div class="wait-box">
+    <p style="color:var(--txt2);font-size:14px;margin-bottom:.5rem">Oda kodun</p>
+    <div class="codebox" id="wCode">ABCD</div>
+    <p class="pulse" style="color:var(--txt2);font-size:14px">Arkadasinin katilmasi bekleniyor&hellip;</p>
+    <button class="btn bo" style="margin-top:1.5rem" onclick="backToLobby()">&#8592; Iptal</button>
+  </div>
+</div>
+
+<!-- OYUN -->
+<div id="sGame" class="screen">
+  <div class="role-banner" id="roleBanner">Yukleniyor...</div>
+
+  <!-- IPUCU VEREN EKRANI (kelime henuz girilmedi) -->
+  <div id="giverSetup" style="display:none">
+    <div class="card">
+      <label>Gizli kelime</label>
+      <input type="text" id="inSecretWord" placeholder="Orn: zurafa" maxlength="30" autocomplete="off">
+      <label style="margin-top:.85rem">Ipucu / Tanim</label>
+      <textarea id="inHint" placeholder="Orn: Uzun boynu olan Afrika hayvani"></textarea>
+      <button class="btn bp bfull" style="margin-top:.85rem" onclick="submitWord()">Turu Baslat</button>
+    </div>
+  </div>
+
+  <!-- IPUCU VEREN: TUR DEVAM EDIYOR -->
+  <div id="giverWatch" style="display:none">
+    <div class="clue-box" id="giverClueDisplay"></div>
+    <div class="attempts-row" id="giverAttemptsRow"></div>
+    <div class="giver-watch">Rakip tahmin ediyor, bekle&hellip;</div>
+    <div class="guess-history" id="giverGuessHistory"></div>
+  </div>
+
+  <!-- TAHMINCI: TUR DEVAM EDIYOR -->
+  <div id="guesserPlay" style="display:none">
+    <div class="clue-box" id="clueDisplay"></div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar" style="width:100%"></div></div>
+    <div class="attempts-row" id="attemptsRow"></div>
+    <div class="card" style="display:flex;gap:.5rem;margin-bottom:1rem">
+      <input type="text" id="inGuess" placeholder="Tahminini yaz&hellip;" autocomplete="off" style="flex:1">
+      <button class="btn bp" onclick="submitGuess()">Tahmin Et</button>
+    </div>
+    <div class="guess-history" id="guessHistory"></div>
+  </div>
+
+  <!-- TUR SONUCU -->
+  <div id="roundResult" style="display:none"></div>
+
+  <!-- CHAT -->
+  <div class="chat-wrap">
+    <div class="chat-log" id="chatLog"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Mesaj yaz...">
+      <button onclick="sendChat()">G&ouml;nder</button>
+    </div>
+  </div>
+
+  <button class="btn bo bfull" style="margin-top:1rem" onclick="backToLobby()">&#8592; Oyundan Cik</button>
+</div>
+
+<button class="settings-btn" onclick="toggleSound()" id="soundBtn" title="Ses">&#128266;</button>
+
+</main>
+
+<script>
+// ── DURUM ─────────────────────────────────────────────────
+var peer=null, conn=null;
+var g = {
+  isHost:false, myName:'', oppName:'?', roomCode:'',
+  myScore:0, oppScore:0,
+  myRole:null,        // 'giver' | 'guesser'
+  roundNum:0,
+  secretWord:'',       // sadece giver bilir
+  attemptsLeft:6,
+  guesses:[],
+  timerSec:90,
+  timerHandle:null
+};
+var soundOn = (localStorage.getItem('kaSound')!=='0');
+var MAX_ATTEMPTS = 6;
+var ROUND_SECONDS = 90;
+
+function genCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ';
+  var s=''; for(var i=0;i<4;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function getName(){ var n=document.getElementById('inName').value.trim(); if(!n){showErr('Once bir isim gir.');return null;} return n; }
+function showErr(m){var e=document.getElementById('lobErr');e.textContent=m;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},4000);}
+function showInfo(m){document.getElementById('lobInfoTxt').textContent=m;document.getElementById('lobInfo').classList.add('show');}
+function hideInfo(){document.getElementById('lobInfo').classList.remove('show');}
+function setBtns(dis){document.getElementById('btnCreate').disabled=dis;document.getElementById('btnJoin').disabled=dis;}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
+function setHBadge(t){var b=document.getElementById('hbadge');b.textContent=t;b.style.display='inline-block';}
+
+function send(obj){ if(conn && conn.open) conn.send(JSON.stringify(obj)); }
+
+function initPeer(id, onOpen){
+  peer = id ? new Peer(id, {debug:0}) : new Peer({debug:0});
+  peer.on('open', onOpen);
+  peer.on('error', function(e){
+    console.error(e);
+    if(e.type==='unavailable-id'){ showErr('Bu kod kullanimda, tekrar dene.'); setBtns(false); hideInfo(); }
+    else if(e.type==='peer-unavailable'){ showErr('Oda bulunamadi. Kodu kontrol et.'); setBtns(false); hideInfo(); }
+  });
+}
+
+function doCreate(){
+  var name=getName(); if(!name) return;
+  g.myName=name; g.isHost=true;
+  var code=genCode(); g.roomCode=code;
+  setBtns(true); showInfo('Baglanti kuruluyor...');
+  initPeer(code, function(){
+    hideInfo(); setBtns(false);
+    document.getElementById('wCode').textContent=code;
+    setHBadge('Oda: '+code);
+    showScreen('sWait');
+    peer.on('connection', function(c){
+      conn=c;
+      conn.on('open', function(){
+        send({type:'hello', name:g.myName});
+      });
+      conn.on('data', function(raw){ onData(typeof raw==='string'?JSON.parse(raw):raw); });
+      conn.on('close', function(){ alert('Baglanti kesildi.'); backToLobby(); });
+    });
+  });
+}
+
+function doJoin(){
+  var name=getName(); if(!name) return;
+  var code=document.getElementById('inCode').value.trim().toUpperCase();
+  if(code.length!==4){ showErr('Oda kodu 4 harf olmali.'); return; }
+  g.myName=name; g.isHost=false; g.roomCode=code;
+  setBtns(true); showInfo('Odaya baglaniliyor...');
+  initPeer(undefined, function(){
+    var c=peer.connect(code, {reliable:true, serialization:'json'});
+    conn=c;
+    conn.on('open', function(){
+      hideInfo(); setBtns(false);
+      setHBadge('Oda: '+code);
+      send({type:'hello', name:g.myName});
+    });
+    conn.on('data', function(raw){ onData(typeof raw==='string'?JSON.parse(raw):raw); });
+    conn.on('close', function(){ alert('Baglanti kesildi.'); backToLobby(); });
+  });
+}
+
+function onData(msg){
+  switch(msg.type){
+    case 'hello':
+      g.oppName = msg.name;
+      send({type:'hello_ack', name:g.myName});
+      startMatch();
+      break;
+    case 'hello_ack':
+      g.oppName = msg.name;
+      startMatch();
+      break;
+    case 'word_set':
+      // Ben tahminciyim, ipucu geldi
+      g.myRole = 'guesser';
+      g.attemptsLeft = MAX_ATTEMPTS;
+      g.guesses = [];
+      g.timerSec = ROUND_SECONDS;
+      showGuesserPlay(msg.hint);
+      break;
+    case 'guess':
+      // Ben giver'im, tahmin geldi
+      handleIncomingGuess(msg.text);
+      break;
+    case 'guess_result':
+      // Ben tahminciyim, sonuc geldi
+      handleGuessResult(msg);
+      break;
+    case 'round_over':
+      handleRoundOver(msg);
+      break;
+    case 'chat':
+      addChatMsg(g.oppName, msg.text, false);
+      break;
+  }
+}
+
+// ── MAC BASLATMA ─────────────────────────────────────────
+function startMatch(){
+  g.myScore=0; g.oppScore=0; g.roundNum=0;
+  updateScoreboard();
+  // Host once giver olur
+  g.myRole = g.isHost ? 'giver' : 'guesser';
+  g.roundNum = 1;
+  showScreen('sGame');
+  renderRoleScreen();
+}
+
+function renderRoleScreen(){
+  document.getElementById('roundResult').style.display='none';
+  document.getElementById('giverSetup').style.display='none';
+  document.getElementById('giverWatch').style.display='none';
+  document.getElementById('guesserPlay').style.display='none';
+  var banner = document.getElementById('roleBanner');
+  if(g.myRole==='giver'){
+    banner.className='role-banner giver';
+    banner.textContent = 'Tur '+g.roundNum+' \u2014 Sen ipucu veriyorsun';
+    document.getElementById('giverSetup').style.display='block';
+    document.getElementById('inSecretWord').value='';
+    document.getElementById('inHint').value='';
+    setTimeout(function(){document.getElementById('inSecretWord').focus();},100);
+  } else {
+    banner.className='role-banner guesser';
+    banner.textContent = 'Tur '+g.roundNum+' \u2014 Rakip kelime seciyor, bekle...';
+  }
+}
+
+function submitWord(){
+  var word = document.getElementById('inSecretWord').value.trim();
+  var hint = document.getElementById('inHint').value.trim();
+  if(!word){ alert('Once gizli bir kelime yaz.'); return; }
+  if(!hint){ alert('Bir ipucu/tanim yaz.'); return; }
+  g.secretWord = normalizeWord(word);
+  g.attemptsLeft = MAX_ATTEMPTS;
+  g.guesses = [];
+  send({type:'word_set', hint:hint});
+  showGiverWatch(hint);
+  startGiverTimer();
+}
+
+function normalizeWord(w){
+  return w.trim().toLocaleLowerCase('tr').replace(/\s+/g,' ');
+}
+
+// ── IPUCU VEREN: IZLEME ──────────────────────────────────
+function showGiverWatch(hint){
+  document.getElementById('giverSetup').style.display='none';
+  document.getElementById('giverWatch').style.display='block';
+  document.getElementById('giverClueDisplay').textContent = hint;
+  document.getElementById('giverGuessHistory').innerHTML='';
+  renderAttemptsRow('giverAttemptsRow', g.attemptsLeft);
+}
+
+function startGiverTimer(){
+  clearInterval(g.timerHandle);
+  var remaining = ROUND_SECONDS;
+  g.timerHandle = setInterval(function(){
+    remaining--;
+    if(remaining<=0){
+      clearInterval(g.timerHandle);
+      finishRound(false, 'timeout');
+    }
+  }, 1000);
+}
+
+function handleIncomingGuess(text){
+  var norm = normalizeWord(text);
+  var correct = (norm === g.secretWord);
+  if(correct){
+    send({type:'guess_result', correct:true, attemptsLeft:g.attemptsLeft, guess:text});
+    finishRound(true, 'correct');
+    return;
+  }
+  g.attemptsLeft--;
+  send({type:'guess_result', correct:false, attemptsLeft:g.attemptsLeft, guess:text});
+  var hist = document.getElementById('giverGuessHistory');
+  var item = document.createElement('div');
+  item.className='guess-item wrong';
+  item.textContent = (g.oppName||'Rakip')+': '+text+' \u2717';
+  hist.appendChild(item);
+  hist.scrollTop = hist.scrollHeight;
+  renderAttemptsRow('giverAttemptsRow', g.attemptsLeft);
+  if(g.attemptsLeft<=0){
+    clearInterval(g.timerHandle);
+    finishRound(false, 'attempts');
+  }
+}
+
+// ── TAHMINCI: OYUN ───────────────────────────────────────
+function showGuesserPlay(hint){
+  document.getElementById('clueDisplay').textContent = hint;
+  document.getElementById('guessHistory').innerHTML='';
+  document.getElementById('inGuess').value='';
+  renderAttemptsRow('attemptsRow', g.attemptsLeft);
+  document.getElementById('roleBanner').textContent = 'Tur '+g.roundNum+' \u2014 Tahmin sirasi sende!';
+  document.getElementById('guesserPlay').style.display='block';
+  startGuesserTimerUI();
+  setTimeout(function(){document.getElementById('inGuess').focus();},100);
+}
+
+function startGuesserTimerUI(){
+  clearInterval(g.timerHandle);
+  var remaining = ROUND_SECONDS;
+  var bar = document.getElementById('timerBar');
+  bar.style.width='100%'; bar.classList.remove('warn');
+  g.timerHandle = setInterval(function(){
+    remaining--;
+    var pct = Math.max(0,(remaining/ROUND_SECONDS)*100);
+    bar.style.width = pct+'%';
+    if(remaining<=20) bar.classList.add('warn');
+    if(remaining<=0) clearInterval(g.timerHandle);
+  }, 1000);
+}
+
+function submitGuess(){
+  var inp = document.getElementById('inGuess');
+  var text = inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  inp.disabled = true;
+  send({type:'guess', text:text});
+}
+
+function handleGuessResult(msg){
+  document.getElementById('inGuess').disabled = false;
+  document.getElementById('inGuess').focus();
+  var hist = document.getElementById('guessHistory');
+  var item = document.createElement('div');
+  item.className='guess-item '+(msg.correct?'right':'wrong');
+  item.textContent = msg.guess+(msg.correct?' \u2713':' \u2717');
+  hist.appendChild(item);
+  hist.scrollTop = hist.scrollHeight;
+  g.attemptsLeft = msg.attemptsLeft;
+  renderAttemptsRow('attemptsRow', g.attemptsLeft);
+}
+
+function renderAttemptsRow(elId, left){
+  var row = document.getElementById(elId);
+  row.innerHTML='';
+  for(var i=0;i<MAX_ATTEMPTS;i++){
+    var dot = document.createElement('div');
+    dot.className = 'attempt-dot'+(i>=left?' used':'');
+    row.appendChild(dot);
+  }
+}
+
+// ── TUR SONU ──────────────────────────────────────────────
+function finishRound(guesserWon, reason){
+  clearInterval(g.timerHandle);
+  if(guesserWon){ g.oppScore_local_giver_loses=true; }
+  // Ben giver'im - skor guncelle
+  if(guesserWon){ g.oppScore++; } else { g.myScore++; }
+  updateScoreboard();
+  send({type:'round_over', winner: guesserWon?'guesser':'giver', word:g.secretWord, reason:reason, giverScore:g.myScore, guesserScoreFromGiverPerspective:g.oppScore});
+  showRoundResult(!guesserWon, g.secretWord, reason);
+}
+
+function handleRoundOver(msg){
+  clearInterval(g.timerHandle);
+  var iWon = (msg.winner === 'guesser'); // ben tahminciydim
+  if(iWon){ g.myScore++; } else { g.oppScore++; }
+  updateScoreboard();
+  showRoundResult(iWon, msg.word, msg.reason);
+}
+
+function showRoundResult(iWon, word, reason){
+  document.getElementById('giverWatch').style.display='none';
+  document.getElementById('guesserPlay').style.display='none';
+  document.getElementById('roleBanner').style.display='none';
+  var box = document.getElementById('roundResult');
+  box.style.display='block';
+  box.className = 'round-result '+(iWon?'win':'lose');
+  var reasonTxt = reason==='timeout' ? 'Sure doldu!' : (reason==='attempts' ? 'Hak kalmadi!' : 'Dogru bilindi!');
+  box.innerHTML =
+    '<h3>'+(iWon ? '&#127881; Bu turu kazandin!' : '&#128548; Bu turu kaybettin')+'</h3>'+
+    '<div style="color:var(--txt2);font-size:13px">'+reasonTxt+'</div>'+
+    '<div class="word-reveal">'+word+'</div>'+
+    '<button class="btn bp bfull" id="nextRoundBtn" style="margin-top:1rem">Sonraki Tur &rarr;</button>';
+  document.getElementById('nextRoundBtn').onclick = nextRound;
+}
+
+function nextRound(){
+  g.roundNum++;
+  g.myRole = (g.myRole==='giver') ? 'guesser' : 'giver';
+  document.getElementById('roleBanner').style.display='block';
+  renderRoleScreen();
+}
+
+function updateScoreboard(){
+  var el = document.getElementById('scoreboard');
+  el.style.display='flex';
+  el.innerHTML = (g.myName||'Sen')+': <span>'+g.myScore+'</span>&nbsp;&nbsp;'+(g.oppName||'Rakip')+': <span>'+g.oppScore+'</span>';
+}
+
+// ── CHAT ──────────────────────────────────────────────────
+function sendChat(){
+  var inp=document.getElementById('chatInput');
+  var txt=inp.value.trim(); if(!txt) return;
+  inp.value='';
+  send({type:'chat', text:txt});
+  addChatMsg(g.myName, txt, true);
+}
+function addChatMsg(from,text,isMe){
+  var log=document.getElementById('chatLog');
+  var p=document.createElement('p');
+  p.className = isMe?'me':'';
+  p.textContent = from+': '+text;
+  log.appendChild(p);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ── AYARLAR ───────────────────────────────────────────────
+function toggleSound(){
+  soundOn = !soundOn;
+  localStorage.setItem('kaSound', soundOn?'1':'0');
+  document.getElementById('soundBtn').textContent = soundOn ? '\u{1F50A}' : '\u{1F507}';
+}
+document.getElementById('soundBtn').textContent = soundOn ? '\u{1F50A}' : '\u{1F507}';
+
+function backToLobby(){
+  clearInterval(g.timerHandle);
+  if(conn){ conn.close(); conn=null; }
+  if(peer){ peer.destroy(); peer=null; }
+  g = {isHost:false, myName:g.myName, oppName:'?', roomCode:'', myScore:0, oppScore:0, myRole:null, roundNum:0, secretWord:'', attemptsLeft:6, guesses:[], timerSec:90, timerHandle:null};
+  document.getElementById('hbadge').style.display='none';
+  document.getElementById('scoreboard').style.display='none';
+  document.getElementById('roleBanner').style.display='block';
+  showScreen('sLobby'); setBtns(false); hideInfo();
+}
+
+document.getElementById('inCode').addEventListener('input',function(){this.value=this.value.toUpperCase();});
+document.getElementById('inName').addEventListener('keydown',function(e){if(e.key==='Enter')doCreate();});
+document.getElementById('inCode').addEventListener('keydown',function(e){if(e.key==='Enter')doJoin();});
+document.getElementById('inGuess').addEventListener('keydown',function(e){if(e.key==='Enter')submitGuess();});
+document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
+document.getElementById('inSecretWord').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('inHint').focus();});
+</script>
+</body>
+</html>
