@@ -1054,8 +1054,9 @@ function handlePresenceMsg(msg, c){
     renderFriendsPanel();
     c.send(JSON.stringify({type:'request_received'}));
   } else if(msg.type==='game_invite'){
-    currentInvite = {fromId:msg.fromId, fromName:msg.fromName, code:msg.code};
-    document.getElementById('invitePopupText').textContent = msg.fromName+' (#'+msg.fromId+') seni oyuna davet etti!';
+    currentInvite = {fromId:msg.fromId, fromName:msg.fromName, code:msg.code, game:msg.game||'amiral-batti'};
+    var gameLabel = currentInvite.game==='kelime-avi' ? 'Kelime Avi' : 'Amiral Batti';
+    document.getElementById('invitePopupText').textContent = msg.fromName+' (#'+msg.fromId+') seni '+gameLabel+'\'na davet etti!';
     document.getElementById('invitePopup').classList.add('open');
     if(settings.sound) sndChat();
   } else if(msg.type==='ping'){
@@ -1166,7 +1167,7 @@ function sendGameInviteTo(fid, fname){
       setTimeout(function(){if(!done){done=true;alert(fname+' simdilik cevrimdisi.');try{c.close();}catch(e){}}},3000);
       c.on('open', function(){
         done=true;
-        c.send(JSON.stringify({type:'game_invite', fromId:myUserId, fromName:g.myName||'Oyuncu', code:g.roomCode}));
+        c.send(JSON.stringify({type:'game_invite', fromId:myUserId, fromName:g.myName||'Oyuncu', code:g.roomCode, game:'amiral-batti'}));
         setTimeout(function(){try{c.close();}catch(e){}},1000);
         alert(fname+' davet edildi! Katilmasini bekle.');
       });
@@ -1192,6 +1193,11 @@ function inviteFriendToGame(fid, fname){
 function acceptInvite(){
   document.getElementById('invitePopup').classList.remove('open');
   if(!currentInvite) return;
+  if(currentInvite.game && currentInvite.game !== 'amiral-batti'){
+    var nm = g.myName || document.getElementById('inName').value.trim() || '';
+    window.location.href = 'kelime-avi.html?code='+currentInvite.code+'&name='+encodeURIComponent(nm);
+    return;
+  }
   var code = currentInvite.code;
   var name = g.myName || document.getElementById('inName').value.trim() || 'Oyuncu';
   g.myName = name;
@@ -2608,6 +2614,14 @@ loadAccount().then(function(){
   updateHeaderGold();
   initPresence();
   updateFriendsBadge();
+  var params = new URLSearchParams(window.location.search);
+  var urlCode = params.get('code');
+  var urlName = params.get('name');
+  if(urlCode){
+    document.getElementById('inCode').value = urlCode.toUpperCase();
+    if(urlName) document.getElementById('inName').value = urlName;
+    if(urlName){ setTimeout(function(){ doJoin(); }, 300); }
+  }
 });
 </script>
 </body>
