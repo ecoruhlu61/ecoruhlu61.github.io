@@ -13,6 +13,7 @@
   --txt:#e8f0fe;--txt2:#8aa5c2;--txt3:#556a82;
   --blue:#3b82f6;--bl:#60a5fa;
   --purple:#a78bfa;
+  --amber:#f59e0b;
 }
 body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem}
 .hero{text-align:center;margin-bottom:2.5rem}
@@ -26,9 +27,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans
 .gcard p{color:var(--txt2);font-size:13px;line-height:1.5}
 .gcard.battleship h2{color:var(--bl)}
 .gcard.wordhunt h2{color:var(--purple)}
+.gcard.connect4 h2{color:var(--amber)}
 .gcard .tag{display:inline-block;margin-top:.85rem;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700}
 .gcard.battleship .tag{background:#1e3a5f;color:var(--bl)}
 .gcard.wordhunt .tag{background:#2e1f4d;color:var(--purple)}
+.gcard.connect4 .tag{background:#3d2a00;color:var(--amber)}
 footer{margin-top:3rem;color:var(--txt3);font-size:12px;text-align:center}
 </style>
 </head>
@@ -51,6 +54,13 @@ footer{margin-top:3rem;color:var(--txt3);font-size:12px;text-align:center}
     <div class="emoji">&#128172;</div>
     <h2>Kelime Avi</h2>
     <p>Ipucu ver, kelimeyi tahmin et. Kim once bilirse o turu kazanir, roller siradan degisir.</p>
+    <span class="tag">2 Oyuncu</span>
+  </a>
+
+  <a href="dortlu.html" class="gcard connect4">
+    <div class="emoji">&#128309;</div>
+    <h2>D&ouml;rtl&uuml;</h2>
+    <p>Diskini d&uuml;&#351;&uuml;r, yatay/dikey/&ccedil;apraz 4 tane dizen kazanir. Klasik strateji oyunu.</p>
     <span class="tag">2 Oyuncu</span>
   </a>
 </div>
