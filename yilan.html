@@ -20,16 +20,16 @@
 body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
 header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2)}
 .logo{font-size:20px;font-weight:700;text-decoration:none;color:var(--txt)}
-main{width:100%;max-width:420px;padding:2rem 1rem;flex:1;display:flex;flex-direction:column;align-items:center}
-.hero{text-align:center;margin-bottom:1.25rem}
-.hero h1{font-size:34px;font-weight:800;letter-spacing:-1px;margin-bottom:.4rem}
+main{width:100%;max-width:420px;padding:1.1rem 1rem;flex:1;display:flex;flex-direction:column;align-items:center}
+.hero{text-align:center;margin-bottom:.7rem}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:.25rem}
 .hero p{color:var(--txt2);font-size:14px}
-.scores{display:flex;justify-content:center;gap:2.5rem;margin-bottom:1.1rem}
+.scores{display:flex;justify-content:center;gap:2.5rem;margin-bottom:.7rem}
 .score-item{text-align:center}
 .score-item .sv{font-size:26px;font-weight:800}
 .score-item .sl{font-size:12px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
-.canvas-wrap{position:relative;width:100%;max-width:340px;margin-bottom:1.1rem}
-canvas{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--bdr2);background:var(--bg3)}
+.canvas-wrap{position:relative;width:100%;max-width:340px;margin-bottom:.7rem}
+canvas{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--bdr2);background:var(--bg3);touch-action:none}
 .overlay-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.75rem;background:rgba(11,15,26,.82);border-radius:12px}
 .overlay-msg.hidden{display:none}
 .overlay-msg h3{font-size:20px;font-weight:800}
@@ -40,7 +40,7 @@ canvas{width:100%;height:auto;display:block;border-radius:12px;border:1px solid 
 .btn.bo{background:transparent;color:var(--txt);border-color:var(--bdr2)}
 .btn.bo:hover{background:var(--bg3)}
 .dpad{display:grid;grid-template-columns:60px 60px 60px;grid-template-rows:60px 60px 60px;gap:6px;margin-top:.5rem}
-.dpad button{border-radius:10px;border:1px solid var(--bdr2);background:var(--surf);color:var(--txt);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none}
+.dpad button{border-radius:10px;border:1px solid var(--bdr2);background:var(--surf);color:var(--txt);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none}
 .dpad button:active{background:var(--bg3)}
 .dpad .up{grid-column:2;grid-row:1}
 .dpad .left{grid-column:1;grid-row:2}
@@ -99,7 +99,7 @@ canvas{width:100%;height:auto;display:block;border-radius:12px;border:1px solid 
     <button class="down" onclick="setDirection(0,1)">&#8595;</button>
     <button class="right" onclick="setDirection(1,0)">&#8594;</button>
   </div>
-  <p class="hint" id="hintTxt">Klavyede ok tu&#351;lar&#305; veya WASD da kullanabilirsin</p>
+  <p class="hint" id="hintTxt">Tahtay&#305; kayd&#305;r, alt&#305;ndaki oklara bas veya klavyede ok tu&#351;lar&#305;/WASD kullan</p>
 </main>
 
 <button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
@@ -142,14 +142,14 @@ var LANG = {
     heroTitle:'Y&#305;lan Oyunu', heroSubtitle:'Elmay&#305; ye, b&uuml;y&uuml; &mdash; duvara veya kendine &ccedil;arpma!',
     lblScore:'Skor', lblHighScore:'En Y&uuml;ksek', overlayTitle:'Y&#305;lan Oyunu', overlaySub:'Ba&#351;lamak i&#231;in butona bas',
     btnStart:'Ba&#351;la', btnRetry:'Tekrar Oyna', gameOverTitle:'Oyun Bitti!', gameOverSub:'Skor: {n}',
-    hintTxt:'Klavyede ok tu&#351;lar&#305; veya WASD da kullanabilirsin',
+    hintTxt:'Tahtay&#305; kayd&#305;r, alt&#305;ndaki oklara bas veya klavyede ok tu&#351;lar&#305;/WASD kullan',
     settingsTitle:'&#9881; Ayarlar', lblSound:'Ses', lblTheme:'Tema', themeDark:'Koyu', themeLight:'Ayd&#305;nl&#305;k', lblLang:'Dil', btnCloseSettings:'Kapat'
   },
   EN: {
     heroTitle:'Snake', heroSubtitle:'Eat the apple, grow &mdash; don\u2019t hit the wall or yourself!',
     lblScore:'Score', lblHighScore:'Best', overlayTitle:'Snake', overlaySub:'Press the button to start',
     btnStart:'Start', btnRetry:'Play Again', gameOverTitle:'Game Over!', gameOverSub:'Score: {n}',
-    hintTxt:'You can also use arrow keys or WASD on keyboard',
+    hintTxt:'Swipe the board, tap the arrows below, or use arrow keys/WASD on keyboard',
     settingsTitle:'&#9881; Settings', lblSound:'Sound', lblTheme:'Theme', themeDark:'Dark', themeLight:'Light', lblLang:'Language', btnCloseSettings:'Close'
   }
 };
@@ -284,6 +284,41 @@ document.addEventListener('keydown', function(e){
   else if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') setDirection(-1,0);
   else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') setDirection(1,0);
 });
+
+// ── DOKUNMATIK: D-PAD (gecikmesiz tepki) ───────────────────
+document.querySelectorAll('.dpad button').forEach(function(btn){
+  btn.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    btn.click();
+  }, {passive:false});
+});
+
+// ── DOKUNMATIK: TAHTAYI KAYDIRMA (swipe) ───────────────────
+var touchStartX=0, touchStartY=0, touchActive=false;
+function onTouchStart(e){
+  if(e.touches.length!==1) return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchActive = true;
+}
+function onTouchMove(e){
+  if(!touchActive) return;
+  e.preventDefault();
+}
+function onTouchEnd(e){
+  if(!touchActive) return;
+  touchActive = false;
+  var t = e.changedTouches[0];
+  var dx = t.clientX - touchStartX;
+  var dy = t.clientY - touchStartY;
+  var absX = Math.abs(dx), absY = Math.abs(dy);
+  if(Math.max(absX,absY) < 18) return; // cok kucuk hareketleri yoksay
+  if(absX > absY) setDirection(dx>0?1:-1, 0);
+  else setDirection(0, dy>0?1:-1);
+}
+document.getElementById('gameCanvas').addEventListener('touchstart', onTouchStart, {passive:true});
+document.getElementById('gameCanvas').addEventListener('touchmove', onTouchMove, {passive:false});
+document.getElementById('gameCanvas').addEventListener('touchend', onTouchEnd, {passive:true});
 
 function tick(){
   dir = nextDir;
