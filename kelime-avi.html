@@ -461,7 +461,6 @@ function renderAttemptsRow(elId, left){
 // ── TUR SONU ──────────────────────────────────────────────
 function finishRound(guesserWon, reason){
   clearInterval(g.timerHandle);
-  if(guesserWon){ g.oppScore_local_giver_loses=true; }
   // Ben giver'im - skor guncelle
   if(guesserWon){ g.oppScore++; } else { g.myScore++; }
   updateScoreboard();
