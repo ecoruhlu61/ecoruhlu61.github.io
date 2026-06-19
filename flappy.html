@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Kuş - Tek Kişilik Oyna</title>
+<meta name="description" content="Flappy Kuş oyununu oyna! Borulardan geçerek en yüksek skoru yap, madalyaları topla.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1c2536;--surf:#1e2d40;
+  --bdr:#2a3f58;--bdr2:#3a5472;
+  --txt:#e8f0fe;--txt2:#8aa5c2;--txt3:#556a82;
+  --blue:#3b82f6;--bl:#60a5fa;--bd:#1e3a5f;
+  --red:#ef4444;--rd:#3f1515;
+  --amber:#f59e0b;--ad:#3d2a00;
+  --green:#22c55e;--gd:#14331f;
+  --purple:#a78bfa;--pd:#2e1f4d;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2)}
+.logo{font-size:20px;font-weight:700;text-decoration:none;color:var(--txt)}
+main{width:100%;max-width:380px;padding:1rem 1rem;flex:1;display:flex;flex-direction:column;align-items:center}
+.hero{text-align:center;margin-bottom:.5rem}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:.2rem}
+.hero p{color:var(--txt2);font-size:13px}
+.scores{display:flex;justify-content:center;gap:2rem;margin-bottom:.6rem}
+.score-item{text-align:center}
+.score-item .sv{font-size:24px;font-weight:800}
+.score-item .sl{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.canvas-wrap{position:relative;width:100%;max-width:320px;margin-bottom:.6rem;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.4);border:1px solid var(--bdr2)}
+canvas#flapCanvas{width:100%;height:auto;display:block;touch-action:none;cursor:pointer}
+.overlay-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.6rem;background:rgba(11,15,26,.55);text-align:center;padding:1rem;pointer-events:none}
+.overlay-msg.hidden{display:none}
+.overlay-msg h3{font-size:22px;font-weight:800;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.overlay-msg p{font-size:13px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.overlay-msg .medal{font-size:40px;margin-top:.2rem}
+.overlay-box{background:rgba(11,15,26,.88);border:1px solid var(--bdr2);border-radius:14px;padding:1.1rem 1.4rem;pointer-events:auto}
+.btn{cursor:pointer;border-radius:10px;font-size:15px;font-weight:700;padding:11px 26px;transition:all .15s;border:1px solid transparent;background:var(--purple);color:#1a1030}
+.btn:hover{background:#bca4fc}
+.btn:active{transform:scale(.97)}
+.btn.bo{background:transparent;color:var(--txt);border-color:var(--bdr2)}
+.btn.bo:hover{background:var(--bg3)}
+.bfull{width:100%}
+.hint{font-size:12px;color:var(--txt3);text-align:center;margin-top:.2rem}
+/* Ayarlar */
+.settings-btn{position:fixed;bottom:1rem;right:1rem;width:48px;height:48px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;transition:all .15s}
+.settings-btn:hover{background:var(--bg3);color:var(--txt)}
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
+.settings-overlay.open{display:flex}
+.settings-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;width:90%;max-width:360px;display:flex;flex-direction:column;gap:1rem}
+.settings-panel h3{font-size:16px;font-weight:600}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--bdr)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;color:var(--txt2)}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--bdr2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--purple)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.seg{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--bdr2)}
+.seg button{flex:1;padding:5px 10px;border:none;background:transparent;color:var(--txt2);font-size:13px;cursor:pointer}
+.seg button.active{background:var(--purple);color:#1a1030}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">&#129411; Flappy Ku&#351;</a>
+</header>
+
+<main>
+  <div class="hero">
+    <h1 id="heroTitle">Flappy Ku&#351;</h1>
+    <p id="heroSubtitle">Borulardan ge&ccedil;, en y&uuml;ksek skoru yap!</p>
+  </div>
+
+  <div class="scores">
+    <div class="score-item"><div class="sv" id="curScore">0</div><div class="sl" id="lblScore">Skor</div></div>
+    <div class="score-item"><div class="sv" id="highScore">0</div><div class="sl" id="lblHighScore">En Y&uuml;ksek</div></div>
+  </div>
+
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="flapCanvas" width="320" height="480"></canvas>
+    <div class="overlay-msg" id="overlayMsg">
+      <div class="overlay-box">
+        <h3 id="overlayTitle">Flappy Ku&#351;</h3>
+        <p id="overlaySub">Ba&#351;lamak i&#231;in t&#305;kla veya bo&#351;luk tu&#351;una bas</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint" id="hintTxt">T&#305;kla / dokun / bo&#351;luk tu&#351;u: zıpla &mdash; her boruyu ge&ccedil;ince 1 puan</p>
+</main>
+
+<button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
+
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOutside(event)">
+  <div class="settings-panel">
+    <h3 id="settingsTitle">&#9881; Ayarlar</h3>
+    <div class="setting-row">
+      <span class="setting-label" id="lblSound">Ses</span>
+      <button class="toggle" id="togSound" onclick="toggleSetting('sound')"></button>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label" id="lblTheme">Tema</span>
+      <div class="seg">
+        <button id="themeDark" class="active" onclick="setTheme('dark')">Koyu</button>
+        <button id="themeLight" onclick="setTheme('light')">Ayd&#305;nl&#305;k</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label" id="lblLang">Dil</span>
+      <div class="seg">
+        <button id="langTR" class="active" onclick="setLang('TR')">TR</button>
+        <button id="langEN" onclick="setLang('EN')">EN</button>
+      </div>
+    </div>
+    <button class="btn bo bfull" onclick="closeSettings()" id="btnCloseSettings">Kapat</button>
+  </div>
+</div>
+
+<script>
+// ── SABITLER ──────────────────────────────────────────────
+var W=320, H=480;
+var GROUND_H=58, GROUND_Y=H-GROUND_H;
+var BIRD_X=78, BIRD_R=12;
+var GRAVITY=0.46, FLAP_VY=-7.7;
+var PIPE_W=52, PIPE_SPACING=190;
+var BASE_GAP=142, BASE_SPEED=1.95;
+
+var SKY_PALETTES = [
+  {top:'#7dd3fc', bot:'#bae6fd', night:false},
+  {top:'#fb923c', bot:'#fde68a', night:false},
+  {top:'#1e1b4b', bot:'#4338ca', night:true},
+  {top:'#f472b6', bot:'#fbcfe8', night:false}
+];
+var HILL_COLOR='#15803d', HILL_COLOR2='#166534';
+var GROUND_TOP='#84cc16', GROUND_BOT='#7c4a1e';
+
+// ── DURUM ─────────────────────────────────────────────────
+var canvas, ctx;
+var state='ready'; // ready, playing, dying, dead
+var bird, pipes, particles, score, elapsed;
+var shakeTime=0, flashAlpha=0;
+var rafHandle=null, lastTs=null;
+var highScore = parseInt(localStorage.getItem('flappyHigh')||'0');
+var bestMedalTier = parseInt(localStorage.getItem('flappyMedal')||'0');
+var soundOn = (localStorage.getItem('flappySound')!=='0');
+var uiSettings = { theme: localStorage.getItem('flappyTheme')||'dark', lang: localStorage.getItem('flappyLang')||'TR' };
+
+var STARS=[], CLOUDS=[], HILLS=[];
+(function initDecor(){
+  for(var i=0;i<18;i++) STARS.push({x:Math.random()*W*2, y:Math.random()*(H*0.55), seed:Math.random()*10});
+  for(var j=0;j<6;j++) CLOUDS.push({x:Math.random()*W*2.2, y:20+Math.random()*70, scale:0.7+Math.random()*0.8});
+  for(var k=0;k<10;k++) HILLS.push({x:k*90, h:30+Math.random()*40});
+})();
+
+var MEDALS = [
+  {min:100, emoji:'\u{1F48E}', name:{TR:'Elmas',EN:'Diamond'}},
+  {min:50, emoji:'\u{1F947}', name:{TR:'Alt\u0131n',EN:'Gold'}},
+  {min:25, emoji:'\u{1F948}', name:{TR:'G\u00fcm\u00fc\u015f',EN:'Silver'}},
+  {min:10, emoji:'\u{1F949}', name:{TR:'Bronz',EN:'Bronze'}}
+];
+function getMedalTier(s){
+  for(var i=0;i<MEDALS.length;i++){ if(s>=MEDALS[i].min) return MEDALS.length-i; }
+  return 0;
+}
+function medalByTier(tier){
+  if(tier<=0) return null;
+  return MEDALS[MEDALS.length-tier];
+}
+
+var LANG = {
+  TR: {
+    heroTitle:'Flappy Ku&#351;', heroSubtitle:'Borulardan ge&ccedil;, en y&uuml;ksek skoru yap!',
+    lblScore:'Skor', lblHighScore:'En Y&uuml;ksek',
+    readyTitle:'Flappy Ku&#351;', readySub:'Ba&#351;lamak i&#231;in t&#305;kla veya bo&#351;luk tu&#351;una bas',
+    gameOverTitle:'Oyun Bitti!', gameOverSub:'Skor: {n}', newRecord:'&#127881; Yeni Rekor!',
+    hintTxt:'T&#305;kla / dokun / bo&#351;luk tu&#351;u: z&#305;pla &mdash; her boruyu ge&ccedil;ince 1 puan',
+    tapRetry:'Tekrar denemek i&#231;in t&#305;kla',
+    settingsTitle:'&#9881; Ayarlar', lblSound:'Ses', lblTheme:'Tema', themeDark:'Koyu', themeLight:'Ayd&#305;nl&#305;k', lblLang:'Dil', btnCloseSettings:'Kapat'
+  },
+  EN: {
+    heroTitle:'Flappy Bird', heroSubtitle:'Fly through the pipes, score as high as you can!',
+    lblScore:'Score', lblHighScore:'Best',
+    readyTitle:'Flappy Bird', readySub:'Click or press space to start',
+    gameOverTitle:'Game Over!', gameOverSub:'Score: {n}', newRecord:'\u{1F389} New Record!',
+    hintTxt:'Click / tap / space: flap \u2014 1 point per pipe passed',
+    tapRetry:'Click to try again',
+    settingsTitle:'&#9881; Settings', lblSound:'Sound', lblTheme:'Theme', themeDark:'Dark', themeLight:'Light', lblLang:'Language', btnCloseSettings:'Close'
+  }
+};
+
+function safeText(id,txt){ var e=document.getElementById(id); if(e) e.innerHTML=txt; }
+function tr(key){ return (LANG[uiSettings.lang]&&LANG[uiSettings.lang][key])!=null ? LANG[uiSettings.lang][key] : key; }
+function L(){ return LANG[uiSettings.lang]; }
+
+function applyLang(){
+  var Lo=L();
+  safeText('heroTitle', Lo.heroTitle); safeText('heroSubtitle', Lo.heroSubtitle);
+  safeText('lblScore', Lo.lblScore); safeText('lblHighScore', Lo.lblHighScore);
+  safeText('hintTxt', Lo.hintTxt);
+  safeText('settingsTitle', Lo.settingsTitle); safeText('lblSound', Lo.lblSound);
+  safeText('lblTheme', Lo.lblTheme); safeText('themeDark', Lo.themeDark); safeText('themeLight', Lo.themeLight);
+  safeText('lblLang', Lo.lblLang); safeText('btnCloseSettings', Lo.btnCloseSettings);
+  if(state==='ready'){ safeText('overlayTitle', Lo.readyTitle); safeText('overlaySub', Lo.readySub); }
+}
+
+function applyTheme(){
+  if(uiSettings.theme==='light'){
+    document.documentElement.style.setProperty('--bg','#f0f4f8');
+    document.documentElement.style.setProperty('--bg2','#e2e8f0');
+    document.documentElement.style.setProperty('--bg3','#cbd5e1');
+    document.documentElement.style.setProperty('--surf','#ffffff');
+    document.documentElement.style.setProperty('--bdr','#94a3b8');
+    document.documentElement.style.setProperty('--bdr2','#64748b');
+    document.documentElement.style.setProperty('--txt','#0f172a');
+    document.documentElement.style.setProperty('--txt2','#334155');
+    document.documentElement.style.setProperty('--txt3','#64748b');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0b0f1a');
+    document.documentElement.style.setProperty('--bg2','#111827');
+    document.documentElement.style.setProperty('--bg3','#1c2536');
+    document.documentElement.style.setProperty('--surf','#1e2d40');
+    document.documentElement.style.setProperty('--bdr','#2a3f58');
+    document.documentElement.style.setProperty('--bdr2','#3a5472');
+    document.documentElement.style.setProperty('--txt','#e8f0fe');
+    document.documentElement.style.setProperty('--txt2','#8aa5c2');
+    document.documentElement.style.setProperty('--txt3','#556a82');
+  }
+}
+function setTheme(t){
+  uiSettings.theme=t; localStorage.setItem('flappyTheme', t);
+  document.getElementById('themeDark').classList.toggle('active', t==='dark');
+  document.getElementById('themeLight').classList.toggle('active', t==='light');
+  applyTheme();
+}
+function setLang(l){
+  uiSettings.lang=l; localStorage.setItem('flappyLang', l);
+  document.getElementById('langTR').classList.toggle('active', l==='TR');
+  document.getElementById('langEN').classList.toggle('active', l==='EN');
+  applyLang();
+}
+function openSettings(){
+  document.getElementById('settingsOverlay').classList.add('open');
+  document.getElementById('togSound').classList.toggle('on', soundOn);
+}
+function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
+function closeSettingsOutside(e){ if(e.target.id==='settingsOverlay') closeSettings(); }
+function toggleSetting(key){
+  if(key==='sound'){
+    soundOn = !soundOn;
+    localStorage.setItem('flappySound', soundOn?'1':'0');
+    document.getElementById('togSound').classList.toggle('on', soundOn);
+    if(soundOn) playTone(440,0.12);
+  }
+}
+
+// ── SES ───────────────────────────────────────────────────
+var AC=null;
+function getAC(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function playTone(freq,dur,type,vol){
+  if(!soundOn) return;
+  var ac=getAC(); if(!ac) return;
+  try{
+    var o=ac.createOscillator(), gn=ac.createGain();
+    o.connect(gn); gn.connect(ac.destination);
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,ac.currentTime);
+    gn.gain.setValueAtTime(vol||0.28,ac.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+(dur||0.2));
+    o.start(); o.stop(ac.currentTime+(dur||0.2));
+  }catch(e){}
+}
+function sndFlap(){ playTone(380,0.07,'triangle',0.18); }
+function sndScore(){ playTone(880,0.08,'sine',0.22); setTimeout(function(){playTone(1180,0.1,'sine',0.2);},55); }
+function sndHit(){ playTone(140,0.18,'square',0.3); }
+function sndFall(){ playTone(110,0.35,'sawtooth',0.22); }
+function sndMedal(){ [660,880,1100,1320].forEach(function(f,i){ setTimeout(function(){playTone(f,0.22,'sine',0.22);},i*100); }); }
+
+// ── BASLATMA ──────────────────────────────────────────────
+function resetBird(){
+  bird = { y:H/2, vy:0, rot:0, wing:0 };
+}
+function resetGame(){
+  resetBird();
+  pipes=[];
+  particles=[];
+  score=0; elapsed=0; shakeTime=0; flashAlpha=0;
+  state='ready';
+  updateScoreDisplay();
+}
+
+function currentGap(){ return Math.max(96, BASE_GAP - Math.floor(score/8)*4); }
+function currentSpeed(){ return Math.min(BASE_SPEED*1.6, BASE_SPEED + score*0.022); }
+
+function spawnPipe(fromX){
+  var gap=currentGap();
+  var margin=46;
+  var gapY = margin + Math.random()*(GROUND_Y - margin*2 - gap);
+  pipes.push({ x:fromX, gapY:gapY, gapH:gap, scored:false });
+}
+
+function flap(){
+  if(state==='ready'){
+    state='playing';
+    document.getElementById('overlayMsg').classList.add('hidden');
+    spawnPipe(W + 40);
+    bird.vy=FLAP_VY;
+    spawnFeathers();
+    sndFlap();
+    return;
+  }
+  if(state==='playing'){
+    bird.vy=FLAP_VY;
+    spawnFeathers();
+    sndFlap();
+  }
+  if(state==='dead'){
+    resetGame();
+  }
+}
+
+function spawnFeathers(){
+  for(var i=0;i<3;i++){
+    particles.push({
+      x:BIRD_X-6, y:bird.y+4, vx:-1.4-Math.random()*1.2, vy:0.6+Math.random()*1.4,
+      life:1, decay:0.025+Math.random()*0.015, size:3+Math.random()*2, type:'feather'
+    });
+  }
+}
+function spawnScoreBurst(x,y){
+  for(var i=0;i<10;i++){
+    var ang=Math.random()*Math.PI*2;
+    particles.push({
+      x:x, y:y, vx:Math.cos(ang)*2.2, vy:Math.sin(ang)*2.2,
+      life:1, decay:0.035, size:2.5, type:'spark'
+    });
+  }
+}
+
+// ── GUNCELLEME ────────────────────────────────────────────
+function circleRectCollide(cx,cy,r,rx,ry,rw,rh){
+  var closestX=Math.max(rx, Math.min(cx, rx+rw));
+  var closestY=Math.max(ry, Math.min(cy, ry+rh));
+  var dx=cx-closestX, dy=cy-closestY;
+  return (dx*dx+dy*dy) < r*r;
+}
+
+function update(dt, dtMs){
+  elapsed += dtMs;
+  if(state==='ready'){
+    bird.y = H/2 + Math.sin(elapsed*0.0035)*8;
+    bird.rot = Math.sin(elapsed*0.0035)*6;
+    bird.wing = Math.sin(elapsed*0.012);
+    return;
+  }
+  if(state==='playing'){
+    bird.vy += GRAVITY*dt;
+    bird.y += bird.vy*dt;
+    bird.rot = Math.max(-25, Math.min(90, bird.vy*4.2));
+    bird.wing = Math.sin(elapsed*0.018);
+
+    var speed=currentSpeed();
+    pipes.forEach(function(p){ p.x -= speed*dt; });
+    if(pipes.length===0){
+      spawnPipe(W + 40);
+    } else {
+      var last = pipes[pipes.length-1];
+      if(last.x <= W - PIPE_SPACING) spawnPipe(last.x + PIPE_SPACING);
+    }
+    pipes = pipes.filter(function(p){ return p.x > -PIPE_W-5; });
+
+    pipes.forEach(function(p){
+      if(!p.scored && p.x+PIPE_W < BIRD_X){
+        p.scored=true; score++; sndScore();
+        spawnScoreBurst(BIRD_X+10, bird.y);
+        updateScoreDisplay();
+        var tier=getMedalTier(score);
+        if(tier>bestMedalTier){ /* sadece oyun sonunda kalici medal guncellenir */ }
+      }
+    });
+
+    var died=false;
+    if(bird.y - BIRD_R <= 0){ bird.y=BIRD_R; bird.vy=0; }
+    if(bird.y + BIRD_R >= GROUND_Y){ died=true; }
+    pipes.forEach(function(p){
+      if(circleRectCollide(BIRD_X,bird.y,BIRD_R-2, p.x,0,PIPE_W,p.gapY)) died=true;
+      if(circleRectCollide(BIRD_X,bird.y,BIRD_R-2, p.x,p.gapY+p.gapH,PIPE_W,GROUND_Y-(p.gapY+p.gapH))) died=true;
+    });
+    if(died){ startDying(); }
+  } else if(state==='dying'){
+    bird.vy += GRAVITY*1.3*dt;
+    bird.y += bird.vy*dt;
+    bird.rot = Math.min(90, bird.rot+6*dt);
+    if(bird.y+BIRD_R >= GROUND_Y){ bird.y=GROUND_Y-BIRD_R; finishDeath(); }
+  }
+  particles.forEach(function(pt){
+    pt.x += pt.vx*dt; pt.y += pt.vy*dt;
+    if(pt.type==='feather') pt.vy += 0.04*dt;
+    pt.life -= pt.decay*dt;
+  });
+  particles = particles.filter(function(pt){ return pt.life>0; });
+  if(shakeTime>0) shakeTime=Math.max(0, shakeTime-dtMs);
+  if(flashAlpha>0) flashAlpha=Math.max(0, flashAlpha-dtMs*0.004);
+}
+function startDying(){
+  state='dying';
+  shakeTime=220; flashAlpha=0.55;
+  sndHit();
+  setTimeout(function(){ if(state==='dying') sndFall(); }, 80);
+}
+function finishDeath(){
+  state='dead';
+  var isRecord = score>highScore;
+  if(isRecord){ highScore=score; localStorage.setItem('flappyHigh', highScore); }
+  var tier=getMedalTier(score);
+  var medalUpgraded=false;
+  if(tier>bestMedalTier){ bestMedalTier=tier; localStorage.setItem('flappyMedal', bestMedalTier); medalUpgraded=true; }
+  document.getElementById('highScore').textContent=highScore;
+  showGameOver(isRecord, medalUpgraded);
+  if(medalUpgraded) setTimeout(sndMedal, 250);
+}
+
+function showGameOver(isRecord, medalUpgraded){
+  var Lo=L();
+  var medal=medalByTier(bestMedalTier);
+  var html = '<div class="overlay-box">'+
+    '<h3>'+Lo.gameOverTitle+'</h3>'+
+    '<p>'+Lo.gameOverSub.replace('{n}', score)+'</p>'+
+    (isRecord ? '<p style="color:#fde047;font-weight:700">'+Lo.newRecord+'</p>' : '')+
+    (medal ? '<div class="medal">'+medal.emoji+'</div><p>'+medal.name[uiSettings.lang]+'</p>' : '')+
+    '<p style="margin-top:.4rem">'+Lo.tapRetry+'</p>'+
+  '</div>';
+  document.getElementById('overlayMsg').innerHTML = html;
+  document.getElementById('overlayMsg').classList.remove('hidden');
+}
+
+function updateScoreDisplay(){ document.getElementById('curScore').textContent=score; }
+
+// ── CIZIM ─────────────────────────────────────────────────
+function paletteIndex(){ return Math.floor(score/10) % SKY_PALETTES.length; }
+function drawSky(){
+  var pal=SKY_PALETTES[paletteIndex()];
+  var grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,pal.top); grad.addColorStop(1,pal.bot);
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  if(pal.night){
+    ctx.fillStyle='#fff';
+    STARS.forEach(function(s){
+      var sx = ((s.x - elapsed*0.01) % (W*2) + W*2) % (W*2);
+      if(sx>W) return;
+      var tw=0.4+0.6*Math.abs(Math.sin(elapsed*0.002+s.seed));
+      ctx.globalAlpha=tw;
+      ctx.fillRect(sx, s.y, 2, 2);
+    });
+    ctx.globalAlpha=1;
+  }
+}
+function drawClouds(){
+  ctx.fillStyle='rgba(255,255,255,.6)';
+  CLOUDS.forEach(function(cl){
+    var x = ((cl.x - elapsed*0.012) % (W*2.2) + W*2.2) % (W*2.2);
+    if(x>W+60) return;
+    drawCloud(x, cl.y, cl.scale);
+  });
+}
+function drawCloud(x,y,s){
+  ctx.beginPath();
+  ctx.ellipse(x,y,18*s,11*s,0,0,Math.PI*2);
+  ctx.ellipse(x+14*s,y+3*s,13*s,9*s,0,0,Math.PI*2);
+  ctx.ellipse(x-14*s,y+4*s,12*s,8*s,0,0,Math.PI*2);
+  ctx.fill();
+}
+function drawHills(){
+  var baseY = GROUND_Y;
+  ctx.fillStyle=HILL_COLOR2;
+  ctx.beginPath(); ctx.moveTo(0, baseY);
+  HILLS.forEach(function(h){
+    var x = ((h.x - elapsed*0.03) % 900 + 900) % 900 - 90;
+    ctx.lineTo(x, baseY-h.h);
+    ctx.lineTo(x+45, baseY-h.h*0.6);
+  });
+  ctx.lineTo(W, baseY); ctx.lineTo(W,baseY); ctx.closePath(); ctx.fill();
+}
+function drawPipe(p){
+  var x=p.x, w=PIPE_W;
+  var grad=ctx.createLinearGradient(x,0,x+w,0);
+  grad.addColorStop(0,'#15803d'); grad.addColorStop(0.45,'#22c55e'); grad.addColorStop(1,'#166534');
+  ctx.fillStyle=grad;
+  ctx.fillRect(x,0,w,p.gapY);
+  ctx.fillRect(x-4,p.gapY-20,w+8,20);
+  var bottomY=p.gapY+p.gapH;
+  ctx.fillRect(x,bottomY,w,GROUND_Y-bottomY);
+  ctx.fillRect(x-4,bottomY,w+8,20);
+  ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=2;
+  ctx.strokeRect(x+1,0,w-2,p.gapY-1);
+  ctx.strokeRect(x+1,bottomY+1,w-2,GROUND_Y-bottomY-2);
+}
+function drawGround(){
+  var grad=ctx.createLinearGradient(0,GROUND_Y,0,H);
+  grad.addColorStop(0,GROUND_TOP); grad.addColorStop(0.18,GROUND_TOP); grad.addColorStop(0.18,GROUND_BOT); grad.addColorStop(1,'#5c3415');
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,GROUND_Y,W,GROUND_H);
+  ctx.fillStyle='rgba(0,0,0,.15)';
+  var off = (elapsed*0.12)%20;
+  for(var x=-20-off; x<W+20; x+=20){ ctx.fillRect(x,GROUND_Y+8,10,4); }
+}
+function drawBird(){
+  ctx.save();
+  ctx.translate(BIRD_X, bird.y);
+  ctx.rotate(bird.rot*Math.PI/180);
+  ctx.fillStyle='#facc15';
+  ctx.beginPath(); ctx.ellipse(0,0,13,10,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#f59e0b';
+  ctx.beginPath(); ctx.ellipse(-3, bird.wing*4, 8,5,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(6,-3,3.6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#1a1030';
+  ctx.beginPath(); ctx.arc(7.3,-3,1.8,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#f97316';
+  ctx.beginPath(); ctx.moveTo(11,0); ctx.lineTo(19,-2); ctx.lineTo(19,3); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawParticles(){
+  particles.forEach(function(pt){
+    ctx.globalAlpha=Math.max(0,pt.life);
+    ctx.fillStyle = pt.type==='feather' ? '#fde68a' : '#fff7b0';
+    ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.size,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+}
+
+function draw(){
+  ctx.save();
+  if(shakeTime>0){
+    ctx.translate((Math.random()-0.5)*6*(shakeTime/220), (Math.random()-0.5)*6*(shakeTime/220));
+  }
+  drawSky();
+  drawClouds();
+  drawHills();
+  pipes.forEach(drawPipe);
+  drawGround();
+  drawParticles();
+  drawBird();
+  ctx.restore();
+  if(flashAlpha>0){
+    ctx.fillStyle='rgba(220,38,38,'+flashAlpha+')';
+    ctx.fillRect(0,0,W,H);
+  }
+  ctx.fillStyle=uiSettings.theme==='light' ? '#0f172a' : '#fff';
+  ctx.font='bold 28px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign='center';
+  ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=4;
+  if(state==='playing'||state==='dying') ctx.fillText(score, W/2, 50);
+  ctx.shadowBlur=0;
+}
+
+// ── DONGU ─────────────────────────────────────────────────
+function loop(ts){
+  if(!lastTs) lastTs=ts;
+  var dtMs = ts-lastTs;
+  lastTs=ts;
+  var dt = Math.min(dtMs/16.6667, 3);
+  update(dt, dtMs);
+  draw();
+  rafHandle=requestAnimationFrame(loop);
+}
+
+// ── GIRIS ─────────────────────────────────────────────────
+function handleInput(e){
+  if(e) e.preventDefault();
+  flap();
+}
+document.addEventListener('keydown', function(e){
+  if(e.key===' '||e.key==='ArrowUp'){ e.preventDefault(); flap(); }
+});
+
+canvas=document.getElementById('flapCanvas');
+canvas.width=W; canvas.height=H;
+ctx=canvas.getContext('2d');
+canvas.addEventListener('pointerdown', handleInput);
+
+resetGame();
+document.getElementById('highScore').textContent=highScore;
+rafHandle=requestAnimationFrame(loop);
+
+applyTheme();
+document.getElementById('themeDark').classList.toggle('active', uiSettings.theme==='dark');
+document.getElementById('themeLight').classList.toggle('active', uiSettings.theme==='light');
+document.getElementById('langTR').classList.toggle('active', uiSettings.lang==='TR');
+document.getElementById('langEN').classList.toggle('active', uiSettings.lang==='EN');
+applyLang();
+</script>
+</body>
+</html>
