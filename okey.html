@@ -97,8 +97,11 @@ input[type=text]:focus{border-color:var(--amber)}
 .tile.cj{background:linear-gradient(135deg,#1a1030,#2e1f4d);border-color:var(--purple)}
 .tile.cj .tn{color:var(--purple);font-size:18px}
 /* El */
-.hand-rack{background:linear-gradient(180deg,#3d2e1a,#2a2012);border:2px solid #5a4626;border-radius:10px;padding:.5rem .4rem;min-height:120px;width:100%;display:flex;flex-direction:column;gap:6px;justify-content:center}
-.hand-row{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;min-height:54px}
+.hand-rack{background:linear-gradient(180deg,#3d2e1a,#2a2012);border:2px solid #5a4626;border-radius:10px;padding:.5rem .4rem;min-height:120px;width:100%;display:flex;flex-direction:column;gap:6px;justify-content:center;overflow-x:auto}
+.hand-row{display:flex;gap:3px;justify-content:center;min-height:54px}
+.hand-slot{width:36px;height:50px;border-radius:5px;border:1px dashed rgba(255,255,255,.18);flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.hand-slot.drop-hover{background:rgba(245,158,11,.25);border-color:var(--amber)}
+.tile.dragging{position:fixed;z-index:999;pointer-events:none;box-shadow:0 8px 16px rgba(0,0,0,.6);transform:scale(1.08)}
 .hand-row:first-child{border-bottom:1px dashed #5a4626;padding-bottom:6px}
 
 /* Merkez */
@@ -201,12 +204,14 @@ input[type=text]:focus{border-color:var(--amber)}
 @media(max-width:600px){
   .tile{width:30px;height:42px}
   .tile .tn{font-size:11px}
+  .hand-slot{width:30px;height:42px}
   .pbox{min-width:60px}
   .center-info{gap:.4rem;padding:.4rem .5rem}
 }
 @media(max-width:400px){
   .tile{width:25px;height:35px}
   .tile .tn{font-size:9px}
+  .hand-slot{width:25px;height:35px}
   .side-col{min-width:36px}
 }
 </style>
@@ -1047,7 +1052,8 @@ function genCode(){
 }
 
 // ── OYUN DURUMU (sadece HOST'ta otorite) ────────────────────
-var gameState = null; // {hands[4], pile, discardTop, discardFrom, turnIndex, dealerIndex, gosterge, okeyTile, gameOver, winner, winType, openedTileId, hasDrawn}
+var gameState = null; // {hands[4], pile, discardTop, discardFrom, turnIndex, dealerIndex, gosterge, okeyTile, gameOver, winner, winType, openedTileId, hasDrawn, dealSeq}
+var dealSeqCounter = 0;
 
 function hostDealNewGame(dealerIdx){
   var d = dealGame(); // {hands, pile, gosterge, okeyTile} - hands[0] 15 tas, digerleri 14
@@ -1066,7 +1072,8 @@ function hostDealNewGame(dealerIdx){
     gameOver: false,
     winner: -1,
     winType: null,
-    hasDrawn: true // dealer zaten 15 tasla basliyor, direkt atabilir/acabilir
+    hasDrawn: true, // dealer zaten 15 tasla basliyor, direkt atabilir/acabilir
+    dealSeq: ++dealSeqCounter
   };
   return gameState;
 }
@@ -1319,6 +1326,7 @@ function buildViewFor(idx){
     turnIndex: gameState.turnIndex,
     myIndex: idx,
     hasDrawn: gameState.hasDrawn,
+    dealSeq: gameState.dealSeq,
     players: players,
     gameOver: gameState.gameOver,
     winner: gameState.winner,
@@ -1380,7 +1388,6 @@ function send(msg){ if(hostConn){ try{ hostConn.send(JSON.stringify(msg)); }catc
 // ── OYUN EKRANI RENDER ───────────────────────────────────────
 var currentView = null;
 var prevTurnWasMine = null;
-var currentHandSortFn = null;
 var lastDiscardTileId; // undefined = henuz baslamadi (ilk render'da ses calmasin)
 var COLOR_CLASS = {kirmizi:'cr', sari:'cy', mavi:'cb', siyah:'cs'};
 
@@ -1397,34 +1404,127 @@ function okeyLabel(ok){
   return (names[ok.color]||ok.color)+' '+ok.num;
 }
 
+var tileSlotMap = {}; // tileId -> slot index (0-19, 10 ust sira + 10 alt sira)
+var dragInfo = null;
+var lastDealSeq = -1;
+
+function clearMissingSlots(hand){
+  var handIds = {};
+  hand.forEach(function(t){ handIds[t.id]=true; });
+  Object.keys(tileSlotMap).forEach(function(tid){
+    if(!handIds[tid]) delete tileSlotMap[tid];
+  });
+}
+function ensureSlotAssignments(hand){
+  clearMissingSlots(hand);
+  var occupied = {};
+  Object.keys(tileSlotMap).forEach(function(tid){ occupied[tileSlotMap[tid]]=tid; });
+  hand.forEach(function(t){
+    if(tileSlotMap[t.id]===undefined){
+      for(var s=0; s<20; s++){
+        if(occupied[s]===undefined){ tileSlotMap[t.id]=s; occupied[s]=t.id; break; }
+      }
+    }
+  });
+}
+// tileId'yi targetSlot'a yerlestirir; orada baska tas varsa yer degistirirler
+function placeTileAtSlot(tileId, targetSlot){
+  var fromSlot = tileSlotMap[tileId];
+  var occupantId = null;
+  Object.keys(tileSlotMap).forEach(function(tid){
+    if(tileSlotMap[tid]===targetSlot && String(tid)!==String(tileId)) occupantId=tid;
+  });
+  if(occupantId!==null) tileSlotMap[occupantId] = fromSlot;
+  tileSlotMap[tileId] = targetSlot;
+}
+
 function renderMyHand(hand, okeyTile, clickable){
+  ensureSlotAssignments(hand);
   var rack=document.getElementById('myHand');
   rack.innerHTML='';
   var rowTop=document.createElement('div'); rowTop.className='hand-row';
   var rowBot=document.createElement('div'); rowBot.className='hand-row';
-  var list = currentHandSortFn ? currentHandSortFn(hand.slice()) : hand;
-  var splitAt = Math.ceil(list.length/2);
-  list.forEach(function(tile, idx){
+  var slotEls=[];
+  for(var s=0; s<20; s++){
+    var slotEl=document.createElement('div');
+    slotEl.className='hand-slot';
+    slotEl.dataset.slot=s;
+    slotEls.push(slotEl);
+    (s<10?rowTop:rowBot).appendChild(slotEl);
+  }
+  hand.forEach(function(tile){
+    var slotIdx = tileSlotMap[tile.id];
     var el=document.createElement('div');
     el.className='tile '+(tile.isJoker?'cj':(COLOR_CLASS[tile.color]||''));
     if(okeyTile && isOkeyTile(tile, okeyTile)) el.classList.add('okey-glow');
     el.innerHTML='<span class="tn">'+(tile.isJoker?'&#127183;':tile.num)+'</span>';
     el.title = tile.isJoker ? 'Sahte Joker' : (tile.color+' '+tile.num);
-    (function(tid){ el.onclick=function(){ attemptDiscard(tid); }; })(tile.id);
     if(!clickable) el.style.opacity='.92';
-    (idx<splitAt ? rowTop : rowBot).appendChild(el);
+    wireTileDrag(el, tile.id, clickable);
+    if(slotEls[slotIdx]) slotEls[slotIdx].appendChild(el);
   });
   rack.appendChild(rowTop);
   rack.appendChild(rowBot);
 }
 
+// Pointer Events ile suruklenebilir tas (mouse + dokunmatik birlikte calisir)
+function wireTileDrag(el, tileId, clickable){
+  el.style.touchAction='none';
+  el.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    var rect = el.getBoundingClientRect();
+    dragInfo = { tileId:tileId, el:el, startX:e.clientX, startY:e.clientY, origLeft:rect.left, origTop:rect.top, w:rect.width, h:rect.height, moved:false, lastSlotEl:null };
+    try{ el.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  el.addEventListener('pointermove', function(e){
+    if(!dragInfo || dragInfo.tileId!==tileId) return;
+    var dx=e.clientX-dragInfo.startX, dy=e.clientY-dragInfo.startY;
+    if(!dragInfo.moved && (Math.abs(dx)>6 || Math.abs(dy)>6)){
+      dragInfo.moved=true;
+      el.classList.add('dragging');
+      el.style.width=dragInfo.w+'px'; el.style.height=dragInfo.h+'px';
+    }
+    if(dragInfo.moved){
+      el.style.left=(dragInfo.origLeft+dx)+'px';
+      el.style.top=(dragInfo.origTop+dy)+'px';
+      var under = document.elementFromPoint(e.clientX, e.clientY);
+      var slotEl = under ? under.closest('.hand-slot') : null;
+      if(dragInfo.lastSlotEl && dragInfo.lastSlotEl!==slotEl) dragInfo.lastSlotEl.classList.remove('drop-hover');
+      if(slotEl){ slotEl.classList.add('drop-hover'); dragInfo.lastSlotEl=slotEl; }
+    }
+  });
+  el.addEventListener('pointerup', function(e){
+    if(!dragInfo || dragInfo.tileId!==tileId) return;
+    var wasMoved = dragInfo.moved;
+    if(dragInfo.lastSlotEl) dragInfo.lastSlotEl.classList.remove('drop-hover');
+    el.classList.remove('dragging');
+    el.style.left=''; el.style.top=''; el.style.width=''; el.style.height='';
+    if(wasMoved){
+      var under = document.elementFromPoint(e.clientX, e.clientY);
+      var slotEl = under ? under.closest('.hand-slot') : null;
+      if(slotEl) placeTileAtSlot(tileId, parseInt(slotEl.dataset.slot,10));
+      if(currentView) renderMyHand(currentView.myHand, currentView.okeyTile, clickable);
+    } else if(clickable){
+      attemptDiscard(tileId);
+    }
+    dragInfo=null;
+  });
+  el.addEventListener('pointercancel', function(){ dragInfo=null; el.classList.remove('dragging'); });
+}
+
 function sortHandByColor(){
-  currentHandSortFn = function(h){ return sortTiles(h); };
-  if(currentView) renderMyHand(currentView.myHand, currentView.okeyTile, isMyTurnAndDrawn());
+  if(!currentView) return;
+  var sorted = sortTiles(currentView.myHand.slice());
+  tileSlotMap = {};
+  sorted.forEach(function(t,i){ tileSlotMap[t.id]=i; });
+  renderMyHand(currentView.myHand, currentView.okeyTile, isMyTurnAndDrawn());
 }
 function sortHandByNum(){
-  currentHandSortFn = function(h){ return h.slice().sort(function(a,b){ return (a.num-b.num) || (COLORS.indexOf(a.color)-COLORS.indexOf(b.color)); }); };
-  if(currentView) renderMyHand(currentView.myHand, currentView.okeyTile, isMyTurnAndDrawn());
+  if(!currentView) return;
+  var sorted = currentView.myHand.slice().sort(function(a,b){ return (a.num-b.num) || (COLORS.indexOf(a.color)-COLORS.indexOf(b.color)); });
+  tileSlotMap = {};
+  sorted.forEach(function(t,i){ tileSlotMap[t.id]=i; });
+  renderMyHand(currentView.myHand, currentView.okeyTile, isMyTurnAndDrawn());
 }
 function isMyTurnAndDrawn(){
   return currentView && !currentView.gameOver && currentView.turnIndex===currentView.myIndex && currentView.hasDrawn;
@@ -1433,9 +1533,11 @@ function isMyTurnNotDrawn(){
   return currentView && !currentView.gameOver && currentView.turnIndex===currentView.myIndex && !currentView.hasDrawn;
 }
 
+
 function renderGameFromState(view){
   currentView = view;
   if(!view.gameOver) gameOverStatsRecorded=false;
+  if(view.dealSeq!==lastDealSeq){ tileSlotMap={}; lastDiscardTileId=undefined; lastDealSeq=view.dealSeq; }
 
   var order=[0,1,2,3].map(function(i){ return (view.myIndex+i)%4; });
   for(var slotPos=0; slotPos<4; slotPos++){
