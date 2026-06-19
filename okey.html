@@ -201,12 +201,54 @@ input[type=text]:focus{border-color:var(--amber)}
 .inv-popup p{font-size:11px;color:var(--txt2);margin-bottom:.8rem}
 .inv-popup .ipb{display:flex;gap:.4rem;justify-content:center}
 
+/* Kurallar */
+.rules-fab-inline{background:transparent;border:1px solid var(--bdr2);color:var(--txt2);font-size:11px;font-weight:700;padding:6px 11px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:.3rem}
+.rules-fab-inline:hover{background:var(--bg3);color:var(--txt)}
+.rules-list{font-size:12px;color:var(--txt2);line-height:1.55;padding-left:1.2rem;display:flex;flex-direction:column;gap:.5rem;max-height:58vh;overflow-y:auto;margin:0}
+.rules-list li::marker{color:var(--amber);font-weight:700}
+
+/* Pbox pozisyonlama (reaksiyon balonu icin) + aktif oyuncu nabiz animasyonu */
+.pbox{position:relative}
+.pbox.myturn{animation:turnPulse 1.4s ease-in-out infinite}
+@keyframes turnPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 7px rgba(245,158,11,0)}}
+
+/* Reaksiyonlar */
+.reaction-fab{position:fixed;bottom:1rem;left:8rem;width:42px;height:42px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100}
+.reaction-panel{position:fixed;bottom:4rem;left:8rem;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;z-index:100;display:none;flex-wrap:wrap;gap:.3rem;padding:.5rem;width:150px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.reaction-panel.open{display:flex}
+.reaction-panel button{width:38px;height:38px;border-radius:8px;border:1px solid var(--bdr2);background:var(--bg3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.reaction-panel button:hover{background:var(--bd)}
+.reaction-bubble{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:24px;pointer-events:none;animation:reactFloat 1.6s ease-out forwards;z-index:50}
+@keyframes reactFloat{0%{opacity:0;transform:translate(-50%,4px) scale(.5)}15%{opacity:1;transform:translate(-50%,-6px) scale(1.2)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-36px) scale(1)}}
+
+/* Host yonetimi */
+.host-admin{border-top:1px solid var(--bdr);padding-top:.65rem;margin-top:.1rem;display:flex;flex-direction:column;gap:.5rem}
+.host-admin-title{font-size:11px;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.host-player-row{display:flex;align-items:center;gap:.35rem;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;padding:.4rem .5rem}
+.host-player-row .hp-name{flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hp-btn{border:none;border-radius:6px;font-size:10px;font-weight:700;padding:5px 7px;cursor:pointer;flex-shrink:0}
+.hp-warn{background:var(--ad);color:var(--amber)}
+.hp-mute{background:var(--bdr2);color:var(--txt2)}
+.hp-mute.active{background:var(--red);color:#fff}
+.hp-kick{background:var(--rd);color:var(--red)}
+
+/* Uyari flas */
+.warn-flash{animation:warnFlash .35s ease 4}
+@keyframes warnFlash{0%,100%{filter:none}50%{filter:brightness(1.8) saturate(1.6)}}
+
+/* Yeniden baglanma rozeti */
+.disc-tag{color:var(--red);font-size:9px;font-weight:700}
+.reconnect-banner{display:none;position:fixed;top:0;left:0;right:0;background:var(--red);color:#fff;font-size:12px;font-weight:700;padding:8px 10px;align-items:center;justify-content:center;gap:.5rem;z-index:3000}
+.reconnect-banner.show{display:flex}
+
 @media(max-width:600px){
   .tile{width:30px;height:42px}
   .tile .tn{font-size:11px}
   .hand-slot{width:24px;height:42px}
   .pbox{min-width:60px}
   .center-info{gap:.4rem;padding:.4rem .5rem}
+  .reaction-fab{left:auto;right:4.5rem}
+  .reaction-panel{left:auto;right:4.5rem}
 }
 @media(max-width:400px){
   .tile{width:25px;height:35px}
@@ -217,8 +259,10 @@ input[type=text]:focus{border-color:var(--amber)}
 </style>
 </head>
 <body>
+<div id="reconnectBanner" class="reconnect-banner"><div class="spin" style="border-color:#fff;border-top-color:transparent"></div><span id="reconnectBannerTxt"></span></div>
 <header>
   <a href="index.html" class="logo">🀄 Okey</a>
+  <button class="rules-fab-inline" onclick="openRules()">📖 Kurallar</button>
   <div id="hbadge"></div>
 </header>
 
@@ -318,12 +362,22 @@ input[type=text]:focus{border-color:var(--amber)}
       <div class="controls">
         <button class="btn btn-blue" onclick="sortHandByColor()">Renge Göre</button>
         <button class="btn btn-blue" onclick="sortHandByNum()">Sayıya Göre</button>
+        <button class="btn btn-blue" onclick="sortHandSmart()">🧠 Otomatik Diz</button>
         <button class="btn btn-green" id="btnAc" onclick="tryOpen()" disabled>🏆 AÇ!</button>
         <button class="btn bo" style="font-size:11px;padding:6px 10px" onclick="backToLobby()">Çık</button>
       </div>
       <div class="hand-rack" id="myHand"></div>
       <div id="myHint" style="font-size:10px;color:var(--txt3);text-align:center"></div>
     </div>
+  </div>
+  <button class="reaction-fab" onclick="toggleReactionPanel()">😀</button>
+  <div class="reaction-panel" id="reactionPanel">
+    <button onclick="sendReaction('👏')">👏</button>
+    <button onclick="sendReaction('😮')">😮</button>
+    <button onclick="sendReaction('😂')">😂</button>
+    <button onclick="sendReaction('🔥')">🔥</button>
+    <button onclick="sendReaction('😢')">😢</button>
+    <button onclick="sendReaction('👍')">👍</button>
   </div>
 </div>
 
@@ -361,7 +415,45 @@ input[type=text]:focus{border-color:var(--amber)}
       <span class="setting-label">Tema</span>
       <div class="seg"><button id="themeDark" class="active" onclick="setTheme('dark')">Koyu</button><button id="themeLight" onclick="setTheme('light')">Aydınlık</button></div>
     </div>
+    <button class="btn bo bfull" onclick="openOkeyStats()">📊 İstatistiklerim</button>
+    <div class="host-admin" id="hostAdminSection" style="display:none">
+      <div class="host-admin-title">🛠 Host Yönetimi</div>
+      <div class="setting-row"><span class="setting-label">Sohbeti tamamen kapat</span><button class="toggle" id="togChatOff" onclick="toggleChatDisabled()"></button></div>
+      <div id="hostPlayerAdminList"></div>
+    </div>
     <button class="btn bo bfull" onclick="closeSettings()">Kapat</button>
+  </div>
+</div>
+
+<!-- KURALLAR -->
+<div class="settings-overlay" id="rulesOverlay" onclick="closeRulesOutside(event)">
+  <div class="settings-panel" style="max-width:400px;text-align:left">
+    <h3>📖 Okey'in 10 Temel Kuralı</h3>
+    <ol class="rules-list">
+      <li>106 taş: 4 renk (kırmızı, sarı, mavi, siyah) 1-13 arası ikişer taş + 2 sahte joker.</li>
+      <li>Gösterge taşı çekilir; göstergenin bir üst sayısı (aynı renk) o elin OKEY'idir (13 ise 1 olur).</li>
+      <li>Okey taşı ve sahte jokerler her taşın yerine geçebilen joker (wildcard)'dır.</li>
+      <li>Başlayan oyuncu 15 taşla başlar, diğer 3 oyuncu 14 taşla oynar.</li>
+      <li>Her turda: önce desteden çek YA DA ortadaki atılan taşı al, sonra elinden bir taş at.</li>
+      <li>Kazanmak için 14 taşın hepsi SERİ (aynı renk, ardışık 3+ sayı) veya TAKIM (aynı sayı, 3-4 farklı renk) gruplarına ayrılmalı.</li>
+      <li>"Çift Okey": Okey taşını joker değil kendi gerçek değeriyle kullanarak açmak — normalden daha değerli bir kazanım.</li>
+      <li>"Çift" (7 Çift): 14 taşı 7 ikili (aynı renk+sayı) hâline getirerek kazanma; okey herhangi biriyle eşleşip çift sayılabilir.</li>
+      <li>Atılan taşı sadece sıradaki oyuncu alabilir; almazsa kendi taşını destekten çekmek zorundadır.</li>
+      <li>Deste taşı biter ve hiç kimse açamazsa el berabere sayılır, yeni el dağıtılır.</li>
+    </ol>
+    <button class="btn bo bfull" onclick="closeRules()">Kapat</button>
+  </div>
+</div>
+
+<!-- ISTATISTIKLER -->
+<div class="settings-overlay" id="statsOverlay" onclick="closeStatsOutside(event)">
+  <div class="settings-panel">
+    <h3>📊 Okey İstatistiklerim</h3>
+    <div class="setting-row"><span class="setting-label">Toplam Oyun</span><span id="statTotal" style="font-weight:700">0</span></div>
+    <div class="setting-row"><span class="setting-label">Kazanma Oranı</span><span id="statWinRate" style="font-weight:700;color:var(--green)">0%</span></div>
+    <div class="setting-row"><span class="setting-label">En Çok Açılan Tip</span><span id="statBestType" style="font-weight:700">-</span></div>
+    <div class="setting-row"><span class="setting-label">Ortalama El Süresi</span><span id="statAvgTime" style="font-weight:700">-</span></div>
+    <button class="btn bo bfull" onclick="closeStats()">Kapat</button>
   </div>
 </div>
 
@@ -604,7 +696,13 @@ var clientConns=[null,null,null]; // host'un 3 joinere olan baglantilari (index:
 var myPlayerIndex=-1;        // 0=host, 1-3=joiner sirasi
 var isHost=false;
 var roomCode='';
-var players=[null,null,null,null]; // {name,profile,userId,connected}
+var players=[null,null,null,null]; // {name,profile,userId,connected,disconnected}
+var disconnectedSlots={}; // host: slot(1-3) -> {timeoutId,name,userId} kopan ama yeniden baglanma penceresinde olan oyuncu
+var RECONNECT_GRACE_MS = 45000;
+var chatDisabled=false;     // host: sohbet herkese kapali mi
+var mutedSlots={};          // host: slot(1-3) -> true ise o oyuncu susturulmus
+var intentionalLeave=false; // istemli cikis (kullanici Iptal/Cik dedi) -> otomatik yeniden baglanma denenmesin
+var reconnectInProgress=false;
 var soundOn = (localStorage.getItem('okeySound')!=='0');
 var uiSettings = { theme: localStorage.getItem('okeyTheme')||'dark' };
 var currentInvite = null;
@@ -666,6 +764,7 @@ function setTheme(t){
 function openSettings(){
   document.getElementById('settingsOverlay').classList.add('open');
   document.getElementById('togSound').classList.toggle('on', soundOn);
+  renderHostAdminPanel();
 }
 function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
 function closeSettingsOutside(e){ if(e.target.id==='settingsOverlay') closeSettings(); }
@@ -677,6 +776,37 @@ function toggleSetting(key){
     if(soundOn) sndChat();
   }
 }
+
+// ── KURALLAR ─────────────────────────────────────────────
+function openRules(){ document.getElementById('rulesOverlay').classList.add('open'); }
+function closeRules(){ document.getElementById('rulesOverlay').classList.remove('open'); }
+function closeRulesOutside(e){ if(e.target.id==='rulesOverlay') closeRules(); }
+
+// ── MAÇ İSTATİSTİKLERİ ───────────────────────────────────
+var winTypeCounts = JSON.parse(localStorage.getItem('admiralOkeyWinTypes') || '{"normal":0,"ciftokey":0,"cift":0}');
+var totalHandTimeMs = parseInt(localStorage.getItem('admiralOkeyHandTimeMs') || '0');
+var handCount = parseInt(localStorage.getItem('admiralOkeyHandCount') || '0');
+var handStartTs = null;
+function saveOkeyExtraStats(){
+  localStorage.setItem('admiralOkeyWinTypes', JSON.stringify(winTypeCounts));
+  localStorage.setItem('admiralOkeyHandTimeMs', totalHandTimeMs);
+  localStorage.setItem('admiralOkeyHandCount', handCount);
+}
+function openOkeyStats(){
+  var total = okeyWins+okeyLosses;
+  var winRate = total>0 ? Math.round(okeyWins/total*100) : 0;
+  var avgSec = handCount>0 ? Math.round(totalHandTimeMs/handCount/1000) : 0;
+  var typeNames={normal:'Normal', ciftokey:'Çift Okey', cift:'7 Çift'};
+  var best='-', bestCount=0;
+  Object.keys(winTypeCounts).forEach(function(k){ if(winTypeCounts[k]>bestCount){ bestCount=winTypeCounts[k]; best=typeNames[k]||k; } });
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statWinRate').textContent = winRate+'%';
+  document.getElementById('statBestType').textContent = bestCount>0 ? (best+' ('+bestCount+')') : '-';
+  document.getElementById('statAvgTime').textContent = avgSec>0 ? (avgSec+' sn') : '-';
+  document.getElementById('statsOverlay').classList.add('open');
+}
+function closeStats(){ document.getElementById('statsOverlay').classList.remove('open'); }
+function closeStatsOutside(e){ if(e.target.id==='statsOverlay') closeStats(); }
 
 // ── SUPABASE HESAP SISTEMI (diger oyunlarla PAYLASILAN) ────
 var SUPABASE_URL = 'https://pxfiltovwkbupapepody.supabase.co';
@@ -1179,31 +1309,59 @@ function doCreate(){
     }
   });
   peer.on('connection', function(c){
-    var slot = players.findIndex(function(p,i){ return i>0 && p===null; });
-    if(slot===-1){ // oda dolu
-      c.on('open', function(){ c.send(JSON.stringify({type:'room_full'})); setTimeout(function(){try{c.close();}catch(e){}},500); });
-      return;
-    }
     c.on('data', function(raw){
       var msg = typeof raw==='string'?JSON.parse(raw):raw;
       if(msg.type==='hello'){
+        var slot=-1, wasReconnect=false;
+        if(msg.userId){
+          for(var i=1;i<4;i++){
+            if(disconnectedSlots[i] && players[i] && players[i].userId===msg.userId){ slot=i; wasReconnect=true; break; }
+          }
+        }
+        if(slot===-1){ slot = players.findIndex(function(p,idx){ return idx>0 && p===null; }); }
+        if(slot===-1){
+          c.send(JSON.stringify({type:'room_full'}));
+          setTimeout(function(){try{c.close();}catch(e){}},500);
+          return;
+        }
+        if(wasReconnect){ clearTimeout(disconnectedSlots[slot].timeoutId); delete disconnectedSlots[slot]; }
         players[slot] = {name:msg.name, profile:msg.profile, userId:msg.userId};
         clientConns[slot-1] = c;
         renderPlayersList();
         broadcastLobby();
+        if(wasReconnect){
+          addSysChat((msg.name||'Oyuncu')+' yeniden ba\u011fland\u0131.');
+          if(gameState){
+            try{ c.send(JSON.stringify(buildViewFor(slot))); }catch(e){}
+            try{ c.send(JSON.stringify({type:'moderation', chatDisabled:chatDisabled, mutedSlots:mutedSlots})); }catch(e){}
+          }
+        }
       } else {
-        handleHostMessage(slot, msg);
+        var sIdx = clientConns.indexOf(c)+1;
+        if(sIdx>0) handleHostMessage(sIdx, msg);
       }
     });
     c.on('close', function(){
-      if(players[slot]){
-        addSysChat((players[slot].name||'Oyuncu')+' baglantisi kesildi.');
-        if(gameState && !gameState.gameOver){
-          gameState.gameOver=true; gameState.winner=-1; gameState.winType='abandoned';
-          broadcastState();
-        }
-        players[slot]=null; clientConns[slot-1]=null;
+      var slot = clientConns.indexOf(c)+1;
+      if(slot>0 && players[slot]){
+        var pname = players[slot].name || 'Oyuncu';
+        players[slot].disconnected = true;
+        clientConns[slot-1]=null;
+        addSysChat(pname+' ba\u011flant\u0131s\u0131 kesildi, yeniden ba\u011flanmas\u0131 bekleniyor...');
         renderPlayersList(); broadcastLobby();
+        if(gameState && !gameState.gameOver) broadcastState();
+        disconnectedSlots[slot] = { name:pname, userId:players[slot]?players[slot].userId:null, timeoutId: setTimeout(function(){
+          delete disconnectedSlots[slot];
+          if(players[slot] && players[slot].disconnected){
+            addSysChat(pname+' geri ba\u011flanamad\u0131, oyundan \u00e7\u0131kar\u0131ld\u0131.');
+            if(gameState && !gameState.gameOver){
+              gameState.gameOver=true; gameState.winner=-1; gameState.winType='abandoned';
+              broadcastState();
+            }
+            players[slot]=null; clientConns[slot-1]=null; delete mutedSlots[slot];
+            renderPlayersList(); broadcastLobby();
+          }
+        }, RECONNECT_GRACE_MS) };
       }
     });
   });
@@ -1214,25 +1372,65 @@ function doJoin(){
   var name=getName(); if(!name) return;
   var code=document.getElementById('inCode').value.trim().toUpperCase();
   if(code.length!==4){ showLobErr('4 harfli oda kodu gir.'); return; }
-  myName=name; isHost=false; roomCode=code;
+  myName=name; isHost=false; roomCode=code; intentionalLeave=false;
   setBtns(true); showInfo('Odaya baglaniliyor...');
+  connectToHost(code, false);
+}
+
+function connectToHost(code, isReconnectAttempt){
   peer = new Peer(undefined, {debug:0, config:{iceServers:[{urls:'stun:stun.l.google.com:19302'}]}});
   peer.on('open', function(){
     hostConn = peer.connect(code, {reliable:true, serialization:'json'});
     hostConn.on('open', function(){
-      hideInfo(); setBtns(false);
+      hideInfo(); setBtns(false); reconnectInProgress=false; hideReconnectBanner();
       setHBadge('Oda: '+code);
       hostConn.send(JSON.stringify({type:'hello', name:myName, profile:myProfile, userId:myUserId}));
-      showScreen('sWait');
+      try{ sessionStorage.setItem('okeySession', JSON.stringify({roomCode:code, isHost:false, name:myName})); }catch(e){}
+      if(!isReconnectAttempt) showScreen('sWait');
     });
     hostConn.on('data', function(raw){ handleClientMessage(typeof raw==='string'?JSON.parse(raw):raw); });
     hostConn.on('close', function(){
-      alert('Host ile baglanti kesildi.');
-      backToLobby();
+      if(intentionalLeave) return;
+      scheduleReconnectAttempt(code);
     });
-    hostConn.on('error', function(){ hideInfo(); setBtns(false); showLobErr('Odaya baglanilamadi. Kodu kontrol et.'); });
+    hostConn.on('error', function(){
+      if(isReconnectAttempt){ scheduleReconnectAttempt(code); }
+      else { hideInfo(); setBtns(false); showLobErr('Odaya baglanilamadi. Kodu kontrol et.'); try{ sessionStorage.removeItem('okeySession'); }catch(e){} }
+    });
   });
-  peer.on('error', function(e){ hideInfo(); setBtns(false); showLobErr('Baglanti hatasi: '+(e&&e.type?e.type:'')); });
+  peer.on('error', function(e){
+    if(isReconnectAttempt){ scheduleReconnectAttempt(code); }
+    else { hideInfo(); setBtns(false); showLobErr('Baglanti hatasi: '+(e&&e.type?e.type:'')); }
+  });
+}
+
+function showReconnectBanner(text){
+  var b=document.getElementById('reconnectBanner'); if(!b) return;
+  document.getElementById('reconnectBannerTxt').textContent=text;
+  b.classList.add('show');
+}
+function hideReconnectBanner(){
+  var b=document.getElementById('reconnectBanner'); if(b) b.classList.remove('show');
+}
+
+var reconnectAttemptsLeft=0;
+function scheduleReconnectAttempt(code){
+  if(isHost || intentionalLeave) return;
+  if(!reconnectInProgress){ reconnectInProgress=true; reconnectAttemptsLeft=6; }
+  showReconnectBanner('\u26a0 Ba\u011flant\u0131 kesildi, yeniden ba\u011flan\u0131l\u0131yor... ('+(reconnectAttemptsLeft)+')');
+  if(reconnectAttemptsLeft<=0){
+    reconnectInProgress=false;
+    try{ sessionStorage.removeItem('okeySession'); }catch(e){}
+    hideReconnectBanner();
+    alert('Ba\u011flant\u0131 yeniden kurulamad\u0131. Lobiye d\u00f6n\u00fcl\u00fcyor.');
+    backToLobby();
+    return;
+  }
+  reconnectAttemptsLeft--;
+  setTimeout(function(){
+    try{ if(peer) peer.destroy(); }catch(e){}
+    connectToHost(code, true);
+  }, 2000);
 }
 
 function broadcastLobby(){
@@ -1250,7 +1448,7 @@ function renderPlayersList(){
     var div=document.createElement('div');
     div.className='pslot'+(p?' filled':'')+(i===myPlayerIndex?' me':'');
     if(p){
-      div.innerHTML='<span class="pe">'+getEmojiChar(p.profile?p.profile.emoji:'ship')+'</span><div><div class="pn">'+escapeHtml(p.name)+(i===myPlayerIndex?' (Sen)':'')+'</div><div class="ps">Oyuncu '+(i+1)+'</div></div>';
+      div.innerHTML='<span class="pe">'+getEmojiChar(p.profile?p.profile.emoji:'ship')+'</span><div><div class="pn">'+escapeHtml(p.name)+(i===myPlayerIndex?' (Sen)':'')+(p.disconnected?' <span class="disc-tag">\u26a0 kopuk</span>':'')+'</div><div class="ps">Oyuncu '+(i+1)+'</div></div>';
     } else {
       div.innerHTML='<span class="pe">&#9201;</span><div><div class="pn" style="color:var(--txt3)">Bekleniyor...</div><div class="ps">Oyuncu '+(i+1)+'</div></div>';
     }
@@ -1263,13 +1461,17 @@ function renderPlayersList(){
   document.getElementById('waitStatus').textContent = players.every(function(p){return p;}) ?
     (isHost?'Tum oyuncular hazir, baslatabilirsin!':'Tum oyuncular hazir, host baslatmasini bekle...') :
     'Oyuncular bekleniyor... ('+players.filter(function(p){return p;}).length+'/4)';
+  renderHostAdminPanel();
 }
 function escapeHtml(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
 function backToLobby(){
+  intentionalLeave=true; reconnectInProgress=false; reconnectAttemptsLeft=0;
+  hideReconnectBanner();
   try{ if(peer) peer.destroy(); }catch(e){}
   peer=null; hostConn=null; clientConns=[null,null,null]; myPlayerIndex=-1; isHost=false; roomCode='';
-  players=[null,null,null,null]; gameState=null;
+  players=[null,null,null,null]; gameState=null; disconnectedSlots={}; chatDisabled=false; mutedSlots={};
+  try{ sessionStorage.removeItem('okeySession'); }catch(e){}
   document.getElementById('hbadge').style.display='none';
   document.getElementById('resultOverlay').classList.remove('open');
   showScreen('sLobby'); setBtns(false); hideInfo(); showLobErr('');
@@ -1296,7 +1498,10 @@ function handleHostMessage(slot, msg){
       try{ clientConns[slot-1].send(JSON.stringify({type:'open_failed'})); }catch(e){}
     }
   } else if(msg.type==='chat'){
+    if(chatDisabled || mutedSlots[slot]) return;
     relayChat(players[slot]?players[slot].name:'Oyuncu', msg.text);
+  } else if(msg.type==='reaction'){
+    relayReaction(slot, msg.emoji);
   } else if(msg.type==='rematch_request'){
     hostRematch();
   }
@@ -1306,6 +1511,77 @@ function relayChat(fromName, text){
   addChatMsg(fromName, text, false);
   var out = JSON.stringify({type:'chat', from:fromName, text:text});
   clientConns.forEach(function(c){ if(c){ try{ c.send(out); }catch(e){} } });
+}
+
+// ── HOST YONETIMI (at/uyar/sustur/sohbeti kapat) ────────────
+function renderHostAdminPanel(){
+  var sec=document.getElementById('hostAdminSection'); if(!sec) return;
+  if(!isHost){ sec.style.display='none'; return; }
+  sec.style.display='flex';
+  var tog=document.getElementById('togChatOff'); if(tog) tog.classList.toggle('on', !!chatDisabled);
+  var list=document.getElementById('hostPlayerAdminList'); if(!list) return;
+  list.innerHTML='';
+  for(var i=1;i<=3;i++){
+    var p=players[i]; if(!p) continue;
+    var row=document.createElement('div');
+    row.className='host-player-row';
+    var muted=!!mutedSlots[i];
+    row.innerHTML = '<span class="hp-name">'+escapeHtml(p.name)+(p.disconnected?' \u26a0':'')+'</span>'+
+      '<button class="hp-btn hp-warn" onclick="hostWarnPlayer('+i+')">\u23f0 Uyar</button>'+
+      '<button class="hp-btn hp-mute'+(muted?' active':'')+'" onclick="hostToggleMute('+i+')">'+(muted?'\ud83d\udd07':'\ud83d\udd0a')+'</button>'+
+      '<button class="hp-btn hp-kick" onclick="hostKickPlayer('+i+')">\u26d4 At</button>';
+    list.appendChild(row);
+  }
+}
+function toggleChatDisabled(){
+  if(!isHost) return;
+  chatDisabled = !chatDisabled;
+  addSysChat(chatDisabled ? 'Host sohbeti kapatt\u0131.' : 'Host sohbeti yeniden a\u00e7t\u0131.');
+  broadcastModerationState();
+  renderHostAdminPanel();
+}
+function hostToggleMute(slot){
+  if(!isHost) return;
+  mutedSlots[slot] = !mutedSlots[slot];
+  addSysChat((players[slot]?players[slot].name:'Oyuncu')+(mutedSlots[slot]?' susturuldu.':' susturmas\u0131 kald\u0131r\u0131ld\u0131.'));
+  broadcastModerationState();
+  renderHostAdminPanel();
+}
+function hostWarnPlayer(slot){
+  if(!isHost || slot<1 || slot>3) return;
+  var c=clientConns[slot-1];
+  if(c){ try{ c.send(JSON.stringify({type:'warned'})); }catch(e){} }
+  addSysChat('Host, '+(players[slot]?players[slot].name:'oyuncuyu')+' h\u0131zlanmas\u0131 i\u00e7in uyard\u0131.');
+}
+function hostKickPlayer(slot){
+  if(!isHost || slot<1 || slot>3) return;
+  var pname = players[slot] ? players[slot].name : 'Bu oyuncu';
+  if(!confirm(pname+' oyundan at\u0131ls\u0131n m\u0131?')) return;
+  var c=clientConns[slot-1];
+  if(c){ try{ c.send(JSON.stringify({type:'kicked'})); }catch(e){} setTimeout(function(){ try{c.close();}catch(e){} }, 200); }
+  if(disconnectedSlots[slot]){ clearTimeout(disconnectedSlots[slot].timeoutId); delete disconnectedSlots[slot]; }
+  addSysChat(pname+' host taraf\u0131ndan oyundan at\u0131ld\u0131.');
+  players[slot]=null; clientConns[slot-1]=null; delete mutedSlots[slot];
+  if(gameState && !gameState.gameOver){
+    gameState.gameOver=true; gameState.winner=-1; gameState.winType='abandoned';
+    broadcastState();
+  }
+  renderPlayersList(); broadcastLobby(); broadcastModerationState();
+}
+function broadcastModerationState(){
+  var msg = JSON.stringify({type:'moderation', chatDisabled:chatDisabled, mutedSlots:mutedSlots});
+  clientConns.forEach(function(c){ if(c){ try{ c.send(msg); }catch(e){} } });
+  applyModerationUI();
+}
+function applyModerationUI(){
+  var amMuted = !isHost && mutedSlots[myPlayerIndex];
+  var disabled = chatDisabled || amMuted;
+  var inp=document.getElementById('chatInput');
+  if(inp){
+    inp.disabled = !!disabled;
+    inp.placeholder = chatDisabled ? 'Sohbet kapat\u0131ld\u0131' : (amMuted ? 'Sohbette susturuldun' : 'Mesaj...');
+  }
+  document.querySelectorAll('.chat-input-row button').forEach(function(b){ b.disabled = !!disabled; });
 }
 
 function buildViewFor(idx){
@@ -1373,6 +1649,21 @@ function handleClientMessage(msg){
     renderGameFromState(msg);
   } else if(msg.type==='chat'){
     addChatMsg(msg.from, msg.text, false);
+  } else if(msg.type==='reaction'){
+    showReaction(msg.from, msg.emoji);
+  } else if(msg.type==='moderation'){
+    chatDisabled = !!msg.chatDisabled;
+    mutedSlots = msg.mutedSlots || {};
+    applyModerationUI();
+  } else if(msg.type==='warned'){
+    sndTurn();
+    var bar=document.getElementById('turnBar');
+    if(bar){ bar.classList.add('warn-flash'); setTimeout(function(){ bar.classList.remove('warn-flash'); }, 1600); }
+    alert('\u23f0 Host seni h\u0131zlanman i\u00e7in uyard\u0131! S\u0131ra sende, l\u00fctfen oyna.');
+  } else if(msg.type==='kicked'){
+    intentionalLeave=true;
+    alert('Host taraf\u0131ndan odadan \u00e7\u0131kar\u0131ld\u0131n.');
+    backToLobby();
   } else if(msg.type==='open_failed'){
     alert('Hen\u00fcz a\u00e7am\u0131yorsun, ge\u00e7erli bir el yok.');
   }
@@ -1522,6 +1813,58 @@ function sortHandByNum(){
   sorted.forEach(function(t,i){ tileSlotMap[t.id]=i; });
   renderMyHand(currentView.myHand, currentView.okeyTile, isMyTurnAndDrawn());
 }
+
+// ── AKILLI EL DIZME (Otomatik Diz) ──────────────────────────
+// Eldeki tasları mümkün olduğunca SERİ ve TAKIM gruplarına ayırıp
+// gruplanmamış taşları ve jokerleri sona ekleyen sezgisel dizici.
+function suggestHandOrder(hand, okeyTile){
+  var wild=[], normal=[];
+  hand.forEach(function(t){ if(isOkeyTile(t,okeyTile)) wild.push(t); else normal.push(t); });
+
+  var groups=[];
+  var leftover = normal.slice();
+
+  // 1) Renk bazlı SERİLER (ardışık 3+ sayı)
+  COLORS.forEach(function(color){
+    var arr = leftover.filter(function(t){ return t.color===color; }).sort(function(a,b){ return a.num-b.num; });
+    leftover = leftover.filter(function(t){ return t.color!==color; });
+    var i=0;
+    while(i<arr.length){
+      var run=[arr[i]], j=i+1;
+      while(j<arr.length && arr[j].num===run[run.length-1].num+1){ run.push(arr[j]); j++; }
+      if(run.length>=3) groups.push(run); else leftover = leftover.concat(run);
+      i=j;
+    }
+  });
+
+  // 2) Kalanlardan sayı bazlı TAKIMLAR (aynı sayı, 3-4 farklı renk)
+  var byNum={};
+  leftover.forEach(function(t){ (byNum[t.num]=byNum[t.num]||[]).push(t); });
+  var leftover2=[];
+  Object.keys(byNum).sort(function(a,b){ return a-b; }).forEach(function(numKey){
+    var arr=byNum[numKey];
+    var seen={}, uniq=[];
+    arr.forEach(function(t){ if(!seen[t.color]){ seen[t.color]=true; uniq.push(t); } });
+    var rest = arr.filter(function(t){ return uniq.indexOf(t)===-1; });
+    if(uniq.length>=3){ groups.push(uniq); leftover2=leftover2.concat(rest); }
+    else leftover2 = leftover2.concat(arr);
+  });
+
+  groups.sort(function(a,b){ return b.length-a.length; });
+  leftover2.sort(function(a,b){ var ci=COLORS.indexOf(a.color)-COLORS.indexOf(b.color); return ci!==0?ci:(a.num-b.num); });
+
+  var finalOrder=[];
+  groups.forEach(function(g){ finalOrder=finalOrder.concat(g); });
+  finalOrder = finalOrder.concat(leftover2).concat(wild);
+  return finalOrder;
+}
+function sortHandSmart(){
+  if(!currentView) return;
+  var ordered = suggestHandOrder(currentView.myHand, currentView.okeyTile);
+  tileSlotMap = {};
+  ordered.forEach(function(t,i){ tileSlotMap[t.id]=i; });
+  renderMyHand(currentView.myHand, currentView.okeyTile, isMyTurnAndDrawn());
+}
 function isMyTurnAndDrawn(){
   return currentView && !currentView.gameOver && currentView.turnIndex===currentView.myIndex && currentView.hasDrawn;
 }
@@ -1533,17 +1876,18 @@ function isMyTurnNotDrawn(){
 function renderGameFromState(view){
   currentView = view;
   if(!view.gameOver) gameOverStatsRecorded=false;
-  if(view.dealSeq!==lastDealSeq){ tileSlotMap={}; lastDiscardTileId=undefined; lastDealSeq=view.dealSeq; }
+  if(view.dealSeq!==lastDealSeq){ tileSlotMap={}; lastDiscardTileId=undefined; lastDealSeq=view.dealSeq; handStartTs=Date.now(); }
 
   var order=[0,1,2,3].map(function(i){ return (view.myIndex+i)%4; });
   for(var slotPos=0; slotPos<4; slotPos++){
     var realIdx=order[slotPos];
     var p=view.players[realIdx];
     var nameEl=document.getElementById('pn'+slotPos), cntEl=document.getElementById('pc'+slotPos), boxEl=document.getElementById('pbox'+slotPos);
-    if(nameEl) nameEl.textContent = slotPos===0 ? (myName||'Sen') : (p?p.name:'---');
+    if(nameEl) nameEl.textContent = slotPos===0 ? (myName||'Sen') : ((p?p.name:'---')+(p&&p.disconnected?' \u26a0':''));
     if(cntEl) cntEl.textContent = view.seatCounts[realIdx];
     if(boxEl) boxEl.classList.toggle('myturn', view.turnIndex===realIdx);
   }
+  applyModerationUI();
   var sv1=document.getElementById('sv1'), sv3=document.getElementById('sv3');
   if(sv1) sv1.innerHTML = view.seatCounts[order[1]]>0 ? '<div class="tile face-down" style="width:26px;height:36px"></div>' : '';
   if(sv3) sv3.innerHTML = view.seatCounts[order[3]]>0 ? '<div class="tile face-down" style="width:26px;height:36px"></div>' : '';
@@ -1589,9 +1933,10 @@ function renderGameFromState(view){
 
   if(view.gameOver && !gameOverStatsRecorded){
     gameOverStatsRecorded=true;
-    if(view.winner===view.myIndex){ okeyWins++; goldCoins+=80; sndWin(); }
+    if(view.winner===view.myIndex){ okeyWins++; goldCoins+=80; sndWin(); if(view.winType) winTypeCounts[view.winType]=(winTypeCounts[view.winType]||0)+1; }
     else if(view.winner!==-1){ okeyLosses++; }
-    saveOkeyStats(); syncAccountToCloud();
+    if(handStartTs){ totalHandTimeMs += (Date.now()-handStartTs); handCount++; handStartTs=null; }
+    saveOkeyStats(); saveOkeyExtraStats(); syncAccountToCloud();
     showResultOverlay(view);
   }
 }
@@ -1662,11 +2007,36 @@ function addSysChat(text){
   if(log){ var p=document.createElement('p'); p.className='sys'; p.textContent=text; log.appendChild(p); log.scrollTop=log.scrollHeight; }
 }
 function sendChat(){
+  if(chatDisabled || (!isHost && mutedSlots[myPlayerIndex])) return;
   var inp=document.getElementById('chatInput');
   var txt=inp.value.trim(); if(!txt) return;
   inp.value='';
   if(isHost){ relayChat(myName, txt); }
   else { send({type:'chat', text:txt}); addChatMsg(myName, txt, true); }
+}
+
+// ── REAKSİYONLAR ─────────────────────────────────────────
+function toggleReactionPanel(){ document.getElementById('reactionPanel').classList.toggle('open'); }
+function sendReaction(emoji){
+  document.getElementById('reactionPanel').classList.remove('open');
+  if(isHost){ relayReaction(myPlayerIndex, emoji); }
+  else { send({type:'reaction', emoji:emoji}); }
+}
+function showReaction(fromSlot, emoji){
+  if(!currentView) return;
+  var slotPos = ((fromSlot - currentView.myIndex)+4)%4;
+  var boxEl = document.getElementById('pbox'+slotPos);
+  if(!boxEl) return;
+  var bubble=document.createElement('div');
+  bubble.className='reaction-bubble';
+  bubble.textContent=emoji;
+  boxEl.appendChild(bubble);
+  setTimeout(function(){ try{ bubble.remove(); }catch(e){} }, 1600);
+}
+function relayReaction(fromSlot, emoji){
+  showReaction(fromSlot, emoji);
+  var out = JSON.stringify({type:'reaction', from:fromSlot, emoji:emoji});
+  clientConns.forEach(function(c){ if(c){ try{ c.send(out); }catch(e){} } });
 }
 
 // ── BASLANGIC ─────────────────────────────────────────────
@@ -1686,10 +2056,17 @@ loadAccount().then(function(){
   var params = new URLSearchParams(window.location.search);
   var urlCode = params.get('code');
   var urlName = params.get('name');
+  var savedSession=null;
+  try{ savedSession = JSON.parse(sessionStorage.getItem('okeySession')||'null'); }catch(e){}
   if(urlCode){
     document.getElementById('inCode').value = urlCode.toUpperCase();
     if(urlName) document.getElementById('inName').value = urlName;
     if(urlName){ setTimeout(function(){ doJoin(); }, 300); }
+  } else if(savedSession && savedSession.roomCode && !savedSession.isHost){
+    document.getElementById('inCode').value = savedSession.roomCode;
+    document.getElementById('inName').value = savedSession.name || myName || '';
+    showInfo('\u00d6nceki odana yeniden ba\u011flan\u0131l\u0131yor...');
+    setTimeout(function(){ doJoin(); }, 300);
   }
 });
 </script>
