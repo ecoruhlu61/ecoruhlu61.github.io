@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 - Tek Kişilik Oyna</title>
+<meta name="description" content="2048 oyununu oyna! Aynı sayılı taşları birleştir, 2048'e ulaş.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--bg2:#111827;--bg3:#1c2536;--surf:#1e2d40;
+  --bdr:#2a3f58;--bdr2:#3a5472;
+  --txt:#e8f0fe;--txt2:#8aa5c2;--txt3:#556a82;
+  --blue:#3b82f6;--bl:#60a5fa;--bd:#1e3a5f;
+  --red:#ef4444;--rd:#3f1515;
+  --amber:#f59e0b;--ad:#3d2a00;
+  --green:#22c55e;--gd:#14331f;
+  --purple:#a78bfa;--pd:#2e1f4d;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;padding:.75rem 2rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:1rem;background:var(--bg2)}
+.logo{font-size:20px;font-weight:700;text-decoration:none;color:var(--txt)}
+main{width:100%;max-width:400px;padding:1.1rem 1rem;flex:1;display:flex;flex-direction:column;align-items:center}
+.hero{text-align:center;margin-bottom:.6rem}
+.hero h1{font-size:30px;font-weight:800;letter-spacing:-1px;margin-bottom:.25rem}
+.hero p{color:var(--txt2);font-size:14px}
+.scores{display:flex;justify-content:center;gap:2.5rem;margin-bottom:.8rem}
+.score-item{text-align:center}
+.score-item .sv{font-size:24px;font-weight:800}
+.score-item .sl{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.board-wrap{position:relative;width:100%;max-width:340px;aspect-ratio:1;background:var(--bg3);border-radius:12px;margin-bottom:.8rem;touch-action:none;border:1px solid var(--bdr)}
+.cell-bg{position:absolute;padding:5px;box-sizing:border-box}
+.cell-bg-inner{width:100%;height:100%;background:var(--surf);border-radius:8px}
+.tile2048-wrap{position:absolute;padding:5px;box-sizing:border-box;z-index:2}
+.tile2048{width:100%;height:100%;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--txt);background:var(--bdr2)}
+.tile2048.spawned{animation:tilePop .18s ease}
+.tile2048.merged{animation:tileMerge .22s ease}
+@keyframes tilePop{0%{transform:scale(0)}80%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes tileMerge{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+.overlay-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.75rem;background:rgba(11,15,26,.86);border-radius:12px;z-index:10;text-align:center;padding:1rem}
+.overlay-msg.hidden{display:none}
+.overlay-msg h3{font-size:22px;font-weight:800}
+.overlay-msg p{font-size:13px;color:var(--txt2)}
+.btn{cursor:pointer;border-radius:10px;font-size:15px;font-weight:700;padding:11px 24px;transition:all .15s;border:1px solid transparent;background:var(--purple);color:#1a1030}
+.btn:hover{background:#bca4fc}
+.btn:active{transform:scale(.97)}
+.btn.bo{background:transparent;color:var(--txt);border-color:var(--bdr2)}
+.btn.bo:hover{background:var(--bg3)}
+.bfull{width:100%}
+.hint{font-size:12px;color:var(--txt3);text-align:center;margin-top:.3rem}
+/* Ayarlar */
+.settings-btn{position:fixed;bottom:1rem;right:1rem;width:48px;height:48px;border-radius:50%;background:var(--surf);border:1px solid var(--bdr2);color:var(--txt2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;transition:all .15s}
+.settings-btn:hover{background:var(--bg3);color:var(--txt)}
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
+.settings-overlay.open{display:flex}
+.settings-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;width:90%;max-width:360px;display:flex;flex-direction:column;gap:1rem}
+.settings-panel h3{font-size:16px;font-weight:600}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--bdr)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;color:var(--txt2)}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--bdr2);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--purple)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.seg{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--bdr2)}
+.seg button{flex:1;padding:5px 10px;border:none;background:transparent;color:var(--txt2);font-size:13px;cursor:pointer}
+.seg button.active{background:var(--purple);color:#1a1030}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">&#128290; 2048</a>
+</header>
+
+<main>
+  <div class="hero">
+    <h1 id="heroTitle">2048</h1>
+    <p id="heroSubtitle">Ayn&#305; say&#305;lar&#305; birle&#351;tir, 2048'e ula&#351;!</p>
+  </div>
+
+  <div class="scores">
+    <div class="score-item"><div class="sv" id="curScore">0</div><div class="sl" id="lblScore">Skor</div></div>
+    <div class="score-item"><div class="sv" id="highScore">0</div><div class="sl" id="lblHighScore">En Y&uuml;ksek</div></div>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="overlay-msg hidden" id="overlayMsg">
+      <h3 id="overlayTitle">Oyun Bitti!</h3>
+      <p id="overlaySub">Skor: 0</p>
+      <button class="btn" id="retryBtn" onclick="startGame()">Tekrar Oyna</button>
+    </div>
+  </div>
+
+  <p class="hint" id="hintTxt">Klavyede ok tu&#351;lar&#305;/WASD kullan veya tahtay&#305; kayd&#305;r</p>
+  <button class="btn bo" id="newGameBtn" onclick="startGame()" style="margin-top:.6rem">Yeni Oyun</button>
+</main>
+
+<button class="settings-btn" onclick="openSettings()" title="Ayarlar">&#9881;</button>
+
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOutside(event)">
+  <div class="settings-panel">
+    <h3 id="settingsTitle">&#9881; Ayarlar</h3>
+    <div class="setting-row">
+      <span class="setting-label" id="lblSound">Ses</span>
+      <button class="toggle" id="togSound" onclick="toggleSetting('sound')"></button>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label" id="lblTheme">Tema</span>
+      <div class="seg">
+        <button id="themeDark" class="active" onclick="setTheme('dark')">Koyu</button>
+        <button id="themeLight" onclick="setTheme('light')">Ayd&#305;nl&#305;k</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label" id="lblLang">Dil</span>
+      <div class="seg">
+        <button id="langTR" class="active" onclick="setLang('TR')">TR</button>
+        <button id="langEN" onclick="setLang('EN')">EN</button>
+      </div>
+    </div>
+    <button class="btn bo bfull" onclick="closeSettings()" id="btnCloseSettings">Kapat</button>
+  </div>
+</div>
+
+<script>
+var SIZE=4;
+var board=[]; // SIZExSIZE, 0=bos
+var score=0, isPlaying=false, hasWon=false;
+var highScore = parseInt(localStorage.getItem('g2048High')||'0');
+var soundOn = (localStorage.getItem('g2048Sound')!=='0');
+var uiSettings = { theme: localStorage.getItem('g2048Theme')||'dark', lang: localStorage.getItem('g2048Lang')||'TR' };
+
+var TILE_COLORS = {
+  2:'#3a5472', 4:'#3d6098', 8:'#f59e0b', 16:'#f97316', 32:'#ef4444', 64:'#dc2626',
+  128:'#eab308', 256:'#facc15', 512:'#fde047', 1024:'#fef08a', 2048:'#ffffff',
+  4096:'#a78bfa', 8192:'#7c3aed'
+};
+function tileTextColor(v){ return v>=128 ? '#1a1030' : '#e8f0fe'; }
+function tileFontSize(v){ return v>=1000 ? '20px' : (v>=100 ? '24px' : '28px'); }
+
+var LANG = {
+  TR: {
+    heroTitle:'2048', heroSubtitle:'Ayn&#305; say&#305;lar&#305; birle&#351;tir, 2048\'e ula&#351;!',
+    lblScore:'Skor', lblHighScore:'En Y&uuml;ksek',
+    hintTxt:'Klavyede ok tu&#351;lar&#305;/WASD kullan veya tahtay&#305; kayd&#305;r',
+    newGame:'Yeni Oyun', retry:'Tekrar Oyna',
+    gameOverTitle:'Oyun Bitti!', gameOverSub:'Skor: {n}',
+    winTitle:'2048\'e Ula&#351;t&#305;n! &#127881;', winSub:'Devam edip daha y&uuml;ksek skor yapabilirsin.', continueBtn:'Devam Et',
+    settingsTitle:'&#9881; Ayarlar', lblSound:'Ses', lblTheme:'Tema', themeDark:'Koyu', themeLight:'Ayd&#305;nl&#305;k', lblLang:'Dil', btnCloseSettings:'Kapat'
+  },
+  EN: {
+    heroTitle:'2048', heroSubtitle:'Merge matching numbers, reach 2048!',
+    lblScore:'Score', lblHighScore:'Best',
+    hintTxt:'Use arrow keys/WASD or swipe the board',
+    newGame:'New Game', retry:'Play Again',
+    gameOverTitle:'Game Over!', gameOverSub:'Score: {n}',
+    winTitle:'You reached 2048! \u{1F389}', winSub:'Keep going for an even higher score.', continueBtn:'Continue',
+    settingsTitle:'&#9881; Settings', lblSound:'Sound', lblTheme:'Theme', themeDark:'Dark', themeLight:'Light', lblLang:'Language', btnCloseSettings:'Close'
+  }
+};
+
+function safeText(id,txt){ var e=document.getElementById(id); if(e) e.innerHTML=txt; }
+function tr(key){ return (LANG[uiSettings.lang]&&LANG[uiSettings.lang][key])!=null ? LANG[uiSettings.lang][key] : key; }
+
+function applyLang(){
+  var L = LANG[uiSettings.lang];
+  safeText('heroTitle', L.heroTitle); safeText('heroSubtitle', L.heroSubtitle);
+  safeText('lblScore', L.lblScore); safeText('lblHighScore', L.lblHighScore);
+  safeText('hintTxt', L.hintTxt); safeText('newGameBtn', L.newGame); safeText('retryBtn', L.retry);
+  safeText('settingsTitle', L.settingsTitle); safeText('lblSound', L.lblSound);
+  safeText('lblTheme', L.lblTheme); safeText('themeDark', L.themeDark); safeText('themeLight', L.themeLight);
+  safeText('lblLang', L.lblLang); safeText('btnCloseSettings', L.btnCloseSettings);
+}
+
+function applyTheme(){
+  if(uiSettings.theme==='light'){
+    document.documentElement.style.setProperty('--bg','#f0f4f8');
+    document.documentElement.style.setProperty('--bg2','#e2e8f0');
+    document.documentElement.style.setProperty('--bg3','#cbd5e1');
+    document.documentElement.style.setProperty('--surf','#ffffff');
+    document.documentElement.style.setProperty('--bdr','#94a3b8');
+    document.documentElement.style.setProperty('--bdr2','#64748b');
+    document.documentElement.style.setProperty('--txt','#0f172a');
+    document.documentElement.style.setProperty('--txt2','#334155');
+    document.documentElement.style.setProperty('--txt3','#64748b');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0b0f1a');
+    document.documentElement.style.setProperty('--bg2','#111827');
+    document.documentElement.style.setProperty('--bg3','#1c2536');
+    document.documentElement.style.setProperty('--surf','#1e2d40');
+    document.documentElement.style.setProperty('--bdr','#2a3f58');
+    document.documentElement.style.setProperty('--bdr2','#3a5472');
+    document.documentElement.style.setProperty('--txt','#e8f0fe');
+    document.documentElement.style.setProperty('--txt2','#8aa5c2');
+    document.documentElement.style.setProperty('--txt3','#556a82');
+  }
+}
+function setTheme(t){
+  uiSettings.theme=t; localStorage.setItem('g2048Theme', t);
+  document.getElementById('themeDark').classList.toggle('active', t==='dark');
+  document.getElementById('themeLight').classList.toggle('active', t==='light');
+  applyTheme();
+}
+function setLang(l){
+  uiSettings.lang=l; localStorage.setItem('g2048Lang', l);
+  document.getElementById('langTR').classList.toggle('active', l==='TR');
+  document.getElementById('langEN').classList.toggle('active', l==='EN');
+  applyLang();
+}
+function openSettings(){
+  document.getElementById('settingsOverlay').classList.add('open');
+  document.getElementById('togSound').classList.toggle('on', soundOn);
+}
+function closeSettings(){ document.getElementById('settingsOverlay').classList.remove('open'); }
+function closeSettingsOutside(e){ if(e.target.id==='settingsOverlay') closeSettings(); }
+function toggleSetting(key){
+  if(key==='sound'){
+    soundOn = !soundOn;
+    localStorage.setItem('g2048Sound', soundOn?'1':'0');
+    document.getElementById('togSound').classList.toggle('on', soundOn);
+    if(soundOn) playTone(440,0.15);
+  }
+}
+
+// ── SES ───────────────────────────────────────────────────
+var AC=null;
+function getAC(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function playTone(freq,dur,type){
+  if(!soundOn) return;
+  var ac=getAC(); if(!ac) return;
+  try{
+    var o=ac.createOscillator(), gn=ac.createGain();
+    o.connect(gn); gn.connect(ac.destination);
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,ac.currentTime);
+    gn.gain.setValueAtTime(0.28,ac.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+(dur||0.2));
+    o.start(); o.stop(ac.currentTime+(dur||0.2));
+  }catch(e){}
+}
+function sndMerge(){ playTone(500,0.08); }
+function sndWin(){ [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){playTone(f,0.25);},i*110); }); }
+function sndGameOver(){ [300,250,200,150].forEach(function(f,i){ setTimeout(function(){playTone(f,0.3,'sawtooth');},i*130); }); }
+
+// ── OYUN MANTIGI ──────────────────────────────────────────
+function emptyCells(){
+  var cells=[];
+  for(var r=0;r<SIZE;r++) for(var c=0;c<SIZE;c++) if(board[r][c]===0) cells.push({r:r,c:c});
+  return cells;
+}
+function spawnTile(){
+  var cells=emptyCells();
+  if(cells.length===0) return null;
+  var cell=cells[Math.floor(Math.random()*cells.length)];
+  var val = Math.random()<0.9 ? 2 : 4;
+  board[cell.r][cell.c]=val;
+  return cell;
+}
+
+function getRow(r){ return board[r].slice(); }
+function setRow(r, arr){ board[r]=arr; }
+function getCol(c){ var a=[]; for(var r=0;r<SIZE;r++) a.push(board[r][c]); return a; }
+function setCol(c, arr){ for(var r=0;r<SIZE;r++) board[r][c]=arr[r]; }
+
+function mergeLine(line){
+  var vals = line.filter(function(v){ return v!==0; });
+  var mergedAt = [];
+  var gained=0;
+  for(var i=0;i<vals.length-1;i++){
+    if(vals[i]===vals[i+1]){
+      vals[i]*=2;
+      gained+=vals[i];
+      mergedAt.push(vals[i]);
+      vals.splice(i+1,1);
+    }
+  }
+  while(vals.length<SIZE) vals.push(0);
+  var moved = vals.some(function(v,idx){ return v!==line[idx]; });
+  return {line:vals, gained:gained, moved:moved, mergedValues:mergedAt};
+}
+
+var lastMergedValues=[];
+function move(direction){
+  if(!isPlaying) return;
+  var changed=false, totalGain=0;
+  lastMergedValues=[];
+  if(direction==='left'){
+    for(var r=0;r<SIZE;r++){
+      var res=mergeLine(getRow(r));
+      setRow(r,res.line); if(res.moved) changed=true; totalGain+=res.gained;
+      lastMergedValues=lastMergedValues.concat(res.mergedValues);
+    }
+  } else if(direction==='right'){
+    for(var r=0;r<SIZE;r++){
+      var line=getRow(r).reverse();
+      var res=mergeLine(line);
+      setRow(r,res.line.reverse()); if(res.moved) changed=true; totalGain+=res.gained;
+      lastMergedValues=lastMergedValues.concat(res.mergedValues);
+    }
+  } else if(direction==='up'){
+    for(var c=0;c<SIZE;c++){
+      var resU=mergeLine(getCol(c));
+      setCol(c,resU.line); if(resU.moved) changed=true; totalGain+=resU.gained;
+      lastMergedValues=lastMergedValues.concat(resU.mergedValues);
+    }
+  } else if(direction==='down'){
+    for(var c2=0;c2<SIZE;c2++){
+      var lineD=getCol(c2).reverse();
+      var resD=mergeLine(lineD);
+      setCol(c2,resD.line.reverse()); if(resD.moved) changed=true; totalGain+=resD.gained;
+      lastMergedValues=lastMergedValues.concat(resD.mergedValues);
+    }
+  }
+  if(!changed) return;
+  score+=totalGain;
+  document.getElementById('curScore').textContent=score;
+  if(totalGain>0) sndMerge();
+  var spawned = spawnTile();
+  render(spawned);
+  if(!hasWon && board.some(function(row){ return row.some(function(v){ return v>=2048; }); })){
+    hasWon=true;
+    sndWin();
+    showOverlay(tr('winTitle'), tr('winSub'), tr('continueBtn'), function(){ hideOverlay(); });
+  } else if(isGameOver()){
+    endGame();
+  }
+}
+
+function canMove(){
+  if(emptyCells().length>0) return true;
+  for(var r=0;r<SIZE;r++){
+    for(var c=0;c<SIZE;c++){
+      var v=board[r][c];
+      if(c<SIZE-1 && board[r][c+1]===v) return true;
+      if(r<SIZE-1 && board[r+1][c]===v) return true;
+    }
+  }
+  return false;
+}
+function isGameOver(){ return !canMove(); }
+
+function render(spawnedCell){
+  var wrap=document.getElementById('boardWrap');
+  var existing = wrap.querySelectorAll('.cell-bg, .tile2048-wrap');
+  existing.forEach(function(el){ el.remove(); });
+  for(var r=0;r<SIZE;r++){
+    for(var c=0;c<SIZE;c++){
+      var bg=document.createElement('div');
+      bg.className='cell-bg';
+      bg.style.left=(c*100/SIZE)+'%'; bg.style.top=(r*100/SIZE)+'%';
+      bg.style.width=(100/SIZE)+'%'; bg.style.height=(100/SIZE)+'%';
+      var inner=document.createElement('div'); inner.className='cell-bg-inner';
+      bg.appendChild(inner);
+      wrap.appendChild(bg);
+    }
+  }
+  for(var rr=0;rr<SIZE;rr++){
+    for(var cc=0;cc<SIZE;cc++){
+      var val=board[rr][cc];
+      if(val===0) continue;
+      var w=document.createElement('div');
+      w.className='tile2048-wrap';
+      w.style.left=(cc*100/SIZE)+'%'; w.style.top=(rr*100/SIZE)+'%';
+      w.style.width=(100/SIZE)+'%'; w.style.height=(100/SIZE)+'%';
+      var t=document.createElement('div');
+      var isSpawned = spawnedCell && spawnedCell.r===rr && spawnedCell.c===cc;
+      var isMerged = lastMergedValues.indexOf(val)!==-1;
+      t.className='tile2048'+(isSpawned?' spawned':(isMerged?' merged':''));
+      t.style.background = TILE_COLORS[val] || '#7c3aed';
+      t.style.color = tileTextColor(val);
+      t.style.fontSize = tileFontSize(val);
+      t.textContent = val;
+      w.appendChild(t);
+      wrap.appendChild(w);
+    }
+  }
+}
+
+function showOverlay(title, sub, btnText, onClick){
+  var ov=document.getElementById('overlayMsg');
+  safeText('overlayTitle', title); safeText('overlaySub', sub);
+  var btn=document.getElementById('retryBtn');
+  btn.textContent = btnText;
+  btn.onclick = onClick;
+  ov.classList.remove('hidden');
+}
+function hideOverlay(){ document.getElementById('overlayMsg').classList.add('hidden'); }
+
+function endGame(){
+  isPlaying=false;
+  sndGameOver();
+  if(score>highScore){ highScore=score; localStorage.setItem('g2048High', highScore); }
+  document.getElementById('highScore').textContent=highScore;
+  showOverlay(tr('gameOverTitle'), tr('gameOverSub').replace('{n}', score), tr('retry'), function(){ startGame(); });
+}
+
+function startGame(){
+  board=[];
+  for(var r=0;r<SIZE;r++){ board.push([0,0,0,0]); }
+  score=0; isPlaying=true; hasWon=false; lastMergedValues=[];
+  document.getElementById('curScore').textContent='0';
+  hideOverlay();
+  spawnTile(); spawnTile();
+  render();
+}
+
+// ── GIRIS ─────────────────────────────────────────────────
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){ e.preventDefault(); move('up'); }
+  else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){ e.preventDefault(); move('down'); }
+  else if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){ e.preventDefault(); move('left'); }
+  else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){ e.preventDefault(); move('right'); }
+});
+
+var touchStartX=0, touchStartY=0, touchActive=false;
+function onTouchStart(e){
+  if(e.touches.length!==1) return;
+  touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY; touchActive=true;
+}
+function onTouchMove(e){ if(touchActive) e.preventDefault(); }
+function onTouchEnd(e){
+  if(!touchActive) return;
+  touchActive=false;
+  var t=e.changedTouches[0];
+  var dx=t.clientX-touchStartX, dy=t.clientY-touchStartY;
+  var absX=Math.abs(dx), absY=Math.abs(dy);
+  if(Math.max(absX,absY)<18) return;
+  if(absX>absY) move(dx>0?'right':'left');
+  else move(dy>0?'down':'up');
+}
+document.getElementById('boardWrap').addEventListener('touchstart', onTouchStart, {passive:true});
+document.getElementById('boardWrap').addEventListener('touchmove', onTouchMove, {passive:false});
+document.getElementById('boardWrap').addEventListener('touchend', onTouchEnd, {passive:true});
+
+document.getElementById('highScore').textContent=highScore;
+startGame();
+
+applyTheme();
+document.getElementById('themeDark').classList.toggle('active', uiSettings.theme==='dark');
+document.getElementById('themeLight').classList.toggle('active', uiSettings.theme==='light');
+document.getElementById('langTR').classList.toggle('active', uiSettings.lang==='TR');
+document.getElementById('langEN').classList.toggle('active', uiSettings.lang==='EN');
+applyLang();
+</script>
+</body>
+</html>
