@@ -98,8 +98,8 @@ input[type=text]:focus{border-color:var(--amber)}
 .tile.cj .tn{color:var(--purple);font-size:18px}
 /* El */
 .hand-rack{background:linear-gradient(180deg,#3d2e1a,#2a2012);border:2px solid #5a4626;border-radius:10px;padding:.5rem .4rem;min-height:120px;width:100%;display:flex;flex-direction:column;gap:6px;justify-content:center;overflow-x:auto}
-.hand-row{display:flex;gap:3px;justify-content:center;min-height:54px}
-.hand-slot{width:36px;height:50px;border-radius:5px;border:1px dashed rgba(255,255,255,.18);flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.hand-row{display:flex;gap:2px;justify-content:center;min-height:54px}
+.hand-slot{width:30px;height:50px;border-radius:5px;border:1px dashed rgba(255,255,255,.18);flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;transition:background .12s}
 .hand-slot.drop-hover{background:rgba(245,158,11,.25);border-color:var(--amber)}
 .tile.dragging{position:fixed;z-index:999;pointer-events:none;box-shadow:0 8px 16px rgba(0,0,0,.6);transform:scale(1.08)}
 .hand-row:first-child{border-bottom:1px dashed #5a4626;padding-bottom:6px}
@@ -204,14 +204,14 @@ input[type=text]:focus{border-color:var(--amber)}
 @media(max-width:600px){
   .tile{width:30px;height:42px}
   .tile .tn{font-size:11px}
-  .hand-slot{width:30px;height:42px}
+  .hand-slot{width:24px;height:42px}
   .pbox{min-width:60px}
   .center-info{gap:.4rem;padding:.4rem .5rem}
 }
 @media(max-width:400px){
   .tile{width:25px;height:35px}
   .tile .tn{font-size:9px}
-  .hand-slot{width:25px;height:35px}
+  .hand-slot{width:20px;height:35px}
   .side-col{min-width:36px}
 }
 </style>
@@ -1421,7 +1421,7 @@ function ensureSlotAssignments(hand){
   Object.keys(tileSlotMap).forEach(function(tid){ occupied[tileSlotMap[tid]]=tid; });
   hand.forEach(function(t){
     if(tileSlotMap[t.id]===undefined){
-      for(var s=0; s<20; s++){
+      for(var s=0; s<28; s++){
         if(occupied[s]===undefined){ tileSlotMap[t.id]=s; occupied[s]=t.id; break; }
       }
     }
@@ -1445,12 +1445,12 @@ function renderMyHand(hand, okeyTile, clickable){
   var rowTop=document.createElement('div'); rowTop.className='hand-row';
   var rowBot=document.createElement('div'); rowBot.className='hand-row';
   var slotEls=[];
-  for(var s=0; s<20; s++){
+  for(var s=0; s<28; s++){
     var slotEl=document.createElement('div');
     slotEl.className='hand-slot';
     slotEl.dataset.slot=s;
     slotEls.push(slotEl);
-    (s<10?rowTop:rowBot).appendChild(slotEl);
+    (s<14?rowTop:rowBot).appendChild(slotEl);
   }
   hand.forEach(function(tile){
     var slotIdx = tileSlotMap[tile.id];
