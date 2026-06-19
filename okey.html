@@ -97,7 +97,9 @@ input[type=text]:focus{border-color:var(--amber)}
 .tile.cj{background:linear-gradient(135deg,#1a1030,#2e1f4d);border-color:var(--purple)}
 .tile.cj .tn{color:var(--purple);font-size:18px}
 /* El */
-.hand-rack{background:var(--bg3);border:1px solid var(--bdr);border-radius:10px;padding:.4rem;min-height:60px;display:flex;flex-wrap:wrap;gap:3px;align-items:flex-end;width:100%}
+.hand-rack{background:linear-gradient(180deg,#3d2e1a,#2a2012);border:2px solid #5a4626;border-radius:10px;padding:.5rem .4rem;min-height:120px;width:100%;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.hand-row{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;min-height:54px}
+.hand-row:first-child{border-bottom:1px dashed #5a4626;padding-bottom:6px}
 
 /* Merkez */
 .center-info{display:flex;align-items:center;gap:.6rem;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:.5rem .8rem}
@@ -625,6 +627,7 @@ function playTone(freq,dur,type,vol){
 }
 function sndDraw(){ playTone(300,0.08,'sine',0.2); }
 function sndDiscard(){ playTone(220,0.1,'sine',0.2); }
+function sndOkeyDiscard(){ [660,880,1100].forEach(function(f,i){ setTimeout(function(){playTone(f,0.18,'sine',0.28);},i*90); }); }
 function sndWin(){ [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){playTone(f,0.3,'sine',0.3);},i*120); }); }
 function sndChat(){ playTone(880,0.08,'sine',0.15); }
 function sndTurn(){ playTone(440,0.15,'sine',0.25); }
@@ -1378,6 +1381,7 @@ function send(msg){ if(hostConn){ try{ hostConn.send(JSON.stringify(msg)); }catc
 var currentView = null;
 var prevTurnWasMine = null;
 var currentHandSortFn = null;
+var lastDiscardTileId; // undefined = henuz baslamadi (ilk render'da ses calmasin)
 var COLOR_CLASS = {kirmizi:'cr', sari:'cy', mavi:'cb', siyah:'cs'};
 
 function tileHtmlStatic(tile, okeyTile){
@@ -1396,8 +1400,11 @@ function okeyLabel(ok){
 function renderMyHand(hand, okeyTile, clickable){
   var rack=document.getElementById('myHand');
   rack.innerHTML='';
+  var rowTop=document.createElement('div'); rowTop.className='hand-row';
+  var rowBot=document.createElement('div'); rowBot.className='hand-row';
   var list = currentHandSortFn ? currentHandSortFn(hand.slice()) : hand;
-  list.forEach(function(tile){
+  var splitAt = Math.ceil(list.length/2);
+  list.forEach(function(tile, idx){
     var el=document.createElement('div');
     el.className='tile '+(tile.isJoker?'cj':(COLOR_CLASS[tile.color]||''));
     if(okeyTile && isOkeyTile(tile, okeyTile)) el.classList.add('okey-glow');
@@ -1405,8 +1412,10 @@ function renderMyHand(hand, okeyTile, clickable){
     el.title = tile.isJoker ? 'Sahte Joker' : (tile.color+' '+tile.num);
     (function(tid){ el.onclick=function(){ attemptDiscard(tid); }; })(tile.id);
     if(!clickable) el.style.opacity='.92';
-    rack.appendChild(el);
+    (idx<splitAt ? rowTop : rowBot).appendChild(el);
   });
+  rack.appendChild(rowTop);
+  rack.appendChild(rowBot);
 }
 
 function sortHandByColor(){
@@ -1448,6 +1457,11 @@ function renderGameFromState(view){
   document.getElementById('pileBtn').disabled = !isMyTurnNotDrawn();
 
   var discArea=document.getElementById('discardArea');
+  var newDiscardId = view.discardTop ? view.discardTop.id : null;
+  if(lastDiscardTileId!==undefined && newDiscardId!==lastDiscardTileId && newDiscardId!==null){
+    if(isOkeyTile(view.discardTop, view.okeyTile)) sndOkeyDiscard(); else sndDiscard();
+  }
+  lastDiscardTileId = newDiscardId;
   if(view.discardTop){
     discArea.innerHTML = tileHtmlStatic(view.discardTop, view.okeyTile);
     var canTake = isMyTurnNotDrawn();
@@ -1502,8 +1516,8 @@ function attemptDiscard(tileId){
   if(!isMyTurnAndDrawn()) return;
   if(isHost){
     var r=hostDiscardTile(myPlayerIndex, tileId);
-    if(r.ok){ sndDiscard(); hostCheckPileEmpty(); broadcastState(); }
-  } else { sndDiscard(); send({type:'discard', tileId:tileId}); }
+    if(r.ok){ hostCheckPileEmpty(); broadcastState(); }
+  } else { send({type:'discard', tileId:tileId}); }
 }
 function tryOpen(){
   if(!isMyTurnAndDrawn()) return;
