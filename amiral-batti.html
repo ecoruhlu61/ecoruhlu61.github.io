@@ -1190,8 +1190,8 @@ function inviteFriendToGame(fid, fname){
   showScreen('sModeSelect');
 }
 
-function gamePageFor(id){ if(id==='kelime-avi') return 'kelime-avi.html'; if(id==='dortlu') return 'dortlu.html'; if(id==='xox') return 'xox.html'; return 'amiral-batti.html'; }
-function gameLabelFor(id){ if(id==='kelime-avi') return 'Kelime Avi'; if(id==='dortlu') return 'Dortlu'; if(id==='xox') return 'XOX'; return 'Amiral Batti'; }
+function gamePageFor(id){ if(id==='kelime-avi') return 'kelime-avi.html'; if(id==='dortlu') return 'dortlu.html'; if(id==='xox') return 'xox.html'; if(id==='okey') return 'okey.html'; return 'amiral-batti.html'; }
+function gameLabelFor(id){ if(id==='kelime-avi') return 'Kelime Avi'; if(id==='dortlu') return 'Dortlu'; if(id==='xox') return 'XOX'; if(id==='okey') return 'Okey'; return 'Amiral Batti'; }
 function acceptInvite(){
   document.getElementById('invitePopup').classList.remove('open');
   if(!currentInvite) return;
