@@ -1992,11 +1992,12 @@ function renderMyHand(hand, okeyTile, clickable){
     var slotIdx = tileSlotMap[tile.id];
     var el=document.createElement('div');
     var isOk = okeyTile && isOkeyTile(tile, okeyTile);
+    var isRealOkey = okeyTile && !tile.isJoker && tile.color===okeyTile.color && tile.num===okeyTile.num;
     el.className='tile '+(tile.isJoker?'cj':(COLOR_CLASS[tile.color]||''))+(isOk?' okey-glow':'')+(flippedTiles[tile.id]?' flipped':'');
     el.innerHTML='<div class="tile-inner"><div class="tile-face tile-front"><span class="tn">'+(tile.isJoker?'&#127183;':tile.num)+'</span></div><div class="tile-face tile-back"></div></div>';
     el.title = tile.isJoker ? 'Sahte Joker' : (tile.color+' '+tile.num);
     if(!clickable) el.style.opacity='.92';
-    if(isOk) wireTileFlip(el, tile.id);
+    if(isRealOkey) wireTileFlip(el, tile.id);
     wireTileDrag(el, tile.id, clickable);
     if(slotEls[slotIdx]) slotEls[slotIdx].appendChild(el);
   });
