@@ -2150,7 +2150,10 @@ function isMyTurnNotDrawn(){
 
 function renderGameFromState(view){
   currentView = view;
-  if(!view.gameOver) gameOverStatsRecorded=false;
+  if(!view.gameOver){
+    gameOverStatsRecorded=false;
+    document.getElementById('resultOverlay').classList.remove('open');
+  }
   if(view.dealSeq!==lastDealSeq){ tileSlotMap={}; flippedTiles={}; lastDiscardTileId=undefined; lastDealSeq=view.dealSeq; handStartTs=Date.now(); }
   if(view.roundScores){
     roundScores = view.roundScores;
